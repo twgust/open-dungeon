@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The encrypted OpenRouter key is useless anywhere else: its Keystore key never leaves this device.
+  Keep it out of cloud backups and device transfers so a restored app starts clean instead of broken.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/openrouter_credentials.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/openrouter_credentials.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>
