@@ -24,11 +24,13 @@ android {
 
 dependencies {
     implementation(projects.core.data)
+    implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(projects.core.model)
     implementation(projects.core.network)
     implementation(projects.core.ui)
     implementation(projects.data.generation)
+    implementation(projects.data.story)
     implementation(projects.feature.connect)
 
     implementation(libs.androidx.activity.compose)
