@@ -24,4 +24,14 @@ public sealed interface DataError {
 
     /** The response did not match the documented schema. */
     public data object UnexpectedResponse : DataError
+
+    public companion object {
+        /** Interprets a non-success status from OpenRouter, with the message from its error envelope. */
+        public fun fromHttpStatus(status: Int, message: String): DataError = when (status) {
+            401 -> Unauthorized(message)
+            402 -> InsufficientCredits(message)
+            429 -> RateLimited(message)
+            else -> Remote(status, message)
+        }
+    }
 }

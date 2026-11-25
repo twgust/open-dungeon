@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.network)
     implementation(projects.core.ui)
+    implementation(projects.data.generation)
     implementation(projects.feature.connect)
 
     implementation(libs.androidx.activity.compose)
