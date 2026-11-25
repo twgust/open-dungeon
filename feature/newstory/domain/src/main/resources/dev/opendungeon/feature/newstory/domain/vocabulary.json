@@ -1,0 +1,47 @@
+{
+  "genres": [
+    "Gothic", "Noir", "Fantasy", "Science fiction", "Horror", "Romance", "Mystery", "Western",
+    "Thriller", "Cyberpunk", "Post-apocalyptic", "Historical", "Mythic", "Fairy tale", "Space opera",
+    "Cosmic horror", "Comedy", "Tragedy", "Sword and sorcery", "Slice of life", "Steampunk", "Ghost story"
+  ],
+  "twists": [
+    "a heist", "a betrayal", "a curse", "a forbidden love", "a missing heir", "a locked room",
+    "a deal with something old", "an inheritance", "a plague", "a trial", "a stolen face", "a wedding",
+    "a debt come due", "a prophecy that is wrong", "an impostor", "a hunt", "a long winter", "an amnesia"
+  ],
+  "roles": [
+    "a disgraced smuggler", "a reliquary thief", "a court physician", "a deserter", "a hedge witch",
+    "an exiled heir", "a debt collector", "a ferry pilot", "a lighthouse keeper", "a bounty hunter",
+    "a failed priest", "a war widow", "a cartographer", "a forger", "a travelling surgeon",
+    "a retired assassin", "a novice inquisitor", "a ship's cook", "a disinherited noble", "a grave robber"
+  ],
+  "tones": [
+    "tenderly", "coldly", "with dread", "wryly", "breathlessly", "with grief", "with longing",
+    "darkly funny", "slowly", "with menace", "dreamily", "bluntly", "with wonder", "bitterly"
+  ],
+  "settings": [
+    "a salt-war border town", "a drowned cathedral city", "a sleeper train crossing the steppe",
+    "a mountain monastery cut off by snow", "a city where it never stops raining", "a generation ship's slums",
+    "a plague-quiet port", "a manor on a tidal island", "the last inn before the wastes",
+    "a sinking academy", "a floating market", "a besieged capital", "a mining colony on a dead moon",
+    "a forest that moves at night", "a desert caravan", "a canal city in carnival week"
+  ],
+  "wants": [
+    "To be forgiven by the one person who won't", "To buy back the family name", "To find out who they were before",
+    "To get out before the debt is called", "To be the one who is remembered", "To keep a promise made to the dead",
+    "To see the sea, once", "To prove the prophecy wrong", "To be left alone, and to be missed",
+    "To get even, quietly", "To be loved without having to earn it", "To bring someone home"
+  ],
+  "flaws": [
+    "Lies when the truth would do", "Cannot walk away from a wager", "Trusts the wrong kind of charm",
+    "Keeps every grudge", "Freezes when someone raises their voice", "Needs to be the cleverest in the room",
+    "Drinks to sleep", "Promises too much", "Mistakes pity for love", "Runs before they can be left",
+    "Cannot ask for help", "Hears an insult in everything"
+  ],
+  "goodAt": [
+    "Reading a lie in the hands", "Picking locks by feel", "Making strangers talk", "Staying unseen",
+    "Patching a wound in the dark", "Knowing what things are worth", "Talking their way past guards",
+    "Remembering faces", "Climbing anything", "Keeping a cool head when it goes wrong",
+    "Forging a signature", "Calming frightened animals"
+  ]
+}
