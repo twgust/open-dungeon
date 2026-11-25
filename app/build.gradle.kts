@@ -31,6 +31,8 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.data.generation)
     implementation(projects.data.story)
+    implementation(projects.feature.newstory.domain)
+    implementation(projects.feature.newstory.ui)
     implementation(projects.feature.connect)
 
     implementation(libs.androidx.activity.compose)

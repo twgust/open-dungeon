@@ -20,6 +20,8 @@ public data class WizardState(
 public data class StepControls(
     val canGoBack: Boolean,
     val canAdvance: Boolean,
+    /** Picking completes the step, so it shows no next arrow; tapping the current pick moves on. */
+    val advancesOnPick: Boolean,
     /** The step has a die, and rolling it would change something. */
     val canRoll: Boolean,
     /** The step takes the player's own words in its "my own" pill. */

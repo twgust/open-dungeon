@@ -6,8 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
-import dev.opendungeon.core.ui.OpenDungeonTheme
-import dev.opendungeon.feature.connect.ConnectRoute
+import dev.opendungeon.core.designsystem.PaperTheme
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -27,8 +26,8 @@ class MainActivity(private val viewModelFactory: MetroViewModelFactory) : Compon
         super.onCreate(savedInstanceState)
         setContent {
             CompositionLocalProvider(LocalMetroViewModelFactory provides viewModelFactory) {
-                OpenDungeonTheme {
-                    ConnectRoute()
+                PaperTheme {
+                    AppScreens()
                 }
             }
         }
