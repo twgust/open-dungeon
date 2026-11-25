@@ -126,6 +126,7 @@ internal class DefaultStoryWizard(
                 canGoBack = true,
                 // The last step's next is Begin, which only exists once a story can be committed.
                 canAdvance = draft.step.following != null && policy.canAdvance(draft),
+                advancesOnPick = policy.advancesOnPick,
                 canRoll = policy.canRoll(draft),
                 takesOwnWords = policy.takesOwnWords(draft),
             ),

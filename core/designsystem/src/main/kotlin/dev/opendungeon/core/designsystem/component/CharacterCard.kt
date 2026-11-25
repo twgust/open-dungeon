@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,17 +33,17 @@ import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.PaperIcons
 
 /**
- * A card on the paper: a small-capitals [label] with an edit pen, then [content]. While [editing] the
- * pen becomes "done". Used for the player's card and for each person in the cast.
+ * A card on the paper: a small-capitals [label], then [content]. With [onToggleEdit] it carries an
+ * edit pen that becomes "done" while [editing]. Used for the player's card and for each person in the cast.
  */
 @Composable
 public fun CharacterCard(
     label: String,
-    editing: Boolean,
-    onToggleEdit: () -> Unit,
-    editLabel: String,
-    doneLabel: String,
     modifier: Modifier = Modifier,
+    editing: Boolean = false,
+    onToggleEdit: (() -> Unit)? = null,
+    editLabel: String = "",
+    doneLabel: String = "",
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = Paper.colors
@@ -55,13 +56,15 @@ public fun CharacterCard(
             .padding(start = 18.dp, top = 6.dp, end = 4.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = Paper.type.label, color = colors.muted, modifier = Modifier.weight(1f))
-            AnimatedContent(editing, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "card pen") { isEditing ->
-                if (isEditing) {
-                    GhostTextButton(doneLabel, onToggleEdit, emphasised = true)
-                } else {
-                    GhostIconButton(PaperIcons.Pen, editLabel, onToggleEdit, iconSize = 16)
+            if (onToggleEdit != null) {
+                AnimatedContent(editing, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "card pen") { isEditing ->
+                    if (isEditing) {
+                        GhostTextButton(doneLabel, onToggleEdit, emphasised = true)
+                    } else {
+                        GhostIconButton(PaperIcons.Pen, editLabel, onToggleEdit, iconSize = 16)
+                    }
                 }
             }
         }

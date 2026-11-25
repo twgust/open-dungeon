@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The genre step has no story yet, so the screen supplies its lead. -->
+    <string name="wizard_lead_genre">A story has</string>
+
+    <string name="wizard_prompt_genre">a genre</string>
+    <string name="wizard_prompt_twist">twisted by</string>
+    <string name="wizard_prompt_starring">starring</string>
+    <string name="wizard_prompt_tone">told</string>
+    <string name="wizard_prompt_setting">set in</string>
+    <string name="wizard_prompt_limits">How far?</string>
+    <string name="wizard_prompt_premise">It begins</string>
+    <string name="wizard_prompt_cast">Among them</string>
+    <string name="wizard_prompt_first_line">The first line</string>
+    <string name="wizard_prompt_first_turn">The first turn</string>
+
+    <string name="wizard_own">my own</string>
+    <string name="wizard_own_limits">my own limits</string>
+    <string name="wizard_own_premise">write my own</string>
+    <string name="wizard_own_cast">someone of my own</string>
+    <string name="wizard_own_use">use</string>
+    <string name="wizard_own_cancel">Cancel</string>
+
+    <string name="wizard_own_hint_genre">a genre of your own</string>
+    <string name="wizard_own_hint_twist">a twist of your own</string>
+    <string name="wizard_own_hint_tone">like a lullaby</string>
+    <string name="wizard_own_hint_setting">a place of your own</string>
+    <string name="wizard_own_hint_limits">no harm to animals</string>
+    <string name="wizard_own_hint_premise">how it begins</string>
+
+    <string name="wizard_die">Surprise me</string>
+    <string name="wizard_die_premise">Reroll</string>
+    <string name="wizard_die_cast">Other people</string>
+    <string name="wizard_back">Back</string>
+    <string name="wizard_next">Next</string>
+
+    <string name="wizard_you">YOU</string>
+    <string name="wizard_edit">Edit</string>
+    <string name="wizard_done">done</string>
+    <string name="wizard_reroll_line">Reroll %1$s</string>
+
+    <string name="wizard_line_role">ROLE</string>
+    <string name="wizard_line_name">NAME</string>
+    <string name="wizard_line_age">AGE</string>
+    <string name="wizard_line_gender">GENDER</string>
+    <string name="wizard_line_look">LOOK</string>
+    <string name="wizard_line_traits">TRAITS</string>
+    <string name="wizard_line_speech">SPEECH</string>
+    <string name="wizard_line_wants">WANTS</string>
+    <string name="wizard_line_flaw">FLAW</string>
+    <string name="wizard_line_good_at">GOOD AT</string>
+    <string name="wizard_line_habit">HABIT</string>
+    <string name="wizard_line_voice">VOICE</string>
+    <string name="wizard_line_secret">SECRET</string>
+    <string name="wizard_secret_sealed">Sealed secret</string>
+    <string name="wizard_someone">Someone</string>
+    <string name="wizard_cast_take">take them</string>
+    <string name="wizard_cast_taken">in the story</string>
+    <plurals name="wizard_cast_count">
+        <item quantity="one">%1$d of %2$d in the story</item>
+        <item quantity="other">%1$d of %2$d in the story</item>
+    </plurals>
+
+    <string name="wizard_dial_desire">DESIRE</string>
+    <string name="wizard_dial_violence">VIOLENCE</string>
+    <string name="wizard_desire_unspoken">unspoken</string>
+    <string name="wizard_desire_close">close</string>
+    <string name="wizard_desire_all_the_way">all the way</string>
+    <string name="wizard_violence_offstage">offstage</string>
+    <string name="wizard_violence_felt">felt</string>
+    <string name="wizard_violence_shown">shown</string>
+    <string name="wizard_limits_note">and %1$s</string>
+
+    <string name="wizard_premise_label">Premise</string>
+    <string name="wizard_premise_hint">in your own words…</string>
+    <string name="wizard_first_line_label">First line</string>
+    <string name="wizard_first_line_hint">or leave it to the story</string>
+    <string name="wizard_first_line_count">%1$d / %2$d</string>
+
+    <string name="wizard_take_writing">%1$s is writing…</string>
+    <string name="wizard_take_interrupted">%1$s · STOPPED EARLY</string>
+    <string name="wizard_take_choose">this one</string>
+    <string name="wizard_take_chosen">chosen</string>
+</resources>

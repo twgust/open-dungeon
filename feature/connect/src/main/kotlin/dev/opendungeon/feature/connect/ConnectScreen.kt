@@ -40,21 +40,26 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-fun ConnectRoute(viewModel: ConnectViewModel = metroViewModel()) {
+fun ConnectRoute(onNewStory: () -> Unit, viewModel: ConnectViewModel = metroViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    ConnectScreen(state = state, onIntent = viewModel::onIntent)
+    ConnectScreen(state = state, onIntent = viewModel::onIntent, onNewStory = onNewStory)
 }
 
 /** Stateless: renders [state] and reports user actions as [ConnectIntent]s. */
 @Composable
-fun ConnectScreen(state: ConnectState, onIntent: (ConnectIntent) -> Unit, modifier: Modifier = Modifier) {
+fun ConnectScreen(
+    state: ConnectState,
+    onIntent: (ConnectIntent) -> Unit,
+    onNewStory: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(modifier = modifier) { padding ->
         Box(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             when (val phase = state.phase) {
                 Phase.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                 is Phase.Disconnected -> KeyEntry(isValidating = false, error = phase.error, onIntent = onIntent)
                 Phase.Validating -> KeyEntry(isValidating = true, error = null, onIntent = onIntent)
-                is Phase.Connected -> Connected(phase, onIntent)
+                is Phase.Connected -> Connected(phase, onIntent, onNewStory)
             }
         }
     }
@@ -88,12 +93,15 @@ private fun KeyEntry(isValidating: Boolean, error: DataError?, onIntent: (Connec
 }
 
 @Composable
-private fun Connected(phase: Phase.Connected, onIntent: (ConnectIntent) -> Unit) {
+private fun Connected(phase: Phase.Connected, onIntent: (ConnectIntent) -> Unit, onNewStory: () -> Unit) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(phase.key.summary(), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             TextButton(onClick = { onIntent(ConnectIntent.Refresh) }) { Text(stringResource(R.string.connect_refresh)) }
             TextButton(onClick = { onIntent(ConnectIntent.Disconnect) }) { Text(stringResource(R.string.connect_disconnect)) }
+        }
+        Button(onClick = onNewStory, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+            Text(stringResource(R.string.connect_new_story))
         }
         when (val models = phase.models) {
             Remote.Loading -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(32.dp))
@@ -149,5 +157,5 @@ private fun DataError.message(): String = when (this) {
 @Preview
 @Composable
 private fun KeyEntryPreview() = PaperTheme {
-    ConnectScreen(state = ConnectState(phase = Phase.Disconnected(DataError.Unauthorized(""))), onIntent = {})
+    ConnectScreen(state = ConnectState(phase = Phase.Disconnected(DataError.Unauthorized(""))), onIntent = {}, onNewStory = {})
 }

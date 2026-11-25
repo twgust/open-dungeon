@@ -22,4 +22,5 @@
     <string name="error_insufficient_credits">This key is out of credits.</string>
     <string name="error_rate_limited">OpenRouter is rate limiting this key. Try again shortly.</string>
     <string name="error_remote">OpenRouter error %1$d: %2$s</string>
+    <string name="connect_new_story">New story</string>
 </resources>

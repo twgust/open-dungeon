@@ -56,7 +56,7 @@ private fun SentenceStepPreview() = OnPaper {
 @PaperPreviews
 @Composable
 private fun CardPreview() = OnPaper {
-    CharacterCard(label = "YOU", editing = false, onToggleEdit = {}, editLabel = "Edit", doneLabel = "done") {
+    CharacterCard(label = "YOU", onToggleEdit = {}, editLabel = "Edit", doneLabel = "done") {
         CardLine("WANTS", trailing = { LineDieButton("Reroll wants", onClick = {}) }) {
             Text("to clear a debt that isn’t yours", style = Paper.type.body, color = Paper.colors.ink)
         }

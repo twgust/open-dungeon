@@ -20,21 +20,30 @@ Requires JDK 21 and an Android SDK with platform `android-37.2`.
 | Architecture | MVI (`core:mvi`): immutable state, intents in, one-off effects out |
 | DI | [Metro](https://github.com/ZacSweers/metro) with contribution-based graphs (`@ContributesBinding`, `@ContributesIntoMap`) and `metrox` for ViewModels and constructor-injected Activities |
 | Networking | Ktor client (OkHttp engine) + kotlinx.serialization |
-| Storage | DataStore; the API key is AES-GCM encrypted with an Android Keystore key |
+| Generation | [Koog](https://github.com/JetBrains/koog) `OpenRouterLLMClient` behind `TextGenerator` / `StructuredGenerator` |
+| Storage | Room for drafts (schemas exported to `core/database/schemas`); DataStore for the API key, AES-GCM encrypted with an Android Keystore key |
 | Build | Gradle 9, version catalog, convention plugins in `build-logic` |
-| Tests | JUnit 5, kotlinx-coroutines-test, Turbine, Ktor `MockEngine` |
+| Tests | JUnit 5, kotlinx-coroutines-test, Turbine, Ktor `MockEngine`, OkHttp `MockWebServer`; Robolectric only for Room |
 
 ## Modules
 
 ```
-app                 Application, Metro AppGraph, MainActivity
-feature/connect     Connect an OpenRouter key and list the models it unlocks
-core/ui             Theme and Compose helpers
-core/datastore      Encrypted on-device key storage (Android)
-core/data           Repositories: domain-facing, map network results to typed errors   (JVM)
-core/network        OpenRouter REST client and DTOs                                   (JVM)
-core/mvi            MviViewModel base                                                 (JVM)
-core/model          Domain types: ApiKey, AiModel, ModelParameter, Outcome, DataError (JVM)
+app                      Application, Metro AppGraph, MainActivity
+feature/connect          Connect an OpenRouter key and list the models it unlocks
+feature/newstory/ui      Story creation screens and their thin ViewModel
+feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, vocabulary    (JVM)
+data/story               StoryDraftRepository over Room (Android)
+data/generation          Text and structured generation on Koog's OpenRouter client    (JVM)
+domain/story             Drafts, characters, takes, the sentence builder              (JVM)
+domain/generation        TextGenerator, StructuredGenerator, sampling, typed errors    (JVM)
+core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
+core/ui                  Compose helpers
+core/database            Room database, entities, DAOs (Android)
+core/datastore           Encrypted on-device key storage (Android)
+core/data                Repositories: domain-facing, map network results to typed errors   (JVM)
+core/network             OpenRouter REST client and DTOs                                   (JVM)
+core/mvi                 MviViewModel base                                                 (JVM)
+core/model               Domain types: ApiKey, AiModel, ModelParameter, Outcome, DataError (JVM)
 ```
 
 Dependencies point downwards only. Features never depend on each other. Everything that can be pure

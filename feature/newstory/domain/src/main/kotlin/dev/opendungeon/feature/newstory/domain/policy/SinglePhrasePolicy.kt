@@ -13,6 +13,7 @@ import dev.opendungeon.feature.newstory.domain.vocabulary.WizardVocabulary
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
 
 /**
  * A step that takes exactly one phrase. Any pick completes it: a tap, the player's own words, or the
@@ -37,6 +38,8 @@ public abstract class SinglePhrasePolicy(
 
     override fun canRoll(draft: StoryDraft): Boolean = true
 
+    override val advancesOnPick: Boolean get() = true
+
     override fun takesOwnWords(draft: StoryDraft): Boolean = true
 
     override fun select(draft: StoryDraft, choice: Choice): Selection? {
@@ -58,7 +61,7 @@ public abstract class SinglePhrasePolicy(
 }
 
 @Inject
-@ContributesIntoSet(AppScope::class)
+@ContributesIntoSet(AppScope::class, binding = binding<StepPolicy>())
 public class TwistPolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
     SinglePhrasePolicy(CreationStep.Twist, VocabularyList.Twists, vocabulary, rollChoice) {
     override fun StoryDraft.phrase(): Phrase? = twist
@@ -66,7 +69,7 @@ public class TwistPolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
 }
 
 @Inject
-@ContributesIntoSet(AppScope::class)
+@ContributesIntoSet(AppScope::class, binding = binding<StepPolicy>())
 public class TonePolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
     SinglePhrasePolicy(CreationStep.Tone, VocabularyList.Tones, vocabulary, rollChoice) {
     override fun StoryDraft.phrase(): Phrase? = tone
@@ -74,7 +77,7 @@ public class TonePolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
 }
 
 @Inject
-@ContributesIntoSet(AppScope::class)
+@ContributesIntoSet(AppScope::class, binding = binding<StepPolicy>())
 public class SettingPolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
     SinglePhrasePolicy(CreationStep.Setting, VocabularyList.Settings, vocabulary, rollChoice) {
     override fun StoryDraft.phrase(): Phrase? = setting

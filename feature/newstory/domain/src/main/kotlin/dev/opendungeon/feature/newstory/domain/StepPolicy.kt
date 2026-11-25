@@ -19,6 +19,9 @@ public interface StepPolicy {
 
     public fun canRoll(draft: StoryDraft): Boolean = false
 
+    /** A pick completes the step by itself, so the step needs no next arrow. */
+    public val advancesOnPick: Boolean get() = false
+
     public fun takesOwnWords(draft: StoryDraft): Boolean = false
 
     public fun select(draft: StoryDraft, choice: Choice): Selection? = null

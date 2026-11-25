@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import dev.opendungeon.core.designsystem.PaperTheme
-import dev.opendungeon.feature.connect.ConnectRoute
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -28,7 +27,7 @@ class MainActivity(private val viewModelFactory: MetroViewModelFactory) : Compon
         setContent {
             CompositionLocalProvider(LocalMetroViewModelFactory provides viewModelFactory) {
                 PaperTheme {
-                    ConnectRoute()
+                    AppScreens()
                 }
             }
         }
