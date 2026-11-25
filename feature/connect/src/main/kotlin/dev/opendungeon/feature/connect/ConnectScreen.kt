@@ -33,7 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.KeyInfo
-import dev.opendungeon.core.ui.OpenDungeonTheme
+import dev.opendungeon.core.designsystem.PaperTheme
 import dev.opendungeon.feature.connect.ConnectState.Phase
 import dev.opendungeon.feature.connect.ConnectState.Remote
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -148,6 +148,6 @@ private fun DataError.message(): String = when (this) {
 
 @Preview
 @Composable
-private fun KeyEntryPreview() = OpenDungeonTheme {
+private fun KeyEntryPreview() = PaperTheme {
     ConnectScreen(state = ConnectState(phase = Phase.Disconnected(DataError.Unauthorized(""))), onIntent = {})
 }
