@@ -120,7 +120,7 @@ internal class DefaultStoryWizard(
             draft = draft.id,
             step = draft.step,
             progress = (draft.step.ordinal + 1f) / CreationStep.entries.size,
-            sentence = sentenceOf(draft),
+            lead = leadOf(draft),
             body = policy.body(draft),
             controls = StepControls(
                 canGoBack = true,
@@ -133,18 +133,16 @@ internal class DefaultStoryWizard(
     }
 
     /**
-     * Up to the setting, the sentence grows with each pick and stays open. From the limits on it is
-     * the whole story clause, closed, and from the cast on it names the people in it.
+     * The words above the step's prompt. On the sentence steps it is the story so far, left open for the
+     * prompt to finish ("A gothic noir story," above "twisted by"); on the limits it is the whole story
+     * clause, and on the first line it is the cast. The other steps lead with their prompt alone.
      */
-    private fun sentenceOf(draft: StoryDraft): Sentence {
-        val growing = draft.step < CreationStep.Limits
-        val story = sentences.story(
-            draft = draft,
-            before = if (growing) CreationStep.entries[draft.step.ordinal + 1] else CreationStep.Limits,
-            ending = if (growing) SentenceBuilder.Ending.None else SentenceBuilder.Ending.Period,
-        )
-        val cast = if (draft.step >= CreationStep.Cast) sentences.cast(draft) else Sentence.Empty
-        return if (cast.isEmpty()) story else story + Sentence(listOf(Sentence.Segment.Fixed(" "))) + cast
+    private fun leadOf(draft: StoryDraft): Sentence = when (draft.step) {
+        CreationStep.Genre, CreationStep.Premise, CreationStep.Cast, CreationStep.FirstTurn -> Sentence.Empty
+        CreationStep.Twist, CreationStep.Starring, CreationStep.Tone, CreationStep.Setting ->
+            sentences.story(draft, before = draft.step, ending = SentenceBuilder.Ending.Comma)
+        CreationStep.Limits -> sentences.story(draft, before = CreationStep.Limits, ending = SentenceBuilder.Ending.Period)
+        CreationStep.FirstLine -> sentences.cast(draft)
     }
 }
 

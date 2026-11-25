@@ -10,7 +10,8 @@ public data class WizardState(
     val step: CreationStep,
     /** How far through creation the current step is, from just above 0 to 1 on the last step. */
     val progress: Float,
-    val sentence: Sentence,
+    /** The sentence so far, shown above the step's prompt. Empty where the prompt stands alone. */
+    val lead: Sentence,
     val body: StepBody,
     val controls: StepControls,
 )

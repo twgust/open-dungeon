@@ -65,7 +65,7 @@ class DefaultStoryWizardTest {
         assertEquals(CreationStep.Genre, state.step)
         assertEquals(DraftId("draft-1"), state.draft)
         assertEquals(setOf(DraftId("draft-1")), repository.drafts.value.keys)
-        assertEquals("A story", state.sentence.text)
+        assertTrue(state.lead.isEmpty(), "the genre step leads with its prompt alone")
     }
 
     @Test
@@ -88,7 +88,7 @@ class DefaultStoryWizardTest {
 
         val state = wizard.current()
         assertEquals(CreationStep.Starring, state.step)
-        assertEquals("A gothic story, twisted by a heist", state.sentence.text)
+        assertEquals("A gothic story, twisted by a heist,", state.lead.text)
         assertEquals(Phrase.Offered("a heist"), repository.drafts.value.values.single().twist)
     }
 
@@ -111,7 +111,7 @@ class DefaultStoryWizardTest {
 
         val state = wizard.current()
         assertEquals(CreationStep.Twist, state.step)
-        assertEquals("A gothic noir story", state.sentence.text)
+        assertEquals("A gothic noir story,", state.lead.text)
     }
 
     @Test
@@ -141,7 +141,7 @@ class DefaultStoryWizardTest {
     }
 
     @Test
-    fun `from the limits on, the sentence is the whole story clause`() = runTest(UnconfinedTestDispatcher()) {
+    fun `on the limits, the lead is the whole story clause`() = runTest(UnconfinedTestDispatcher()) {
         val draft = StoryDraft(
             DraftId("d"),
             step = CreationStep.Limits,
@@ -153,7 +153,7 @@ class DefaultStoryWizardTest {
 
         wizard.start()
 
-        assertEquals("A noir story, told coldly, set in a lighthouse.", wizard.current().sentence.text)
+        assertEquals("A noir story, told coldly, set in a lighthouse.", wizard.current().lead.text)
     }
 
     @Test
