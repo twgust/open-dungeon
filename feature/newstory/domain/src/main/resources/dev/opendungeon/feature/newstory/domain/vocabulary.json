@@ -1,0 +1,39 @@
+{
+  "genres": [
+    "Gothic", "Noir", "Space opera", "Low fantasy", "Weird west", "Court intrigue", "Cyberpunk", "Mythic",
+    "Folk horror", "Grimdark", "Regency", "Wuxia", "Solarpunk", "Cosmic horror", "Pulp adventure",
+    "Southern gothic", "Post-collapse", "Slice of life", "Dark academia", "Sword and sorcery"
+  ],
+  "twists": [
+    "a heist", "a romance", "cosmic dread", "survival", "farce", "revenge", "a betrayal", "a curse",
+    "a missing heir", "a locked room", "a debt come due", "an impostor"
+  ],
+  "roles": [
+    "a disgraced smuggler", "a hedge witch", "a deserter", "a widowed heir", "a forger", "a priest without faith",
+    "a reliquary thief", "a court physician", "a debt collector", "a ferry pilot", "a lighthouse keeper",
+    "a bounty hunter", "a cartographer", "a travelling surgeon", "a retired assassin", "a grave robber"
+  ],
+  "tones": [
+    "tenderly", "brutally", "wryly", "with dread", "feverishly", "playfully", "coldly", "with longing",
+    "darkly funny", "slowly", "dreamily", "bitterly"
+  ],
+  "settings": [
+    "a drowned cathedral city", "a generation ship", "a salt-war border town", "a snowed-in lodge",
+    "an orbital casino", "a sleeper train crossing the steppe", "a plague-quiet port", "a manor on a tidal island",
+    "the last inn before the wastes", "a besieged capital", "a forest that moves at night", "a canal city in carnival week"
+  ],
+  "wants": [
+    "to clear a debt that isn’t yours", "to see your sister once more", "never to owe anyone again",
+    "forgiveness from someone dead", "to buy back the family name", "to find out who you were before",
+    "to keep a promise made to the dead", "to get even, quietly", "to bring someone home"
+  ],
+  "flaws": [
+    "you lie when the truth would do", "you can’t leave a locked door alone", "you trust anyone who feeds you",
+    "you keep score", "you can’t walk away from a wager", "you run before you can be left",
+    "you can’t ask for help", "you promise too much"
+  ],
+  "goodAt": [
+    "locks and ledgers", "reading a room", "the marsh paths", "talking past guards", "patching a wound in the dark",
+    "knowing what things are worth", "remembering faces", "keeping a cool head"
+  ]
+}

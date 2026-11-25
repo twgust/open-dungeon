@@ -29,8 +29,7 @@ internal fun openRouterHttpClient(
     }
     defaultRequest {
         url(OpenRouterApi.BASE_URL)
-        headers.append(TITLE_HEADER, attribution.title)
-        attribution.siteUrl?.let { headers.append(REFERER_HEADER, it) }
+        attribution.headers().forEach(headers::append)
     }
 }
 

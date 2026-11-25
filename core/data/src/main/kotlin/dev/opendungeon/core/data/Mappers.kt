@@ -30,15 +30,7 @@ internal inline fun <T, R> NetworkResult<T>.toDataOutcome(transform: (T) -> R): 
 internal fun NetworkError.toDataError(): DataError = when (this) {
     is NetworkError.Transport -> DataError.Network
     is NetworkError.Decoding -> DataError.UnexpectedResponse
-    is NetworkError.Http -> {
-        val message = body?.message.orEmpty()
-        when (status) {
-            401 -> DataError.Unauthorized(message)
-            402 -> DataError.InsufficientCredits(message)
-            429 -> DataError.RateLimited(message)
-            else -> DataError.Remote(status, message)
-        }
-    }
+    is NetworkError.Http -> DataError.fromHttpStatus(status, body?.message.orEmpty())
 }
 
 internal fun CurrentKeyDto.toKeyInfo() = KeyInfo(
