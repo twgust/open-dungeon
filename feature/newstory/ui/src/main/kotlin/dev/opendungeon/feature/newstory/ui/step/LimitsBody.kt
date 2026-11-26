@@ -54,7 +54,14 @@ internal fun LimitsBody(body: StepBody.Limits, onIntent: (WizardIntent) -> Unit)
 @Composable
 private fun Dial(label: String, levels: List<Level>, onIntent: (WizardIntent) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = Paper.type.label.copy(fontSize = Paper.type.caption.fontSize), color = Paper.colors.muted, modifier = Modifier.semantics { heading() })
+        Text(
+            label,
+            style = Paper.type.label.copy(fontSize = Paper.type.caption.fontSize),
+            color = Paper.colors.muted,
+            modifier = Modifier.semantics {
+                heading()
+            },
+        )
         FlowRow(
             modifier = Modifier.padding(top = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),

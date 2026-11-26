@@ -6,7 +6,9 @@ import dev.zacsweers.metro.createGraphFactory
 import dev.zacsweers.metrox.android.MetroAppComponentProviders
 import dev.zacsweers.metrox.android.MetroApplication
 
-class OpenDungeonApplication : Application(), MetroApplication {
+class OpenDungeonApplication :
+    Application(),
+    MetroApplication {
 
     val graph: AppGraph by lazy { createGraphFactory<AppGraph.Factory>().create(this) }
 

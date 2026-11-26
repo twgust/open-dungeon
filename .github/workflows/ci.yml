@@ -20,5 +20,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v5
+      - name: Style and static analysis
+        run: ./gradlew ktlintCheck detekt
       - name: Test, lint and build
         run: ./gradlew test lint assembleDebug

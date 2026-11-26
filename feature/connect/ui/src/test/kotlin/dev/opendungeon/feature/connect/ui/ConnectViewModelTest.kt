@@ -30,9 +30,17 @@ class ConnectViewModelTest {
         val failureChannel = Channel<DataError>(Channel.UNLIMITED)
         override val failures: Flow<DataError> = failureChannel.receiveAsFlow()
 
-        override fun connect(rawKey: String) { calls += "connect($rawKey)" }
-        override fun refresh() { calls += "refresh" }
-        override fun disconnect() { calls += "disconnect" }
+        override fun connect(rawKey: String) {
+            calls += "connect($rawKey)"
+        }
+
+        override fun refresh() {
+            calls += "refresh"
+        }
+
+        override fun disconnect() {
+            calls += "disconnect"
+        }
     }
 
     private val interactor = RecordingInteractor()

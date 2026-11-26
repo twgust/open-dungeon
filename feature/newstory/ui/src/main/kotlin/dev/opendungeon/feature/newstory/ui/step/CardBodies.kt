@@ -49,7 +49,14 @@ internal fun CastBody(body: StepBody.Cast, onIntent: (WizardIntent) -> Unit) {
         Deck(cardWidth = 286.dp, items = body.people, key = { it.id.value }) { person -> CastCard(person, onIntent) }
         if (body.people.isNotEmpty()) {
             Text(
-                pluralStringResource(R.plurals.wizard_cast_count, body.people.size, body.people.count { it.inStory }, body.people.size),
+                pluralStringResource(
+                    R.plurals.wizard_cast_count,
+                    body.people.size,
+                    body.people.count {
+                        it.inStory
+                    },
+                    body.people.size,
+                ),
                 style = Paper.type.caption,
                 color = Paper.colors.muted,
             )
@@ -63,12 +70,24 @@ private fun CastCard(person: PersonCard, onIntent: (WizardIntent) -> Unit) {
     CharacterCard(label = (person.role ?: stringResource(R.string.wizard_someone)).uppercase()) {
         Column(Modifier.padding(end = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             person.name?.let { Text(it, style = Paper.type.cardName, color = colors.ink) }
-            person.appearance?.let { Text(it, style = Paper.type.cardText.copy(fontSize = 17.sp, fontStyle = FontStyle.Italic), color = colors.lead) }
+            person.appearance?.let {
+                Text(
+                    it,
+                    style = Paper.type.cardText.copy(fontSize = 17.sp, fontStyle = FontStyle.Italic),
+                    color = colors.lead,
+                )
+            }
             HorizontalDivider(color = colors.divider)
             person.lines.forEach { line ->
                 CardLine(stringResource(line.line.labelRes()), labelWidth = 50.dp) {
                     val italic = line.line == CharacterLine.VoiceLine
-                    Text(line.text, style = Paper.type.cardText.copy(fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal), color = colors.ink)
+                    Text(
+                        line.text,
+                        style = Paper.type.cardText.copy(
+                            fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
+                        ),
+                        color = colors.ink,
+                    )
                 }
             }
             when (val secret = person.secret) {
@@ -94,7 +113,9 @@ private fun CastCard(person: PersonCard, onIntent: (WizardIntent) -> Unit) {
 /** The auditioned openings, side by side; one can be chosen once it is written. */
 @Composable
 internal fun AuditionsBody(body: StepBody.Auditions, onIntent: (WizardIntent) -> Unit) {
-    Deck(cardWidth = 300.dp, items = body.auditions, key = { it.id.value }) { audition -> AuditionCard(audition, onIntent) }
+    Deck(cardWidth = 300.dp, items = body.auditions, key = {
+        it.id.value
+    }) { audition -> AuditionCard(audition, onIntent) }
 }
 
 @Composable
@@ -121,7 +142,9 @@ private fun AuditionCard(audition: Audition, onIntent: (WizardIntent) -> Unit) {
         }
         if (audition.canBeChosen) {
             ChoicePill(
-                text = stringResource(if (audition.chosen) R.string.wizard_take_chosen else R.string.wizard_take_choose),
+                text = stringResource(
+                    if (audition.chosen) R.string.wizard_take_chosen else R.string.wizard_take_choose,
+                ),
                 picked = audition.chosen,
                 onClick = { onIntent(WizardIntent.Pick(Choice.Take(audition.id))) },
                 style = Paper.type.pill.copy(fontSize = 17.sp),

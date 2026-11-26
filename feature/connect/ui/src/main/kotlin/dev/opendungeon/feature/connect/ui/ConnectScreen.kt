@@ -32,11 +32,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.opendungeon.core.designsystem.PaperTheme
+import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.KeyInfo
-import dev.opendungeon.core.designsystem.PaperTheme
-import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.feature.connect.domain.Connection
 import dev.opendungeon.feature.connect.domain.Remote
@@ -72,7 +72,11 @@ fun ConnectScreen(
         Box(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             when (connection) {
                 Connection.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                is Connection.Disconnected -> KeyEntry(isValidating = false, error = connection.error, onIntent = onIntent)
+                is Connection.Disconnected -> KeyEntry(
+                    isValidating = false,
+                    error = connection.error,
+                    onIntent = onIntent,
+                )
                 Connection.Validating -> KeyEntry(isValidating = true, error = null, onIntent = onIntent)
                 is Connection.Connected -> Connected(connection, onIntent, onNewStory)
             }
@@ -113,7 +117,9 @@ private fun Connected(connected: Connection.Connected, onIntent: (ConnectIntent)
         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(connected.key.summary(), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             TextButton(onClick = { onIntent(ConnectIntent.Refresh) }) { Text(stringResource(R.string.connect_refresh)) }
-            TextButton(onClick = { onIntent(ConnectIntent.Disconnect) }) { Text(stringResource(R.string.connect_disconnect)) }
+            TextButton(
+                onClick = { onIntent(ConnectIntent.Disconnect) },
+            ) { Text(stringResource(R.string.connect_disconnect)) }
         }
         Button(onClick = onNewStory, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
             Text(stringResource(R.string.connect_new_story))
@@ -128,22 +134,24 @@ private fun Connected(connected: Connection.Connected, onIntent: (ConnectIntent)
 
 @Composable
 private fun ModelList(models: List<AiModel>) {
-    Text(
-        pluralStringResource(R.plurals.connect_model_count, models.size, models.size),
-        style = MaterialTheme.typography.labelLarge,
-    )
-    LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
-        items(models, key = { it.id.value }) { model ->
-            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                Text(model.name, style = MaterialTheme.typography.titleSmall)
-                Text(model.id.value, style = MaterialTheme.typography.bodySmall)
-                Text(
-                    model.supportedParameters.joinToString { it.wireName },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+    Column {
+        Text(
+            pluralStringResource(R.plurals.connect_model_count, models.size, models.size),
+            style = MaterialTheme.typography.labelLarge,
+        )
+        LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
+            items(models, key = { it.id.value }) { model ->
+                Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Text(model.name, style = MaterialTheme.typography.titleSmall)
+                    Text(model.id.value, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        model.supportedParameters.joinToString { it.wireName },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                HorizontalDivider()
             }
-            HorizontalDivider()
         }
     }
 }
@@ -152,9 +160,10 @@ private fun ModelList(models: List<AiModel>) {
 private fun Remote<KeyInfo>.summary(): String = when (this) {
     Remote.Loading -> stringResource(R.string.connect_connected)
     is Remote.Failed -> error.message()
-    is Remote.Loaded -> value.limitRemaining
-        ?.let { stringResource(R.string.connect_key_remaining, value.label, it) }
-        ?: value.label
+    is Remote.Loaded ->
+        value.limitRemaining
+            ?.let { stringResource(R.string.connect_key_remaining, value.label, it) }
+            ?: value.label
 }
 
 @Composable

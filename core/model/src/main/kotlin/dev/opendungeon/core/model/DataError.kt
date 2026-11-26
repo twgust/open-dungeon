@@ -31,10 +31,14 @@ public sealed interface DataError {
     public companion object {
         /** Interprets a non-success status from OpenRouter, with the message from its error envelope. */
         public fun fromHttpStatus(status: Int, message: String): DataError = when (status) {
-            401 -> Unauthorized(message)
-            402 -> InsufficientCredits(message)
-            429 -> RateLimited(message)
+            UNAUTHORIZED -> Unauthorized(message)
+            PAYMENT_REQUIRED -> InsufficientCredits(message)
+            TOO_MANY_REQUESTS -> RateLimited(message)
             else -> Remote(status, message)
         }
+
+        private const val UNAUTHORIZED = 401
+        private const val PAYMENT_REQUIRED = 402
+        private const val TOO_MANY_REQUESTS = 429
     }
 }

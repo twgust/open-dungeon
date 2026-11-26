@@ -16,7 +16,8 @@ public class FirstLinePolicy : StepPolicy {
 
     override val step: CreationStep = CreationStep.FirstLine
 
-    override fun body(draft: StoryDraft): StepBody = StepBody.FirstLine(draft.firstLine, StoryDraft.MAX_FIRST_LINE_LENGTH)
+    override fun body(draft: StoryDraft): StepBody =
+        StepBody.FirstLine(draft.firstLine, StoryDraft.MAX_FIRST_LINE_LENGTH)
 
     override fun canAdvance(draft: StoryDraft): Boolean = true
 

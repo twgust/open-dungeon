@@ -22,7 +22,7 @@ import dev.opendungeon.core.designsystem.PaperTheme
 @Preview(name = "Light", widthDp = 390)
 @Preview(name = "Dark", widthDp = 390, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "Large text", widthDp = 390, fontScale = 2f)
-private annotation class PaperPreviews
+private annotation class PreviewOnPaper
 
 @Composable
 private fun OnPaper(content: @Composable () -> Unit) = PaperTheme {
@@ -34,12 +34,15 @@ private fun OnPaper(content: @Composable () -> Unit) = PaperTheme {
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@PaperPreviews
+@PreviewOnPaper
 @Composable
 private fun SentenceStepPreview() = OnPaper {
     ProgressLine(progress = 0.2f)
     SentenceLead(lead = AnnotatedString("A gothic noir story,"), prompt = "twisted by")
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         ChoicePill("a heist", picked = true, onClick = {})
         ChoicePill("a romance", picked = false, onClick = {})
         ChoicePill("cosmic dread", picked = false, onClick = {})
@@ -53,7 +56,7 @@ private fun SentenceStepPreview() = OnPaper {
     }
 }
 
-@PaperPreviews
+@PreviewOnPaper
 @Composable
 private fun CardPreview() = OnPaper {
     CharacterCard(label = "YOU", onToggleEdit = {}, editLabel = "Edit", doneLabel = "done") {

@@ -143,7 +143,11 @@ class DefaultStoryDraftRepositoryTest {
                     inStory = true,
                 ),
                 CastMember(
-                    character = Character(id = CharacterId("c2"), name = "Father Oszkar", voiceLine = "Kneel, or swim."),
+                    character = Character(
+                        id = CharacterId("c2"),
+                        name = "Father Oszkar",
+                        voiceLine = "Kneel, or swim.",
+                    ),
                     origin = CastMember.Origin.Own,
                     inStory = false,
                 ),

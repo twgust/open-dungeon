@@ -8,8 +8,4 @@ import kotlinx.serialization.json.JsonObject
 public data class ErrorResponseDto(val error: ErrorDto)
 
 @Serializable
-public data class ErrorDto(
-    val code: Int? = null,
-    val message: String = "",
-    val metadata: JsonObject? = null,
-)
+public data class ErrorDto(val code: Int? = null, val message: String = "", val metadata: JsonObject? = null)

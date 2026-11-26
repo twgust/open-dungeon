@@ -19,9 +19,13 @@ public class DefaultStoryDraftRepository(private val dao: StoryDraftDao) : Story
 
     override suspend fun openDraft(): Outcome<StoryDraft?, StorageError> = storage { dao.first()?.toDomain() }
 
-    override suspend fun draft(id: DraftId): Outcome<StoryDraft?, StorageError> = storage { dao.get(id.value)?.toDomain() }
+    override suspend fun draft(id: DraftId): Outcome<StoryDraft?, StorageError> = storage {
+        dao.get(id.value)?.toDomain()
+    }
 
-    override suspend fun save(draft: StoryDraft): Outcome<Unit, StorageError> = storage { dao.replaceAll(draft.toStored()) }
+    override suspend fun save(draft: StoryDraft): Outcome<Unit, StorageError> = storage {
+        dao.replaceAll(draft.toStored())
+    }
 
     override suspend fun discard(id: DraftId): Outcome<Unit, StorageError> = storage { dao.delete(id.value) }
 

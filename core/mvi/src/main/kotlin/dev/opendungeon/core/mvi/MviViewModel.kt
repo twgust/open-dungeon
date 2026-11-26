@@ -21,9 +21,7 @@ import kotlinx.coroutines.flow.update
  * so concurrent work cannot lose updates. There is deliberately no way to read the current state from
  * a subclass: deciding what is allowed from it is business logic, and that belongs in an interactor.
  */
-public abstract class MviViewModel<State : Any, Intent : Any, Effect : Any>(
-    initialState: State,
-) : ViewModel() {
+public abstract class MviViewModel<State : Any, Intent : Any, Effect : Any>(initialState: State) : ViewModel() {
 
     private val mutableState = MutableStateFlow(initialState)
     public val state: StateFlow<State> = mutableState.asStateFlow()

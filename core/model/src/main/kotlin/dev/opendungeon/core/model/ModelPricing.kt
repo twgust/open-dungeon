@@ -17,8 +17,5 @@ public sealed interface ModelPricing {
 
     public data object Free : ModelPricing
 
-    public data class Metered(
-        val promptPerToken: BigDecimal,
-        val completionPerToken: BigDecimal,
-    ) : ModelPricing
+    public data class Metered(val promptPerToken: BigDecimal, val completionPerToken: BigDecimal) : ModelPricing
 }

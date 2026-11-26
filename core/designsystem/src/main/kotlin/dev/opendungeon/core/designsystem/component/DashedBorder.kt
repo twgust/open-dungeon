@@ -16,7 +16,11 @@ public fun Modifier.dashedBorder(color: Color, shape: Shape): Modifier = drawWit
     drawContent()
     val width = 1.dp.toPx()
     val inset = width / 2
-    val outline = shape.createOutline(size.copy(width = size.width - width, height = size.height - width), layoutDirection, this)
+    val outline = shape.createOutline(
+        size.copy(width = size.width - width, height = size.height - width),
+        layoutDirection,
+        this,
+    )
     val path = Path().apply {
         addOutline(outline)
         translate(Offset(inset, inset))

@@ -75,7 +75,10 @@ public class StarringPolicy(
         return draft.copy(protagonist = you.with(line, rollChoice(list, avoiding = listOfNotNull(you[line])).single()))
     }
 
-    private fun dealCard(): Character = CARD_LINES.entries.fold(Character(id = CharacterId(ids.next()))) { card, (line, list) ->
+    private fun dealCard(): Character = CARD_LINES.entries.fold(Character(id = CharacterId(ids.next()))) {
+        card,
+        (line, list),
+        ->
         card.with(line, rollChoice(list).single())
     }
 

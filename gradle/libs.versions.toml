@@ -6,6 +6,12 @@ metro = "1.6.0"
 ksp = "2.3.14"
 jvmTarget = "21"
 
+# Quality gates
+detekt = "2.0.0-alpha.6"
+ktlint = "1.8.0"
+ktlint-gradle = "14.2.0"
+compose-rules = "0.6.8"
+
 # Android SDK
 compileSdk = "37"
 compileSdkMinor = "2"
@@ -88,6 +94,9 @@ android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 compose-gradle-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 metro-gradle-plugin = { module = "dev.zacsweers.metro:gradle-plugin", version.ref = "metro" }
+detekt-gradle-plugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+ktlint-gradle-plugin = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint-gradle" }
+compose-rules-ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "compose-rules" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -98,6 +107,8 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 androidx-room = { id = "androidx.room", version.ref = "androidx-room" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle" }
 
 # Convention plugins (build-logic)
 opendungeon-android-application = { id = "opendungeon.android.application" }

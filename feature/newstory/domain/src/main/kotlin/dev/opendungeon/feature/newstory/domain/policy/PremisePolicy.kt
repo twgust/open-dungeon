@@ -36,6 +36,5 @@ public class PremisePolicy : StepPolicy {
         (edit as? DraftEdit.Premise)?.let { draft.withPremise(it.text) }
 
     /** Any edit makes the premise the player's own words, even one that started as a generated one. Blank clears it. */
-    private fun StoryDraft.withPremise(text: String) =
-        copy(premise = text.takeIf(String::isNotBlank)?.let(Phrase::Own))
+    private fun StoryDraft.withPremise(text: String) = copy(premise = text.takeIf(String::isNotBlank)?.let(Phrase::Own))
 }

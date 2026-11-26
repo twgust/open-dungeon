@@ -13,7 +13,9 @@ class KoogMappersTest {
 
     @Test
     fun `capabilities follow supported parameters`() {
-        val toolCaller = aiModel(parameters = setOf("tools", "tool_choice", "structured_outputs", "temperature")).toLLModel()
+        val toolCaller = aiModel(
+            parameters = setOf("tools", "tool_choice", "structured_outputs", "temperature"),
+        ).toLLModel()
         val plain = aiModel(parameters = setOf("max_tokens")).toLLModel()
 
         assertTrue(toolCaller.supports(LLMCapability.Tools))
@@ -29,7 +31,8 @@ class KoogMappersTest {
 
     @Test
     fun `unsupported sampling values are dropped, supported ones kept`() {
-        val sampling = Sampling(temperature = 1.1, topP = 0.9, topK = 50, minP = 0.05, repetitionPenalty = 1.1, seed = 3)
+        val sampling =
+            Sampling(temperature = 1.1, topP = 0.9, topK = 50, minP = 0.05, repetitionPenalty = 1.1, seed = 3)
 
         val params = sampling.toOpenRouterParams(
             model = aiModel(parameters = setOf("temperature", "min_p")),

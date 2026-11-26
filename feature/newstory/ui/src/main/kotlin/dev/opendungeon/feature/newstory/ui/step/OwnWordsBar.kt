@@ -55,12 +55,19 @@ internal fun OwnWordsBar(step: CreationStep, onUse: (String) -> Unit, modifier: 
             open = false
         }
     }
-    Box(modifier.fillMaxWidth().heightIn(min = 60.dp).padding(horizontal = 24.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier.fillMaxWidth().heightIn(min = 60.dp).padding(horizontal = 24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
         AnimatedContent(open, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "own words") { writing ->
             if (writing) {
                 val focus = remember { FocusRequester() }
                 LaunchedEffect(Unit) { focus.requestFocus() }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     PaperField(
                         state = words,
                         label = label,
@@ -72,8 +79,16 @@ internal fun OwnWordsBar(step: CreationStep, onUse: (String) -> Unit, modifier: 
                         onKeyboardAction = use,
                         modifier = Modifier.weight(1f).focusRequester(focus),
                     )
-                    GhostIconButton(PaperIcons.Close, stringResource(R.string.wizard_own_cancel), onClick = { open = false }, iconSize = 16)
-                    GhostTextButton(stringResource(R.string.wizard_own_use), onClick = use, emphasised = true, enabled = words.text.isNotBlank())
+                    GhostIconButton(PaperIcons.Close, stringResource(R.string.wizard_own_cancel), onClick = {
+                        open =
+                            false
+                    }, iconSize = 16)
+                    GhostTextButton(
+                        stringResource(R.string.wizard_own_use),
+                        onClick = use,
+                        emphasised = true,
+                        enabled = words.text.isNotBlank(),
+                    )
                 }
             } else {
                 OwnPill(label, onClick = { open = true })

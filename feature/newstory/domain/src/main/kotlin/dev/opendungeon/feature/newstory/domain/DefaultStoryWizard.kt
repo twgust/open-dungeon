@@ -64,6 +64,7 @@ internal class DefaultStoryWizard(
     private val actions = Channel<suspend () -> Unit>(Channel.UNLIMITED)
 
     // Read and written by the action loop only, so they need no locking.
+
     /** The draft on screen. */
     private var draft: StoryDraft? = null
 
@@ -193,6 +194,7 @@ internal class DefaultStoryWizard(
      * throw here is a bug in a rule, never an expected failure (those come back typed), so it is reported
      * as [WizardFailure.Unexpected] with its cause, and the verb is taken back.
      */
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun runIsolated(action: suspend () -> Unit) {
         val draftBefore = draft
         val stateBefore = mutableState.value
@@ -255,7 +257,11 @@ internal class DefaultStoryWizard(
         CreationStep.Genre, CreationStep.Premise, CreationStep.Cast, CreationStep.FirstTurn -> Sentence.Empty
         CreationStep.Twist, CreationStep.Starring, CreationStep.Tone, CreationStep.Setting ->
             sentences.story(draft, before = draft.step, ending = SentenceBuilder.Ending.Comma)
-        CreationStep.Limits -> sentences.story(draft, before = CreationStep.Limits, ending = SentenceBuilder.Ending.Period)
+        CreationStep.Limits -> sentences.story(
+            draft,
+            before = CreationStep.Limits,
+            ending = SentenceBuilder.Ending.Period,
+        )
         CreationStep.FirstLine -> sentences.cast(draft)
     }
 
@@ -273,5 +279,6 @@ public class DefaultStoryWizardFactory(
     private val sentences: SentenceBuilder,
     private val ids: IdGenerator,
 ) : StoryWizard.Factory {
-    override fun create(scope: CoroutineScope): StoryWizard = DefaultStoryWizard(scope, repository, policies, sentences, ids)
+    override fun create(scope: CoroutineScope): StoryWizard =
+        DefaultStoryWizard(scope, repository, policies, sentences, ids)
 }

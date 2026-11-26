@@ -37,7 +37,11 @@ internal fun PremiseBody(body: StepBody.Premise, onIntent: (WizardIntent) -> Uni
 @Composable
 internal fun FirstLineBody(body: StepBody.FirstLine, onIntent: (WizardIntent) -> Unit) {
     val text = rememberEditedText(body.text) { onIntent(WizardIntent.Edit(DraftEdit.FirstLine(it))) }
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         PaperField(
             state = text,
             label = stringResource(R.string.wizard_first_line_label),

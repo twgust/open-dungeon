@@ -48,11 +48,12 @@ public val OpenRouterJson: Json = Json {
  * headers on every request, and the connect timeout. Status codes are left to the caller, so error bodies
  * can be read. Callers specialise it with [HttpClient.config], which shares the engine.
  */
-public fun openRouterBaseClient(engine: HttpClientEngine, attribution: AppAttribution): HttpClient = HttpClient(engine) {
-    expectSuccess = false
-    install(attributionHeaders(attribution))
-    install(HttpTimeout) { connectTimeoutMillis = OpenRouter.ConnectTimeout.inWholeMilliseconds }
-}
+public fun openRouterBaseClient(engine: HttpClientEngine, attribution: AppAttribution): HttpClient =
+    HttpClient(engine) {
+        expectSuccess = false
+        install(attributionHeaders(attribution))
+        install(HttpTimeout) { connectTimeoutMillis = OpenRouter.ConnectTimeout.inWholeMilliseconds }
+    }
 
 /** [this] client set up for the REST endpoints: JSON bodies, relative paths and the REST timeout. */
 internal fun HttpClient.forRest(): HttpClient = config {

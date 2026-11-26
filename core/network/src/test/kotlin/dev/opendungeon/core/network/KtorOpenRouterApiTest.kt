@@ -41,10 +41,23 @@ class KtorOpenRouterApiTest {
 
     @Test
     fun `lists models for the key with auth, attribution and paging`() = runTest {
-        val result = api { json(fixture("models_user_page.json")) }.listModelsForKey(apiKey, offset = 1000, limit = 1000)
+        val result = api {
+            json(
+                fixture("models_user_page.json"),
+            )
+        }.listModelsForKey(apiKey, offset = 1000, limit = 1000)
 
         val page = assertIs<Outcome.Success<ModelsPageDto>>(result).value
-        assertEquals(listOf("upstage/solar-mini-4-5", "~unbiased/pareto-latest", "inclusionai/ling-3.2-flash:free"), page.data.map { it.id })
+        assertEquals(
+            listOf(
+                "upstage/solar-mini-4-5",
+                "~unbiased/pareto-latest",
+                "inclusionai/ling-3.2-flash:free",
+            ),
+            page.data.map {
+                it.id
+            },
+        )
         assertNull(page.links?.next)
         assertEquals("medium", page.data.first().reasoning?.defaultEffort)
 
@@ -57,7 +70,8 @@ class KtorOpenRouterApiTest {
 
     @Test
     fun `unwraps the current key envelope`() = runTest {
-        val body = """{"data":{"label":"sk-or-v1-ab…","is_free_tier":false,"usage":1.5,"limit":10,"limit_remaining":8.5,"new_field":true}}"""
+        val body = """{"data":{"label":"sk-or-v1-ab…","is_free_tier":false,"usage":1.5,"limit":10,""" +
+            """"limit_remaining":8.5,"new_field":true}}"""
         val result = api { json(body) }.getCurrentKey(apiKey)
 
         val key = assertIs<Outcome.Success<CurrentKeyDto>>(result).value

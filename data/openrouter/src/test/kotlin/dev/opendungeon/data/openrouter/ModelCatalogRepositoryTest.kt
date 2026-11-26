@@ -32,7 +32,9 @@ class ModelCatalogRepositoryTest {
         val fullPage = List(OpenRouterApi.MAX_PAGE_SIZE) { model("a/$it") }
         val api = FakeOpenRouterApi(pages = { offset ->
             when (offset) {
-                0 -> Outcome.Success(ModelsPageDto(fullPage, links = PageLinksDto(next = "/api/v1/models/user?offset=1000")))
+                0 -> Outcome.Success(
+                    ModelsPageDto(fullPage, links = PageLinksDto(next = "/api/v1/models/user?offset=1000")),
+                )
                 1000 -> Outcome.Success(ModelsPageDto(listOf(model("b/last")), links = PageLinksDto(next = null)))
                 else -> error("unexpected offset $offset")
             }
@@ -101,7 +103,10 @@ class ModelCatalogRepositoryTest {
     @Test
     fun `a next link that never ends fails instead of looping`() = runTest {
         val fullPage = List(OpenRouterApi.MAX_PAGE_SIZE) { model("a/$it") }
-        val api = FakeOpenRouterApi(pages = { Outcome.Success(ModelsPageDto(fullPage, links = PageLinksDto(next = "/again"))) })
+        val api =
+            FakeOpenRouterApi(pages = {
+                Outcome.Success(ModelsPageDto(fullPage, links = PageLinksDto(next = "/again")))
+            })
 
         val result = DefaultModelCatalogRepository(api, FakeApiKeyStore(VALID_KEY)).fetchModels()
 

@@ -33,7 +33,10 @@ class OtherPoliciesTest {
         val violence = limits.select(desire.draft, Choice.Violence(ContentLimits.Violence.Offstage))!!
         val noted = limits.submitOwn(violence.draft, "  no harm to animals ")
 
-        assertEquals(ContentLimits(ContentLimits.Desire.AllTheWay, ContentLimits.Violence.Offstage, "no harm to animals"), noted.draft.limits)
+        assertEquals(
+            ContentLimits(ContentLimits.Desire.AllTheWay, ContentLimits.Violence.Offstage, "no harm to animals"),
+            noted.draft.limits,
+        )
         assertFalse(desire.advance || violence.advance || noted.advance)
         assertNull(limits.edit(noted.draft, DraftEdit.LimitsNote(" ")).let { it!!.limits.note })
         assertTrue(limits.canAdvance(emptyDraft))
@@ -44,18 +47,26 @@ class OtherPoliciesTest {
         val premise = PremisePolicy()
         assertFalse(premise.canAdvance(emptyDraft))
 
-        val written = premise.edit(emptyDraft.copy(premise = Phrase.Offered("A bell rings.")), DraftEdit.Premise("A bell rings twice. "))!!
+        val written = premise.edit(
+            emptyDraft.copy(premise = Phrase.Offered("A bell rings.")),
+            DraftEdit.Premise("A bell rings twice. "),
+        )!!
 
         assertEquals(Phrase.Own("A bell rings twice. "), written.premise, "a field mid-sentence keeps its space")
         assertTrue(premise.canAdvance(written))
         assertNull(premise.edit(written, DraftEdit.Premise("  ")).let { it!!.premise }, "blank clears it")
-        assertEquals(Phrase.Own("A bell."), premise.submitOwn(emptyDraft, "  A bell.  ").draft.premise, "submitted words are tidied")
+        assertEquals(
+            Phrase.Own("A bell."),
+            premise.submitOwn(emptyDraft, "  A bell.  ").draft.premise,
+            "submitted words are tidied",
+        )
     }
 
     @Test
     fun `cast members go in and out of the story, and one must be in`() {
         val cast = CastPolicy()
-        val maren = CastMember(Character(CharacterId("maren"), name = "Maren"), CastMember.Origin.Offered, inStory = false)
+        val maren =
+            CastMember(Character(CharacterId("maren"), name = "Maren"), CastMember.Origin.Offered, inStory = false)
         val draft = emptyDraft.copy(cast = listOf(maren))
         assertFalse(cast.canAdvance(draft))
 
@@ -85,7 +96,10 @@ class OtherPoliciesTest {
         assertEquals(ShownSecret.Sealed, card.secret)
         assertFalse("She sold them herself." in body.toString())
         assertEquals(
-            listOf(ShownLine(CharacterLine.Wants, "Her mother's bones back."), ShownLine(CharacterLine.VoiceLine, "Count it again.")),
+            listOf(
+                ShownLine(CharacterLine.Wants, "Her mother's bones back."),
+                ShownLine(CharacterLine.VoiceLine, "Count it again."),
+            ),
             card.lines,
         )
         assertTrue(card.inStory)
@@ -127,7 +141,8 @@ class OtherPoliciesTest {
             Take(TakeId("c"), ModelId("m/three"), "The", Take.State.Interrupted),
         )
 
-        val body = assertIs<StepBody.Auditions>(firstTurn.body(emptyDraft.copy(takes = takes, chosenTake = TakeId("a"))))
+        val body =
+            assertIs<StepBody.Auditions>(firstTurn.body(emptyDraft.copy(takes = takes, chosenTake = TakeId("a"))))
 
         assertEquals(listOf(true, false, false), body.auditions.map { it.chosen })
         assertEquals(listOf(true, false, false), body.auditions.map { it.canBeChosen })

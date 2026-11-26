@@ -1,10 +1,13 @@
 package dev.opendungeon.feature.newstory.domain
 
 import app.cash.turbine.test
+import dev.opendungeon.domain.story.CharacterLine
+import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DefaultSentenceBuilder
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Phrase
+import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.feature.newstory.domain.policy.CastPolicy
 import dev.opendungeon.feature.newstory.domain.policy.FirstLinePolicy
@@ -16,9 +19,6 @@ import dev.opendungeon.feature.newstory.domain.policy.SettingPolicy
 import dev.opendungeon.feature.newstory.domain.policy.StarringPolicy
 import dev.opendungeon.feature.newstory.domain.policy.TonePolicy
 import dev.opendungeon.feature.newstory.domain.policy.TwistPolicy
-import dev.opendungeon.domain.story.CharacterLine
-import dev.opendungeon.domain.story.ContentLimits
-import dev.opendungeon.domain.story.StorageError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -54,8 +54,11 @@ class DefaultStoryWizardTest {
         FirstTurnPolicy(),
     )
 
-    private fun wizard(scope: CoroutineScope, repository: InMemoryDraftRepository, policies: Set<StepPolicy> = this.policies) =
-        DefaultStoryWizard(scope, repository, policies, DefaultSentenceBuilder(), CountingIds("draft"))
+    private fun wizard(
+        scope: CoroutineScope,
+        repository: InMemoryDraftRepository,
+        policies: Set<StepPolicy> = this.policies,
+    ) = DefaultStoryWizard(scope, repository, policies, DefaultSentenceBuilder(), CountingIds("draft"))
 
     private suspend fun StoryWizard.current(): WizardState = state.filterNotNull().first()
 
@@ -166,7 +169,8 @@ class DefaultStoryWizardTest {
 
     @Test
     fun `the last step never offers a next that leads nowhere`() = runTest(UnconfinedTestDispatcher()) {
-        val wizard = wizard(backgroundScope, InMemoryDraftRepository(StoryDraft(DraftId("d"), step = CreationStep.FirstTurn)))
+        val wizard =
+            wizard(backgroundScope, InMemoryDraftRepository(StoryDraft(DraftId("d"), step = CreationStep.FirstTurn)))
 
         wizard.start()
         wizard.next()
@@ -272,27 +276,28 @@ class DefaultStoryWizardTest {
     }
 
     @Test
-    fun `typing that cannot be saved stays on screen and goes with the next save`() = runTest(UnconfinedTestDispatcher()) {
-        val repository = InMemoryDraftRepository(StoryDraft(DraftId("d"), step = CreationStep.Premise))
-        val wizard = wizard(backgroundScope, repository)
-        wizard.start()
+    fun `typing that cannot be saved stays on screen and goes with the next save`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val repository = InMemoryDraftRepository(StoryDraft(DraftId("d"), step = CreationStep.Premise))
+            val wizard = wizard(backgroundScope, repository)
+            wizard.start()
 
-        wizard.outcomes.test {
-            repository.failSaves = 1
-            wizard.edit(DraftEdit.Premise("A bell"))
-            advanceTimeBy(DefaultStoryWizard.TYPING_SETTLES)
-            runCurrent()
+            wizard.outcomes.test {
+                repository.failSaves = 1
+                wizard.edit(DraftEdit.Premise("A bell"))
+                advanceTimeBy(DefaultStoryWizard.TYPING_SETTLES)
+                runCurrent()
 
-            assertEquals(WizardOutcome.Failed(WizardFailure.Storage(StorageError.Full)), awaitItem())
+                assertEquals(WizardOutcome.Failed(WizardFailure.Storage(StorageError.Full)), awaitItem())
+            }
+            assertEquals(StepBody.Premise("A bell", own = true), wizard.current().body, "typing is never taken back")
+            assertNull(repository.stored.premise)
+
+            wizard.next()
+
+            assertEquals(Phrase.Own("A bell"), repository.stored.premise)
+            assertEquals(CreationStep.Cast, repository.stored.step)
         }
-        assertEquals(StepBody.Premise("A bell", own = true), wizard.current().body, "typing is never taken back")
-        assertNull(repository.stored.premise)
-
-        wizard.next()
-
-        assertEquals(Phrase.Own("A bell"), repository.stored.premise)
-        assertEquals(CreationStep.Cast, repository.stored.step)
-    }
 
     @Test
     fun `typing still unsaved when the screen goes is saved on the way out`() = runTest(UnconfinedTestDispatcher()) {

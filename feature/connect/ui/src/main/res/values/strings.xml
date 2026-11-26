@@ -22,6 +22,6 @@
     <string name="error_key_storage">Couldn\'t store the key</string>
     <string name="error_unauthorized">Key rejected</string>
     <string name="error_insufficient_credits">Out of credits</string>
-    <string name="error_rate_limited">Rate limited. Try again shortly</string>
+    <string name="error_rate_limited">Rate limited</string>
     <string name="error_remote">OpenRouter error %1$d</string>
 </resources>

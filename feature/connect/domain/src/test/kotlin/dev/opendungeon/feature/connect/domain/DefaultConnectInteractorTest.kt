@@ -20,7 +20,8 @@ import kotlin.test.assertIs
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultConnectInteractorTest {
 
-    private val keyInfo = KeyInfo(label = "story key", isFreeTier = false, usage = 0.0, limit = null, limitRemaining = null)
+    private val keyInfo =
+        KeyInfo(label = "story key", isFreeTier = false, usage = 0.0, limit = null, limitRemaining = null)
 
     /** An account whose answers a test can hold back with [connectAnswer] or change between calls. */
     private inner class FakeAccount(connected: Boolean = false) : OpenRouterAccountRepository {
@@ -48,7 +49,8 @@ class DefaultConnectInteractorTest {
         val answers = ArrayDeque<CompletableDeferred<Outcome<List<AiModel>, DataError>>>()
         var autoAnswer: Outcome<List<AiModel>, DataError>? = Outcome.Success(emptyList())
 
-        fun hold(): CompletableDeferred<Outcome<List<AiModel>, DataError>> = CompletableDeferred<Outcome<List<AiModel>, DataError>>().also(answers::addLast)
+        fun hold(): CompletableDeferred<Outcome<List<AiModel>, DataError>> =
+            CompletableDeferred<Outcome<List<AiModel>, DataError>>().also(answers::addLast)
 
         override suspend fun fetchModels(): Outcome<List<AiModel>, DataError> =
             answers.removeFirstOrNull()?.await() ?: requireNotNull(autoAnswer)
@@ -79,25 +81,29 @@ class DefaultConnectInteractorTest {
     }
 
     @Test
-    fun `checking starts at once, and a second submit while checking is ignored`() = runTest(UnconfinedTestDispatcher()) {
-        val account = FakeAccount().apply { connectAnswer = CompletableDeferred() }
-        val interactor = interactor(account)
+    fun `checking starts at once, and a second submit while checking is ignored`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val account = FakeAccount().apply { connectAnswer = CompletableDeferred() }
+            val interactor = interactor(account)
 
-        interactor.connect("key")
-        assertEquals(Connection.Validating, interactor.state.value)
-        interactor.connect("key")
+            interactor.connect("key")
+            assertEquals(Connection.Validating, interactor.state.value)
+            interactor.connect("key")
 
-        assertEquals(1, account.connects)
-        account.connectAnswer?.complete(Outcome.Success(keyInfo))
-        assertEquals(loaded, interactor.state.value)
-    }
+            assertEquals(1, account.connects)
+            account.connectAnswer?.complete(Outcome.Success(keyInfo))
+            assertEquals(loaded, interactor.state.value)
+        }
 
     @Test
     fun `a catalog that fails leaves the key details in place`() = runTest(UnconfinedTestDispatcher()) {
         val catalog = HeldCatalog().apply { autoAnswer = Outcome.Failure(DataError.Network) }
         val interactor = interactor(FakeAccount(connected = true), catalog)
 
-        assertEquals(Connection.Connected(Remote.Loaded(keyInfo), Remote.Failed(DataError.Network)), interactor.state.value)
+        assertEquals(
+            Connection.Connected(Remote.Loaded(keyInfo), Remote.Failed(DataError.Network)),
+            interactor.state.value,
+        )
     }
 
     @Test
@@ -108,7 +114,11 @@ class DefaultConnectInteractorTest {
         val interactor = interactor(FakeAccount(connected = true), catalog)
 
         interactor.refresh()
-        assertEquals(Connection.Connected(Remote.Loading, Remote.Loading), interactor.state.value, "a refresh shows at once")
+        assertEquals(
+            Connection.Connected(Remote.Loading, Remote.Loading),
+            interactor.state.value,
+            "a refresh shows at once",
+        )
         second.complete(Outcome.Success(emptyList()))
         first.complete(Outcome.Failure(DataError.Network))
 
@@ -134,17 +144,20 @@ class DefaultConnectInteractorTest {
     }
 
     @Test
-    fun `a key the device cannot remove comes back, and the failure is reported`() = runTest(UnconfinedTestDispatcher()) {
-        val account = FakeAccount(connected = true).apply { disconnectResult = Outcome.Failure(DataError.KeyStorage) }
-        val interactor = interactor(account)
+    fun `a key the device cannot remove comes back, and the failure is reported`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val account = FakeAccount(connected = true).apply {
+                disconnectResult = Outcome.Failure(DataError.KeyStorage)
+            }
+            val interactor = interactor(account)
 
-        interactor.failures.test {
-            interactor.disconnect()
+            interactor.failures.test {
+                interactor.disconnect()
 
-            assertEquals(DataError.KeyStorage, awaitItem())
+                assertEquals(DataError.KeyStorage, awaitItem())
+            }
+            assertEquals(loaded, interactor.state.value)
         }
-        assertEquals(loaded, interactor.state.value)
-    }
 
     @Test
     fun `a key removed elsewhere returns to key entry`() = runTest(UnconfinedTestDispatcher()) {

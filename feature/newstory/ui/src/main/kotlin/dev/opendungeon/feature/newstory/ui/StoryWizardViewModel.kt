@@ -22,7 +22,8 @@ import kotlinx.coroutines.flow.onEach
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) : MviViewModel<WizardUiState, WizardIntent, WizardEffect>(WizardUiState.Loading) {
+class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) :
+    MviViewModel<WizardUiState, WizardIntent, WizardEffect>(WizardUiState.Loading) {
 
     private val wizard = wizardFactory.create(viewModelScope)
 

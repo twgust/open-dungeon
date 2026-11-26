@@ -11,7 +11,11 @@ public interface RollChoice {
      * Picks [count] different words from [list]. Words in [avoiding] are only picked when the list has
      * too few others, so a reroll always changes what is on screen when it can.
      */
-    public operator fun invoke(list: VocabularyList, count: Int = 1, avoiding: Collection<String> = emptyList()): List<String>
+    public operator fun invoke(
+        list: VocabularyList,
+        count: Int = 1,
+        avoiding: Collection<String> = emptyList(),
+    ): List<String>
 }
 
 @ContributesBinding(AppScope::class)

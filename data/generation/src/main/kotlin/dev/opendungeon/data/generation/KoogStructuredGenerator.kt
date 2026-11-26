@@ -46,7 +46,11 @@ public class KoogStructuredGenerator(
             id = request.serializer.descriptor.serialName.substringAfterLast('.'),
             serializer = request.serializer,
             json = OpenRouterJson,
-            schemaGenerator = if (native) executor.getStandardJsonSchemaGenerator(model) else StandardJsonSchemaGenerator,
+            schemaGenerator = if (native) {
+                executor.getStandardJsonSchemaGenerator(model)
+            } else {
+                StandardJsonSchemaGenerator
+            },
             descriptionOverrides = request.descriptions,
             examples = request.examples,
         )
@@ -64,9 +68,9 @@ public class KoogStructuredGenerator(
             )
         } catch (e: LLMClientException) {
             // Koog surfaces transport and HTTP failures as exceptions from the request itself.
-            return Outcome.Failure(e.toGenerationErrorOrNull() ?: throw e)
+            return failureOf(e)
         } catch (e: KoogHttpClientException) {
-            return Outcome.Failure(e.toGenerationErrorOrNull() ?: throw e)
+            return failureOf(e)
         }
         return result.fold(
             onSuccess = { Outcome.Success(it.data) },
@@ -77,6 +81,10 @@ public class KoogStructuredGenerator(
             },
         )
     }
+
+    /** A failure Koog raised from the request; one that maps to no [GenerationError] is a bug and is rethrown. */
+    private fun failureOf(e: Exception): Outcome.Failure<GenerationError> =
+        Outcome.Failure(e.toGenerationErrorOrNull() ?: throw e)
 
     /**
      * A parse failure, direct or after the fixing parser gave up (it wraps the last

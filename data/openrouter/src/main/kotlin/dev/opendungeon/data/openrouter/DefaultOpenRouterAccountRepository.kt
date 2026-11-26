@@ -20,10 +20,8 @@ import java.io.IOException
 /** Validates keys with `GET /key` and keeps accepted ones in the [ApiKeyStore]. */
 @Inject
 @ContributesBinding(AppScope::class)
-public class DefaultOpenRouterAccountRepository(
-    private val api: OpenRouterApi,
-    private val store: ApiKeyStore,
-) : OpenRouterAccountRepository {
+public class DefaultOpenRouterAccountRepository(private val api: OpenRouterApi, private val store: ApiKeyStore) :
+    OpenRouterAccountRepository {
 
     override val isConnected: Flow<Boolean> = store.apiKey.map { it != null }.distinctUntilChanged()
 

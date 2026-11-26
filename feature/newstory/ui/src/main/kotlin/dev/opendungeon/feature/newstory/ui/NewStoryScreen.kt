@@ -99,7 +99,11 @@ fun NewStoryScreen(
 }
 
 /** The words for each failure, read while composing so effects can show them later. */
-private class FailureMessages(private val storageFull: String, private val storage: String, private val unexpected: String) {
+private class FailureMessages(
+    private val storageFull: String,
+    private val storage: String,
+    private val unexpected: String,
+) {
     fun of(failure: WizardFailure): String = when (failure) {
         is WizardFailure.Storage -> when (failure.error) {
             StorageError.Full -> storageFull
@@ -119,9 +123,14 @@ private fun failureMessages() = FailureMessages(
 @Composable
 private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) -> Unit) {
     ProgressLine(progress = state.progress)
-    Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         if (state.controls.canGoBack) {
-            GhostIconButton(PaperIcons.Back, stringResource(R.string.wizard_back), onClick = { onIntent(WizardIntent.Back) })
+            GhostIconButton(PaperIcons.Back, stringResource(R.string.wizard_back), onClick = {
+                onIntent(WizardIntent.Back)
+            })
         }
     }
     StepTransition(state = state, stepOf = WizardState::step, modifier = Modifier.weight(1f)) { shown ->
@@ -196,19 +205,32 @@ internal data class StepCopy(
 )
 
 internal fun stepCopy(step: CreationStep): StepCopy = when (step) {
-    CreationStep.Genre -> StepCopy(R.string.wizard_prompt_genre, lead = R.string.wizard_lead_genre, ownHint = R.string.wizard_own_hint_genre)
+    CreationStep.Genre -> StepCopy(
+        R.string.wizard_prompt_genre,
+        lead = R.string.wizard_lead_genre,
+        ownHint = R.string.wizard_own_hint_genre,
+    )
     CreationStep.Twist -> StepCopy(R.string.wizard_prompt_twist, ownHint = R.string.wizard_own_hint_twist)
     CreationStep.Starring -> StepCopy(R.string.wizard_prompt_starring, topPadding = 32.dp)
     CreationStep.Tone -> StepCopy(R.string.wizard_prompt_tone, ownHint = R.string.wizard_own_hint_tone)
     CreationStep.Setting -> StepCopy(R.string.wizard_prompt_setting, ownHint = R.string.wizard_own_hint_setting)
-    CreationStep.Limits -> StepCopy(R.string.wizard_prompt_limits, ownLabel = R.string.wizard_own_limits, ownHint = R.string.wizard_own_hint_limits)
+    CreationStep.Limits -> StepCopy(
+        R.string.wizard_prompt_limits,
+        ownLabel = R.string.wizard_own_limits,
+        ownHint = R.string.wizard_own_hint_limits,
+    )
     CreationStep.Premise -> StepCopy(
         R.string.wizard_prompt_premise,
         ownLabel = R.string.wizard_own_premise,
         ownHint = R.string.wizard_own_hint_premise,
         die = R.string.wizard_die_premise,
     )
-    CreationStep.Cast -> StepCopy(R.string.wizard_prompt_cast, ownLabel = R.string.wizard_own_cast, die = R.string.wizard_die_cast, topPadding = 24.dp)
+    CreationStep.Cast -> StepCopy(
+        R.string.wizard_prompt_cast,
+        ownLabel = R.string.wizard_own_cast,
+        die = R.string.wizard_die_cast,
+        topPadding = 24.dp,
+    )
     CreationStep.FirstLine -> StepCopy(R.string.wizard_prompt_first_line)
     CreationStep.FirstTurn -> StepCopy(R.string.wizard_prompt_first_turn, topPadding = 20.dp)
 }

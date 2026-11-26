@@ -66,7 +66,18 @@ public data class Character(
 
 /** The editable text lines of a [Character]. The secret is deliberately not one of them. */
 public enum class CharacterLine {
-    Role, Name, Age, Gender, Appearance, Personality, Speech, VoiceLine, Wants, Flaw, Habit, GoodAt,
+    Role,
+    Name,
+    Age,
+    Gender,
+    Appearance,
+    Personality,
+    Speech,
+    VoiceLine,
+    Wants,
+    Flaw,
+    Habit,
+    GoodAt,
 }
 
 /** What a character hides. A [Sealed] secret is never shown to the player; only story prompts read it. */

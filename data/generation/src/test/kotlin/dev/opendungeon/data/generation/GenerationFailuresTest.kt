@@ -19,8 +19,10 @@ import kotlin.test.assertNull
 
 class GenerationFailuresTest {
 
-    private fun koog(cause: Throwable? = null, status: Int? = null, body: String? = null) =
-        LLMClientException("OpenRouter", cause = KoogHttpClientException("OpenRouter", statusCode = status, errorBody = body, cause = cause))
+    private fun koog(cause: Throwable? = null, status: Int? = null, body: String? = null) = LLMClientException(
+        "OpenRouter",
+        cause = KoogHttpClientException("OpenRouter", statusCode = status, errorBody = body, cause = cause),
+    )
 
     @Test
     fun `a status reads the envelope's message, or the raw body when there is none`() {
@@ -37,7 +39,10 @@ class GenerationFailuresTest {
     @Test
     fun `transport and decoding failures are named for what they are`() {
         assertEquals(GenerationError.Access(DataError.Network), koog(IOException("reset")).toGenerationErrorOrNull())
-        assertEquals(GenerationError.Access(DataError.UnexpectedResponse), koog(SerializationException("bad")).toGenerationErrorOrNull())
+        assertEquals(
+            GenerationError.Access(DataError.UnexpectedResponse),
+            koog(SerializationException("bad")).toGenerationErrorOrNull(),
+        )
     }
 
     @Test

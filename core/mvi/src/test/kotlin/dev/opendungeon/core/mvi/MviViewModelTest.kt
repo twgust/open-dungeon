@@ -10,6 +10,7 @@ class MviViewModelTest {
     private class CounterViewModel : MviViewModel<Int, CounterViewModel.Intent, String>(initialState = 0) {
         sealed interface Intent {
             data object Increment : Intent
+
             data object Announce : Intent
         }
 

@@ -37,6 +37,7 @@ internal class FirstWordsRoll(private val vocabulary: WizardVocabulary = TestVoc
 
 internal class CountingIds(private val prefix: String = "id") : IdGenerator {
     private var next = 0
+
     override fun next(): String = "$prefix-${++next}"
 }
 

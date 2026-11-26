@@ -59,7 +59,9 @@ public fun CharacterCard(
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = Paper.type.label, color = colors.muted, modifier = Modifier.weight(1f))
             if (onToggleEdit != null) {
-                AnimatedContent(editing, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "card pen") { isEditing ->
+                AnimatedContent(editing, transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                }, label = "card pen") { isEditing ->
                     if (isEditing) {
                         GhostTextButton(doneLabel, onToggleEdit, emphasised = true)
                     } else {
@@ -81,7 +83,11 @@ public fun CardLine(
     trailing: (@Composable () -> Unit)? = null,
     value: @Composable () -> Unit,
 ) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(
+        modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Text(label, style = Paper.type.label, color = Paper.colors.muted, modifier = Modifier.width(labelWidth))
         Box(Modifier.weight(1f)) { value() }
         trailing?.invoke()

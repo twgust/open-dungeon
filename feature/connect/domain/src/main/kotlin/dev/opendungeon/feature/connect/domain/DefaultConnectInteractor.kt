@@ -69,7 +69,8 @@ internal class DefaultConnectInteractor(
             val result = account.disconnect()
             if (result is Outcome.Failure) {
                 // A load the disconnect cut short is run again rather than left spinning.
-                if (before.key is Remote.Loading || before.models is Remote.Loading) load() else mutableState.value = before
+                val cutShort = before.key is Remote.Loading || before.models is Remote.Loading
+                if (cutShort) load() else mutableState.value = before
                 failureChannel.send(result.error)
             }
         }

@@ -25,7 +25,4 @@ public data class StoryDraftEntity(
 
 /** A choice in the story's sentence: its words, and whether the player wrote them. */
 @Serializable
-public data class PhraseColumns(
-    val text: String,
-    val own: Boolean,
-)
+public data class PhraseColumns(val text: String, val own: Boolean)

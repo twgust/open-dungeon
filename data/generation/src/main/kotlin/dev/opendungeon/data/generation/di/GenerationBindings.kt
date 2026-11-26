@@ -24,6 +24,8 @@ public object GenerationBindings {
     @Provides
     @SingleIn(AppScope::class)
     @OpenRouterExecutor
-    public fun provideOpenRouterExecutor(keys: ApiKeyStore, @OpenRouterHttpClient baseClient: HttpClient): PromptExecutor =
-        openRouterPromptExecutor(baseClient = baseClient, apiKey = { keys.apiKey.first() })
+    public fun provideOpenRouterExecutor(
+        keys: ApiKeyStore,
+        @OpenRouterHttpClient baseClient: HttpClient,
+    ): PromptExecutor = openRouterPromptExecutor(baseClient = baseClient, apiKey = { keys.apiKey.first() })
 }

@@ -40,14 +40,37 @@ class StoryWizardViewModelTest {
         val outcomeChannel = Channel<WizardOutcome>(Channel.UNLIMITED)
         override val outcomes: Flow<WizardOutcome> = outcomeChannel.receiveAsFlow()
 
-        override fun start(draft: DraftId?) { calls += "start($draft)" }
-        override fun select(choice: Choice) { calls += "select($choice)" }
-        override fun submitOwn(text: String) { calls += "submitOwn($text)" }
-        override fun edit(edit: DraftEdit) { calls += "edit($edit)" }
-        override fun roll() { calls += "roll" }
-        override fun rollLine(line: CharacterLine) { calls += "rollLine($line)" }
-        override fun next() { calls += "next" }
-        override fun back() { calls += "back" }
+        override fun start(draft: DraftId?) {
+            calls += "start($draft)"
+        }
+
+        override fun select(choice: Choice) {
+            calls += "select($choice)"
+        }
+
+        override fun submitOwn(text: String) {
+            calls += "submitOwn($text)"
+        }
+
+        override fun edit(edit: DraftEdit) {
+            calls += "edit($edit)"
+        }
+
+        override fun roll() {
+            calls += "roll"
+        }
+
+        override fun rollLine(line: CharacterLine) {
+            calls += "rollLine($line)"
+        }
+
+        override fun next() {
+            calls += "next"
+        }
+
+        override fun back() {
+            calls += "back"
+        }
     }
 
     private val wizard = RecordingWizard()
@@ -99,7 +122,13 @@ class StoryWizardViewModelTest {
             progress = 0.9f,
             lead = Sentence.Empty,
             body = StepBody.FirstLine("I come in.", maxLength = 4000),
-            controls = StepControls(canGoBack = true, canAdvance = true, advancesOnPick = false, canRoll = false, takesOwnWords = false),
+            controls = StepControls(
+                canGoBack = true,
+                canAdvance = true,
+                advancesOnPick = false,
+                canRoll = false,
+                takesOwnWords = false,
+            ),
         )
         wizard.state.value = state
 

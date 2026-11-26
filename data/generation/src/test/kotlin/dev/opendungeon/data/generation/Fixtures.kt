@@ -27,8 +27,14 @@ internal val ATTRIBUTION = AppAttribution(title = "Open Dungeon", siteUrl = "htt
 
 internal class FakeApiKeyStore(initial: ApiKey? = VALID_KEY) : ApiKeyStore {
     override val apiKey = MutableStateFlow(initial)
-    override suspend fun write(apiKey: ApiKey) { this.apiKey.value = apiKey }
-    override suspend fun clear() { apiKey.value = null }
+
+    override suspend fun write(apiKey: ApiKey) {
+        this.apiKey.value = apiKey
+    }
+
+    override suspend fun clear() {
+        apiKey.value = null
+    }
 }
 
 internal fun aiModel(
@@ -70,12 +76,15 @@ internal class ScriptedOpenRouter(vararg answers: MockResponse) : AutoCloseable 
     )
 
     fun request(index: Int): RecordedRequest {
-        while (recorded.size <= index) recorded += requireNotNull(server.takeRequest(5, TimeUnit.SECONDS)) { "no request #$index" }
+        while (recorded.size <=
+            index
+        ) {
+            recorded += requireNotNull(server.takeRequest(5, TimeUnit.SECONDS)) { "no request #$index" }
+        }
         return recorded[index]
     }
 
-    fun body(index: Int): JsonObject =
-        Json.parseToJsonElement(requireNotNull(request(index).body).utf8()).jsonObject
+    fun body(index: Int): JsonObject = Json.parseToJsonElement(requireNotNull(request(index).body).utf8()).jsonObject
 
     override fun close() = server.close()
 }

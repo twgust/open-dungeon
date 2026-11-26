@@ -43,10 +43,7 @@ public data class ArchitectureDto(
 
 /** Prices are decimal strings in USD per token. `"-1"` marks dynamic routers, `"0"` free variants. */
 @Serializable
-public data class PricingDto(
-    val prompt: String,
-    val completion: String,
-)
+public data class PricingDto(val prompt: String, val completion: String)
 
 @Serializable
 public data class TopProviderDto(

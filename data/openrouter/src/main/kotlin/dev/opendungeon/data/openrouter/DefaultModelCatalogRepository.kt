@@ -14,10 +14,8 @@ import dev.zacsweers.metro.Inject
 /** Pages through `GET /models/user` with the stored key. */
 @Inject
 @ContributesBinding(AppScope::class)
-public class DefaultModelCatalogRepository(
-    private val api: OpenRouterApi,
-    private val store: ApiKeyStore,
-) : ModelCatalogRepository {
+public class DefaultModelCatalogRepository(private val api: OpenRouterApi, private val store: ApiKeyStore) :
+    ModelCatalogRepository {
 
     override suspend fun fetchModels(): Outcome<List<AiModel>, DataError> = store.withApiKey(::fetchAllPages)
 

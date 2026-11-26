@@ -8,7 +8,8 @@ class ErrorBodyTest {
 
     @Test
     fun `reads the documented envelope`() {
-        val error = decodeOpenRouterError("""{"error":{"code":402,"message":"Insufficient credits","metadata":{"x":1}}}""")
+        val error =
+            decodeOpenRouterError("""{"error":{"code":402,"message":"Insufficient credits","metadata":{"x":1}}}""")
 
         assertEquals(402, error?.code)
         assertEquals("Insufficient credits", error?.message)

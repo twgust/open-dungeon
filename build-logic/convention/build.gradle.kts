@@ -19,6 +19,8 @@ dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.compose.gradle.plugin)
     compileOnly(libs.metro.gradle.plugin)
+    implementation(libs.detekt.gradle.plugin)
+    implementation(libs.ktlint.gradle.plugin)
 }
 
 gradlePlugin {
@@ -42,6 +44,10 @@ gradlePlugin {
         register("jvmLibrary") {
             id = libs.plugins.opendungeon.jvm.library.get().pluginId
             implementationClass = "JvmLibraryConventionPlugin"
+        }
+        register("quality") {
+            id = "opendungeon.quality"
+            implementationClass = "QualityConventionPlugin"
         }
         register("metro") {
             id = libs.plugins.opendungeon.metro.get().pluginId

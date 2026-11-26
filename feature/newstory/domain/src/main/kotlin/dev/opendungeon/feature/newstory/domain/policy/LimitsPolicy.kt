@@ -41,6 +41,5 @@ public class LimitsPolicy : StepPolicy {
         (edit as? DraftEdit.LimitsNote)?.let { draft.withNote(it.text) }
 
     /** Blank clears the note. */
-    private fun StoryDraft.withNote(text: String) =
-        copy(limits = limits.copy(note = text.takeIf(String::isNotBlank)))
+    private fun StoryDraft.withNote(text: String) = copy(limits = limits.copy(note = text.takeIf(String::isNotBlank)))
 }
