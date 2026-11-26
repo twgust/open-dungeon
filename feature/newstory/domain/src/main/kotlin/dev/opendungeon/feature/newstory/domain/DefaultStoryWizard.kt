@@ -1,6 +1,9 @@
 package dev.opendungeon.feature.newstory.domain
 
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.domain.drafting.DraftingError
+import dev.opendungeon.domain.drafting.DraftingModel
+import dev.opendungeon.domain.drafting.ResolveDraftingModel
 import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
@@ -14,6 +17,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
@@ -22,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,6 +43,11 @@ import kotlin.time.Duration.Companion.milliseconds
  * reports why. Typing is the exception: text is shown as typed and saved once it settles, so a burst of
  * keystrokes is one write, and text that could not be saved stays on screen for the next save. Whatever
  * is still unsaved when the wizard's scope ends is saved on the way out.
+ *
+ * A step a model writes is the other exception, since writing takes seconds and the player must be able
+ * to stop it. The writing runs beside the loop and hands each piece back to it; while it runs, every
+ * verb but stopping and leaving waits. What it shows on the way is never saved, and only a finished
+ * result is kept, so stopping or failing leaves the draft as it was.
  */
 internal class DefaultStoryWizard(
     private val scope: CoroutineScope,
@@ -45,6 +55,7 @@ internal class DefaultStoryWizard(
     policies: Set<StepPolicy>,
     private val sentences: SentenceBuilder,
     private val ids: IdGenerator,
+    drafter: ResolveDraftingModel,
     private val typingSettles: Duration = TYPING_SETTLES,
 ) : StoryWizard {
 
@@ -74,6 +85,15 @@ internal class DefaultStoryWizard(
     /** Saves typed text once typing pauses. */
     private var settling: Job? = null
 
+    /** The model that writes, once known; `null` when none is chosen. */
+    private var drafting: DraftingModel? = null
+    private var draftingKnown = false
+
+    /** The model writing the current step, if one is. */
+    private var writing: Writing? = null
+
+    private var confirmingLeave = false
+
     init {
         scope.launch {
             try {
@@ -81,6 +101,18 @@ internal class DefaultStoryWizard(
             } finally {
                 withContext(NonCancellable) { saveOnTheWayOut() }
             }
+        }
+        scope.launch {
+            drafter()
+                .catch { cause ->
+                    // A failing source is a bug below; the wizard goes on without a model rather than die.
+                    if (cause is CancellationException || cause !is Exception) throw cause
+                    enqueue {
+                        onDrafter(null)
+                        report(WizardFailure.Unexpected(cause))
+                    }
+                }
+                .collect { model -> enqueue { onDrafter(model) } }
         }
     }
 
@@ -93,6 +125,7 @@ internal class DefaultStoryWizard(
         if (resumed != null) {
             stored = resumed
             show(resumed)
+            writeOnArrival()
             return@enqueue
         }
         // A new draft is shown only once it exists, so a failure leaves nothing half open.
@@ -108,7 +141,7 @@ internal class DefaultStoryWizard(
     override fun submitOwn(text: String) = change { policy, draft -> policy.submitOwn(draft, text)?.let(::settle) }
 
     override fun edit(edit: DraftEdit) = enqueue {
-        val before = draft ?: return@enqueue
+        val before = draft?.takeIf { writing == null } ?: return@enqueue
         val after = policyOf(before).edit(before, edit)?.takeIf { it != before } ?: return@enqueue
         show(after)
         settling?.cancel()
@@ -118,8 +151,17 @@ internal class DefaultStoryWizard(
         }
     }
 
-    override fun roll() = change { policy, draft ->
-        if (policy.canRoll(draft)) policy.roll(draft)?.let(::settle) else null
+    override fun roll() = enqueue {
+        val before = draft?.takeIf { writing == null } ?: return@enqueue
+        val policy = policyOf(before)
+        if (!policy.canRoll(before)) return@enqueue
+        val writer = policy.writer
+        if (writer != null) {
+            startWriting(writer, before)
+            return@enqueue
+        }
+        val after = policy.roll(before)?.let(::settle)?.takeIf { it != before } ?: return@enqueue
+        commit(before, after)
     }
 
     override fun rollLine(line: CharacterLine) = change { policy, draft -> policy.rollLine(draft, line) }
@@ -127,13 +169,41 @@ internal class DefaultStoryWizard(
     override fun next() = change { policy, draft -> if (policy.canAdvance(draft)) draft.forward() else null }
 
     override fun back() = enqueue {
+        if (writing != null) {
+            confirmingLeave = true
+            render()
+        } else {
+            goBack()
+        }
+    }
+
+    override fun stop() = enqueue {
+        if (writing == null) return@enqueue
+        stopWriting()
+        render()
+    }
+
+    override fun confirmLeave() = enqueue {
+        if (!confirmingLeave) return@enqueue
+        stopWriting()
+        render()
+        goBack()
+    }
+
+    override fun stay() = enqueue {
+        if (!confirmingLeave) return@enqueue
+        confirmingLeave = false
+        render()
+    }
+
+    private suspend fun goBack() {
         val current = draft
         val previous = current?.step?.previous
         if (current == null || previous == null) {
             // Leaving keeps the draft to resume, so whatever was typed is saved first.
             if (current != null) saveTyping()
             outcomeChannel.send(WizardOutcome.Left)
-            return@enqueue
+            return
         }
         commit(before = current, after = current.copy(step = previous))
     }
@@ -144,7 +214,7 @@ internal class DefaultStoryWizard(
 
     /** Runs [transform] against the draft on screen and keeps the result when it changed anything. */
     private fun change(transform: suspend (StepPolicy, StoryDraft) -> StoryDraft?) = enqueue {
-        val before = draft ?: return@enqueue
+        val before = draft?.takeIf { writing == null } ?: return@enqueue
         val after = transform(policyOf(before), before)?.takeIf { it != before } ?: return@enqueue
         commit(before, after)
     }
@@ -156,7 +226,89 @@ internal class DefaultStoryWizard(
         if (saved is Outcome.Failure) {
             show(before)
             report(WizardFailure.Storage(saved.error))
+        } else if (after.step != before.step) {
+            writeOnArrival()
         }
+    }
+
+    private suspend fun onDrafter(model: DraftingModel?) {
+        drafting = model
+        draftingKnown = true
+        render()
+        writeOnArrival()
+    }
+
+    /** A step a model writes starts writing on arrival when it has nothing to show and a model can write it. */
+    private suspend fun writeOnArrival() {
+        val current = draft ?: return
+        if (writing != null || drafting == null) return
+        val writer = policyOf(current).writer ?: return
+        if (writer.writesOnArrival(current)) startWriting(writer, current)
+    }
+
+    /**
+     * Writes the current step beside the loop. Each piece comes back through the loop, tagged with this
+     * run, so a piece that arrives after the run was stopped, or replaced, is dropped.
+     */
+    private suspend fun startWriting(writer: StepWriter, from: StoryDraft) {
+        val model = drafting ?: return report(WizardFailure.Drafting(DraftingError.NoModel))
+        val run = Writing()
+        run.job = scope.launch(start = CoroutineStart.LAZY) { write(run, writer, from, model) }
+        writing = run
+        render()
+        run.job.start()
+    }
+
+    /** Runs off the loop: it only hands pieces to it. */
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun write(run: Writing, writer: StepWriter, from: StoryDraft, model: DraftingModel) {
+        try {
+            writer.write(from, model).collect { event -> enqueue { onWritten(run, event) } }
+            // Reached only when the writer ended without its last word, which no writer should do.
+            enqueue { endUnexpectedly(run, IllegalStateException("${from.step} writer ended without a result")) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // As in [runIsolated]: a writer that throws has a bug, and the wizard outlives it.
+            enqueue { endUnexpectedly(run, e) }
+        }
+    }
+
+    private suspend fun onWritten(run: Writing, event: WriterEvent) {
+        if (writing !== run) return
+        when (event) {
+            is WriterEvent.Preview -> {
+                run.preview = event.draft
+                render()
+            }
+            is WriterEvent.Done -> {
+                endWriting()
+                commit(before = draft ?: return, after = event.draft)
+            }
+            is WriterEvent.Failed -> {
+                endWriting()
+                render()
+                report(WizardFailure.Drafting(event.error))
+            }
+        }
+    }
+
+    private suspend fun endUnexpectedly(run: Writing, cause: Exception) {
+        if (writing !== run) return
+        endWriting()
+        render()
+        report(WizardFailure.Unexpected(cause))
+    }
+
+    private fun stopWriting() {
+        writing?.job?.cancel()
+        endWriting()
+    }
+
+    /** Writing is over, so leaving no longer stops anything and needs no asking. */
+    private fun endWriting() {
+        writing = null
+        confirmingLeave = false
     }
 
     /** Saves typed text that is not stored yet. On failure the text stays on screen and is saved with the next change. */
@@ -198,11 +350,14 @@ internal class DefaultStoryWizard(
     private suspend fun runIsolated(action: suspend () -> Unit) {
         val draftBefore = draft
         val stateBefore = mutableState.value
+        val writingBefore = writing
         try {
             action()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            // Writing the verb started is stopped with it, so the step is never left waiting on nothing.
+            if (writing != null && writing !== writingBefore) stopWriting()
             draft = draftBefore
             mutableState.value = stateBefore
             report(WizardFailure.Unexpected(e))
@@ -219,6 +374,11 @@ internal class DefaultStoryWizard(
         this.draft = draft
     }
 
+    /** Shows the draft on screen again, for a change around it: writing, the model, a question. */
+    private fun render() {
+        draft?.let(::show)
+    }
+
     /** A selection that completes its step moves on, unless the step still cannot be left. */
     private fun settle(selection: Selection): StoryDraft {
         val draft = selection.draft
@@ -229,22 +389,29 @@ internal class DefaultStoryWizard(
 
     private fun policyOf(draft: StoryDraft): StepPolicy = policies.getValue(draft.step)
 
+    /** While a model writes, the step shows what it has so far, and its controls wait. */
     private fun stateOf(draft: StoryDraft): WizardState {
         val policy = policyOf(draft)
+        val run = writing
+        val idle = run == null
         return WizardState(
             draft = draft.id,
             step = draft.step,
             progress = (draft.step.ordinal + 1f) / CreationStep.entries.size,
             lead = leadOf(draft),
-            body = policy.body(draft),
+            body = policy.body(run?.preview ?: draft),
             controls = StepControls(
                 canGoBack = true,
                 // The last step's next is Begin, which only exists once a story can be committed.
-                canAdvance = draft.step.following != null && policy.canAdvance(draft),
+                canAdvance = idle && draft.step.following != null && policy.canAdvance(draft),
                 advancesOnPick = policy.advancesOnPick,
-                canRoll = policy.canRoll(draft),
-                takesOwnWords = policy.takesOwnWords(draft),
+                canRoll = idle && policy.canRoll(draft),
+                takesOwnWords = idle && policy.takesOwnWords(draft),
             ),
+            writer = policy.writer?.takeIf { draftingKnown }?.let {
+                ModelLine(model = drafting?.model?.name, writing = !idle)
+            },
+            confirmingLeave = confirmingLeave,
         )
     }
 
@@ -265,6 +432,14 @@ internal class DefaultStoryWizard(
         CreationStep.FirstLine -> sentences.cast(draft)
     }
 
+    /** One run of a model writing the current step. */
+    private class Writing {
+        lateinit var job: Job
+
+        /** What it has written so far, shown in place of the draft. */
+        var preview: StoryDraft? = null
+    }
+
     companion object {
         /** Long enough to span a burst of keystrokes, short enough that little is lost if the app dies. */
         val TYPING_SETTLES: Duration = 400.milliseconds
@@ -278,7 +453,8 @@ public class DefaultStoryWizardFactory(
     private val policies: Set<StepPolicy>,
     private val sentences: SentenceBuilder,
     private val ids: IdGenerator,
+    private val drafter: ResolveDraftingModel,
 ) : StoryWizard.Factory {
     override fun create(scope: CoroutineScope): StoryWizard =
-        DefaultStoryWizard(scope, repository, policies, sentences, ids)
+        DefaultStoryWizard(scope, repository, policies, sentences, ids, drafter)
 }

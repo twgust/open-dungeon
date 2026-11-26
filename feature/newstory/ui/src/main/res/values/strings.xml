@@ -85,4 +85,18 @@
     <string name="wizard_failure_storage_full">Storage full</string>
     <string name="wizard_failure_storage">Storage error</string>
     <string name="wizard_failure_unexpected">Something went wrong</string>
+    <string name="wizard_failure_no_model">Choose a model first</string>
+    <string name="wizard_failure_unusable">Nothing usable came back</string>
+    <string name="wizard_failure_no_provider">No provider takes these settings</string>
+    <string name="wizard_failure_refused">The provider declined</string>
+    <string name="wizard_failure_interrupted">Writing broke off</string>
+    <string name="wizard_failure_schema_mismatch">The answer didn\'t fit</string>
+
+    <string name="wizard_model_idle">with %1$s</string>
+    <string name="wizard_model_writing">%1$s is writing…</string>
+    <string name="wizard_model_none">Choose a model</string>
+    <string name="wizard_stop">Stop</string>
+    <string name="wizard_leave_title">Stop writing?</string>
+    <string name="wizard_leave">Stop</string>
+    <string name="wizard_stay">Keep writing</string>
 </resources>

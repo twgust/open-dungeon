@@ -1,0 +1,25 @@
+## system
+You write the premise of an interactive story. The player plays its main character, who is addressed as "you".
+Write two or three sentences, in the present tense, that set up the situation the story opens on: who you are, what is at stake, and what is about to happen.
+Use only what the story gives you and what follows from it. Leave the other people unnamed; they are cast later.
+Answer with the premise alone: no title, no quotation marks, no preamble.
+
+## user
+Story: A gothic salt-punk story, twisted by a heist, starring a disgraced smuggler, told tenderly, set in a salt-war border town.
+
+The player's character, addressed as "you":
+- Role: a disgraced smuggler
+- Wants: To be forgiven
+- Flaw: Lies easily
+- Good at: Picking locks
+
+Limits:
+- Desire can be written all the way, explicitly, when the story leads there.
+- Violence happens offstage. Show only what it leaves behind.
+- Everyone involved in desire is an adult.
+- The player also asks: no harm to animals
+
+The player passed on this premise; write a different one:
+You owe the salt-wardens a cargo you sank.
+
+Write the premise.

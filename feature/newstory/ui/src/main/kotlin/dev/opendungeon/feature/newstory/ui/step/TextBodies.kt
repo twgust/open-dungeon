@@ -19,9 +19,9 @@ import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
-/** The premise, written straight onto the page and editable in place. */
+/** The premise, written straight onto the page and editable in place, except while a model writes it. */
 @Composable
-internal fun PremiseBody(body: StepBody.Premise, onIntent: (WizardIntent) -> Unit) {
+internal fun PremiseBody(body: StepBody.Premise, writing: Boolean, onIntent: (WizardIntent) -> Unit) {
     val text = rememberEditedText(body.text) { onIntent(WizardIntent.Edit(DraftEdit.Premise(it))) }
     PaperField(
         state = text,
@@ -29,6 +29,7 @@ internal fun PremiseBody(body: StepBody.Premise, onIntent: (WizardIntent) -> Uni
         placeholder = stringResource(R.string.wizard_premise_hint),
         style = Paper.type.body.copy(fontSize = 24.sp, lineHeight = 1.35.em),
         textAlign = TextAlign.Center,
+        readOnly = writing,
         modifier = Modifier.fillMaxWidth(),
     )
 }

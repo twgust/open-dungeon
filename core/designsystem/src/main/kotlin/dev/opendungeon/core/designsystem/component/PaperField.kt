@@ -30,7 +30,8 @@ import dev.opendungeon.core.designsystem.Paper
 
 /**
  * Writing straight onto the page: serif text with no box. With [underlined] it gets a hairline that
- * turns to ink while focused, for short fields on cards and in the own-words bar.
+ * turns to ink while focused, for short fields on cards and in the own-words bar. A [readOnly] field
+ * shows text that something else is writing, such as a model mid-sentence.
  */
 @Composable
 public fun PaperField(
@@ -46,6 +47,7 @@ public fun PaperField(
     inputTransformation: InputTransformation? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onKeyboardAction: (() -> Unit)? = null,
+    readOnly: Boolean = false,
 ) {
     val colors = Paper.colors
     val interactions = remember { MutableInteractionSource() }
@@ -54,6 +56,7 @@ public fun PaperField(
     val limit = maxLength?.let { InputTransformation.maxLengthTrim(it) }
     BasicTextField(
         state = state,
+        readOnly = readOnly,
         modifier = modifier
             .semantics { contentDescription = label }
             .then(

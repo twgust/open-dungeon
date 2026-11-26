@@ -37,13 +37,14 @@ feature/connect/domain   ConnectInteractor: key validation, chosen model, discon
 feature/models/ui        Model picker, parameter editor and try screens, thin ViewModels
 feature/models/domain    ModelPicker, ModelTuner, TryRun interactors; ParameterSheet     (JVM)
 feature/newstory/ui      Story creation screens and their thin ViewModel
-feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, vocabulary    (JVM)
+feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, step writers  (JVM)
 data/openrouter          Remote catalog and account repository over the REST client    (JVM)
 data/models              Catalog cache, chosen model and tunings over Room (Android)
 data/story               StoryDraftRepository over Room (Android)
 data/generation          Text and structured generation on Koog, OpenRouterChatClient   (JVM)
 domain/openrouter        Catalog, setup and account repositories; test fixtures        (JVM)
 domain/story             Drafts, characters, takes, the sentence builder, StoryDraftRepository (JVM)
+domain/drafting          Drafting model, premise and cast use cases, their prompts      (JVM)
 domain/generation        TextGenerator, StructuredGenerator, usage, typed errors        (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
 core/ui                  Compose helpers, error messages

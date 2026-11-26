@@ -41,6 +41,11 @@ class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) :
         is WizardIntent.RollLine -> wizard.rollLine(intent.line)
         WizardIntent.Next -> wizard.next()
         WizardIntent.Back -> wizard.back()
+        WizardIntent.Stop -> wizard.stop()
+        WizardIntent.ConfirmLeave -> wizard.confirmLeave()
+        WizardIntent.Stay -> wizard.stay()
+        // Choosing a model is the models screen's work; going there is navigation, not a rule.
+        WizardIntent.ChooseModel -> sendEffect(WizardEffect.OpenModels)
     }
 
     private fun WizardOutcome.toEffect(): WizardEffect = when (this) {

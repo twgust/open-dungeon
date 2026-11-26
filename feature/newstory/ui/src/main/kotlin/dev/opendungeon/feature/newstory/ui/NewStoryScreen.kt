@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,12 +34,17 @@ import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.PaperIcons
 import dev.opendungeon.core.designsystem.component.DieButton
 import dev.opendungeon.core.designsystem.component.GhostIconButton
+import dev.opendungeon.core.designsystem.component.GhostTextButton
 import dev.opendungeon.core.designsystem.component.NextArrow
 import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.designsystem.component.ProgressLine
 import dev.opendungeon.core.designsystem.component.SentenceLead
 import dev.opendungeon.core.designsystem.component.StepTransition
 import dev.opendungeon.core.ui.CollectEffects
+import dev.opendungeon.core.ui.ErrorMessages
+import dev.opendungeon.core.ui.errorMessages
+import dev.opendungeon.domain.drafting.DraftingError
+import dev.opendungeon.domain.generation.GenerationError
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.feature.newstory.domain.StepBody
@@ -47,6 +54,7 @@ import dev.opendungeon.feature.newstory.ui.step.AuditionsBody
 import dev.opendungeon.feature.newstory.ui.step.CastBody
 import dev.opendungeon.feature.newstory.ui.step.FirstLineBody
 import dev.opendungeon.feature.newstory.ui.step.LimitsBody
+import dev.opendungeon.feature.newstory.ui.step.ModelLineText
 import dev.opendungeon.feature.newstory.ui.step.OwnWordsBar
 import dev.opendungeon.feature.newstory.ui.step.PremiseBody
 import dev.opendungeon.feature.newstory.ui.step.StarringBody
@@ -54,7 +62,7 @@ import dev.opendungeon.feature.newstory.ui.step.WordsBody
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Composable
-fun NewStoryRoute(onLeave: () -> Unit, viewModel: StoryWizardViewModel = metroViewModel()) {
+fun NewStoryRoute(onLeave: () -> Unit, onModels: () -> Unit, viewModel: StoryWizardViewModel = metroViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notices = remember { SnackbarHostState() }
     val failures = failureMessages()
@@ -62,6 +70,7 @@ fun NewStoryRoute(onLeave: () -> Unit, viewModel: StoryWizardViewModel = metroVi
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             WizardEffect.Leave -> onLeave()
+            WizardEffect.OpenModels -> onModels()
             is WizardEffect.ShowFailure -> {
                 notices.currentSnackbarData?.dismiss()
                 notices.showSnackbar(failures.of(effect.failure))
@@ -103,13 +112,33 @@ private class FailureMessages(
     private val storageFull: String,
     private val storage: String,
     private val unexpected: String,
+    private val noModel: String,
+    private val unusable: String,
+    private val noProvider: String,
+    private val refused: String,
+    private val interrupted: String,
+    private val schemaMismatch: String,
+    private val access: ErrorMessages,
 ) {
     fun of(failure: WizardFailure): String = when (failure) {
         is WizardFailure.Storage -> when (failure.error) {
             StorageError.Full -> storageFull
             is StorageError.Failed -> storage
         }
+        is WizardFailure.Drafting -> of(failure.error)
         is WizardFailure.Unexpected -> unexpected
+    }
+
+    private fun of(error: DraftingError): String = when (error) {
+        DraftingError.NoModel -> noModel
+        DraftingError.Unusable -> unusable
+        is DraftingError.Generation -> when (val cause = error.error) {
+            is GenerationError.Access -> access.of(cause.error)
+            GenerationError.NoProvider -> noProvider
+            GenerationError.Refused -> refused
+            GenerationError.Interrupted -> interrupted
+            is GenerationError.SchemaMismatch -> schemaMismatch
+        }
     }
 }
 
@@ -118,6 +147,13 @@ private fun failureMessages() = FailureMessages(
     storageFull = stringResource(R.string.wizard_failure_storage_full),
     storage = stringResource(R.string.wizard_failure_storage),
     unexpected = stringResource(R.string.wizard_failure_unexpected),
+    noModel = stringResource(R.string.wizard_failure_no_model),
+    unusable = stringResource(R.string.wizard_failure_unusable),
+    noProvider = stringResource(R.string.wizard_failure_no_provider),
+    refused = stringResource(R.string.wizard_failure_refused),
+    interrupted = stringResource(R.string.wizard_failure_interrupted),
+    schemaMismatch = stringResource(R.string.wizard_failure_schema_mismatch),
+    access = errorMessages(),
 )
 
 @Composable
@@ -142,6 +178,7 @@ private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) ->
         }
     }
     BottomBar(state, onIntent)
+    if (state.confirmingLeave) LeaveDialog(onIntent)
 }
 
 @Composable
@@ -159,24 +196,53 @@ private fun Stage(state: WizardState, onIntent: (WizardIntent) -> Unit, modifier
         val lead = if (sentence.isEmpty() && copy.lead != null) AnnotatedString(stringResource(copy.lead)) else sentence
         SentenceLead(lead = lead, prompt = stringResource(copy.prompt))
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            val writing = state.writer?.writing == true
             when (val body = state.body) {
                 is StepBody.Words -> WordsBody(body, onIntent)
                 is StepBody.Starring -> StarringBody(body, onIntent)
                 is StepBody.Limits -> LimitsBody(body, onIntent)
-                is StepBody.Premise -> PremiseBody(body, onIntent)
-                is StepBody.Cast -> CastBody(body, onIntent)
+                is StepBody.Premise -> PremiseBody(body, writing, onIntent)
+                is StepBody.Cast -> CastBody(body, writing, onIntent)
                 is StepBody.FirstLine -> FirstLineBody(body, onIntent)
                 is StepBody.Auditions -> AuditionsBody(body, onIntent)
             }
         }
+        state.writer?.let { ModelLineText(it, onChoose = { onIntent(WizardIntent.ChooseModel) }) }
     }
+}
+
+/** Leaving a step a model is writing stops it, so the player says so first. */
+@Composable
+private fun LeaveDialog(onIntent: (WizardIntent) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onIntent(WizardIntent.Stay) },
+        title = { Text(stringResource(R.string.wizard_leave_title), style = Paper.type.cardText) },
+        confirmButton = {
+            GhostTextButton(
+                stringResource(R.string.wizard_leave),
+                onClick = { onIntent(WizardIntent.ConfirmLeave) },
+                emphasised = true,
+            )
+        },
+        dismissButton = {
+            GhostTextButton(stringResource(R.string.wizard_stay), onClick = { onIntent(WizardIntent.Stay) })
+        },
+        containerColor = Paper.colors.card,
+    )
 }
 
 @Composable
 private fun BottomBar(state: WizardState, onIntent: (WizardIntent) -> Unit) {
     val controls = state.controls
     Box(Modifier.fillMaxWidth().heightIn(min = 88.dp).padding(horizontal = 20.dp)) {
-        if (controls.canRoll) {
+        if (state.writer?.writing == true) {
+            GhostTextButton(
+                stringResource(R.string.wizard_stop),
+                onClick = { onIntent(WizardIntent.Stop) },
+                emphasised = true,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        } else if (controls.canRoll) {
             DieButton(
                 contentDescription = stringResource(stepCopy(state.step).die),
                 onClick = { onIntent(WizardIntent.Roll) },

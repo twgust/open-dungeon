@@ -1,5 +1,6 @@
 package dev.opendungeon.feature.newstory.domain
 
+import dev.opendungeon.domain.drafting.DraftingError
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Sentence
@@ -15,6 +16,18 @@ public data class WizardState(
     val lead: Sentence,
     val body: StepBody,
     val controls: StepControls,
+    /** The model that writes this step, on steps a model writes; `null` on every other step. */
+    val writer: ModelLine? = null,
+    /** Back was pressed while a model writes: leaving stops it, so the player is asked first. */
+    val confirmingLeave: Boolean = false,
+)
+
+/** The quiet line naming the model that writes the current step. */
+public data class ModelLine(
+    /** The model's name, or `null` when none is chosen: the line then offers to choose one. */
+    val model: String?,
+    /** A model is writing now. Every other control on the step waits, and the step offers to stop. */
+    val writing: Boolean,
 )
 
 /** Which of the step's fixed controls are live. */
@@ -42,6 +55,9 @@ public sealed interface WizardOutcome {
 public sealed interface WizardFailure {
     /** The draft could not be read or written. Typed text stays on screen and is saved with the next change. */
     public data class Storage(val error: StorageError) : WizardFailure
+
+    /** A model could not write the step. What was there before stays. */
+    public data class Drafting(val error: DraftingError) : WizardFailure
 
     /** A rule failed in a way no rule should. The verb changed nothing; [cause] is kept for diagnosis. */
     public data class Unexpected(val cause: Exception) : WizardFailure

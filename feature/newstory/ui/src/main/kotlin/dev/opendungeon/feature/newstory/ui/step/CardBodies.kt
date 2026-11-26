@@ -42,11 +42,13 @@ import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
-/** Swipeable people, each taken into the story or left out. */
+/** Swipeable people, each taken into the story or left out. While new people are cast, the cards wait. */
 @Composable
-internal fun CastBody(body: StepBody.Cast, onIntent: (WizardIntent) -> Unit) {
+internal fun CastBody(body: StepBody.Cast, writing: Boolean, onIntent: (WizardIntent) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Deck(cardWidth = 286.dp, items = body.people, key = { it.id.value }) { person -> CastCard(person, onIntent) }
+        Deck(cardWidth = 286.dp, items = body.people, key = { it.id.value }) { person ->
+            CastCard(person, enabled = !writing, onIntent)
+        }
         if (body.people.isNotEmpty()) {
             Text(
                 pluralStringResource(
@@ -65,7 +67,7 @@ internal fun CastBody(body: StepBody.Cast, onIntent: (WizardIntent) -> Unit) {
 }
 
 @Composable
-private fun CastCard(person: PersonCard, onIntent: (WizardIntent) -> Unit) {
+private fun CastCard(person: PersonCard, enabled: Boolean, onIntent: (WizardIntent) -> Unit) {
     val colors = Paper.colors
     CharacterCard(label = (person.role ?: stringResource(R.string.wizard_someone)).uppercase()) {
         Column(Modifier.padding(end = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -103,6 +105,7 @@ private fun CastCard(person: PersonCard, onIntent: (WizardIntent) -> Unit) {
                 text = stringResource(if (person.inStory) R.string.wizard_cast_taken else R.string.wizard_cast_take),
                 picked = person.inStory,
                 onClick = { onIntent(WizardIntent.Pick(Choice.CastMember(person.id))) },
+                enabled = enabled,
                 style = Paper.type.pill.copy(fontSize = 18.sp),
                 modifier = Modifier.padding(top = 4.dp, bottom = 6.dp),
             )

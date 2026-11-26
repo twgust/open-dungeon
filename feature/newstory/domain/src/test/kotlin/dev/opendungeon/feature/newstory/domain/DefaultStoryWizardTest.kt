@@ -48,8 +48,8 @@ class DefaultStoryWizardTest {
         TonePolicy(TestVocabulary, FirstWordsRoll()),
         SettingPolicy(TestVocabulary, FirstWordsRoll()),
         LimitsPolicy(),
-        PremisePolicy(),
-        CastPolicy(),
+        PremisePolicy(ScriptedPremise()),
+        CastPolicy(ScriptedCast()),
         FirstLinePolicy(),
         FirstTurnPolicy(),
     )
@@ -58,7 +58,7 @@ class DefaultStoryWizardTest {
         scope: CoroutineScope,
         repository: InMemoryDraftRepository,
         policies: Set<StepPolicy> = this.policies,
-    ) = DefaultStoryWizard(scope, repository, policies, DefaultSentenceBuilder(), CountingIds("draft"))
+    ) = DefaultStoryWizard(scope, repository, policies, DefaultSentenceBuilder(), CountingIds("draft"), FakeDrafter())
 
     private suspend fun StoryWizard.current(): WizardState = state.filterNotNull().first()
 

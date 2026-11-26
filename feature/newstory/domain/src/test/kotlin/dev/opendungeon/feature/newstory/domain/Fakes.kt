@@ -1,6 +1,15 @@
 package dev.opendungeon.feature.newstory.domain
 
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.core.model.Tuning
+import dev.opendungeon.domain.drafting.CastPeople
+import dev.opendungeon.domain.drafting.DraftingError
+import dev.opendungeon.domain.drafting.DraftingModel
+import dev.opendungeon.domain.drafting.GeneratePremise
+import dev.opendungeon.domain.drafting.PremiseProgress
+import dev.opendungeon.domain.drafting.ResolveDraftingModel
+import dev.opendungeon.domain.openrouter.testing.aiModel
+import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.IdGenerator
 import dev.opendungeon.domain.story.StorageError
@@ -9,7 +18,15 @@ import dev.opendungeon.domain.story.StoryDraftRepository
 import dev.opendungeon.feature.newstory.domain.vocabulary.RollChoice
 import dev.opendungeon.feature.newstory.domain.vocabulary.VocabularyList
 import dev.opendungeon.feature.newstory.domain.vocabulary.WizardVocabulary
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlin.coroutines.cancellation.CancellationException
 
 /** Short, recognisable lists, so assertions can name the words. */
 internal object TestVocabulary : WizardVocabulary {
@@ -85,3 +102,63 @@ internal class InMemoryDraftRepository(vararg drafts: StoryDraft) : StoryDraftRe
 }
 
 internal val emptyDraft = StoryDraft(DraftId("draft"))
+
+internal val storyteller = DraftingModel(aiModel("acme/storyteller", name = "Storyteller"), Tuning.Untouched)
+
+/** The drafting model a test sets; none until it does. */
+internal class FakeDrafter(model: DraftingModel? = null) : ResolveDraftingModel {
+    val model = MutableStateFlow(model)
+
+    override fun invoke(): Flow<DraftingModel?> = model
+}
+
+/** Premises the test writes by hand: every run waits for what the test sends it. */
+internal class ScriptedPremise : GeneratePremise {
+    val runs = mutableListOf<Run>()
+
+    class Run(val draft: StoryDraft, val model: DraftingModel) {
+        private val progress = Channel<PremiseProgress>(Channel.UNLIMITED)
+        var cancelled = false
+            internal set
+
+        fun writing(text: String) = progress.trySend(PremiseProgress.Writing(text))
+
+        fun written(text: String) = finish(PremiseProgress.Written(text))
+
+        fun failed(error: DraftingError) = finish(PremiseProgress.Failed(error))
+
+        internal fun flow() = progress.consumeAsFlow()
+
+        private fun finish(last: PremiseProgress) {
+            progress.trySend(last)
+            progress.close()
+        }
+    }
+
+    val last: Run get() = runs.last()
+
+    override fun invoke(draft: StoryDraft, model: DraftingModel): Flow<PremiseProgress> = flow {
+        val run = Run(draft, model)
+        runs += run
+        emitAll(run.flow().onCompletion { cause -> if (cause is CancellationException) run.cancelled = true })
+    }
+}
+
+/** Casts the test answers by hand: every call waits for its answer. */
+internal class ScriptedCast : CastPeople {
+    val calls = mutableListOf<Pair<StoryDraft, CompletableDeferred<Outcome<List<Character>, DraftingError>>>>()
+
+    fun answer(outcome: Outcome<List<Character>, DraftingError>) {
+        calls.last().second.complete(outcome)
+    }
+
+    override suspend fun invoke(
+        draft: StoryDraft,
+        model: DraftingModel,
+        count: Int,
+    ): Outcome<List<Character>, DraftingError> {
+        val answer = CompletableDeferred<Outcome<List<Character>, DraftingError>>()
+        calls += draft to answer
+        return answer.await()
+    }
+}
