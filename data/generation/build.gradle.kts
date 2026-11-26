@@ -11,6 +11,8 @@ dependencies {
     implementation(projects.core.network)
     implementation(libs.koog.prompt.executor.model)
     implementation(libs.koog.prompt.executor.openrouter.client)
+    implementation(libs.koog.prompt.executor.openai.client.base)
+    implementation(libs.kotlin.logging)
     implementation(libs.koog.http.client.ktor)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)

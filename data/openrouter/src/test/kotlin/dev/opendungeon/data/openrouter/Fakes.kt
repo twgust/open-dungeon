@@ -5,6 +5,7 @@ import dev.opendungeon.core.model.ApiKey
 import dev.opendungeon.core.network.NetworkResult
 import dev.opendungeon.core.network.OpenRouterApi
 import dev.opendungeon.core.network.dto.CurrentKeyDto
+import dev.opendungeon.core.network.dto.ModelEndpointsDto
 import dev.opendungeon.core.network.dto.ModelsPageDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.IOException
@@ -30,12 +31,28 @@ internal class FakeApiKeyStore(initial: ApiKey? = null, private val broken: Bool
 internal class FakeOpenRouterApi(
     private val pages: (offset: Int) -> NetworkResult<ModelsPageDto> = { error("unexpected listModelsForKey") },
     private val key: () -> NetworkResult<CurrentKeyDto> = { error("unexpected getCurrentKey") },
+    private val endpoints: (
+        modelId: String,
+    ) -> NetworkResult<ModelEndpointsDto> = { error("unexpected listEndpoints") },
 ) : OpenRouterApi {
     val requestedOffsets = mutableListOf<Int>()
+    val requestedSorts = mutableListOf<String?>()
+    val requestedEndpoints = mutableListOf<String>()
 
-    override suspend fun listModelsForKey(apiKey: ApiKey, offset: Int, limit: Int): NetworkResult<ModelsPageDto> {
+    override suspend fun listModelsForKey(
+        apiKey: ApiKey,
+        offset: Int,
+        limit: Int,
+        sort: String?,
+    ): NetworkResult<ModelsPageDto> {
         requestedOffsets += offset
+        requestedSorts += sort
         return pages(offset)
+    }
+
+    override suspend fun listEndpoints(apiKey: ApiKey, modelId: String): NetworkResult<ModelEndpointsDto> {
+        requestedEndpoints += modelId
+        return endpoints(modelId)
     }
 
     override suspend fun getCurrentKey(apiKey: ApiKey): NetworkResult<CurrentKeyDto> = key()

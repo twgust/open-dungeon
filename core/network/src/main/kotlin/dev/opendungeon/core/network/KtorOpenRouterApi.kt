@@ -5,6 +5,8 @@ import dev.opendungeon.core.model.map
 import dev.opendungeon.core.network.di.OpenRouterHttpClient
 import dev.opendungeon.core.network.dto.CurrentKeyDto
 import dev.opendungeon.core.network.dto.CurrentKeyResponseDto
+import dev.opendungeon.core.network.dto.EndpointsResponseDto
+import dev.opendungeon.core.network.dto.ModelEndpointsDto
 import dev.opendungeon.core.network.dto.ModelsPageDto
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -23,7 +25,12 @@ public class KtorOpenRouterApi(
 
     private val client = baseClient.forRest()
 
-    override suspend fun listModelsForKey(apiKey: ApiKey, offset: Int, limit: Int): NetworkResult<ModelsPageDto> {
+    override suspend fun listModelsForKey(
+        apiKey: ApiKey,
+        offset: Int,
+        limit: Int,
+        sort: String?,
+    ): NetworkResult<ModelsPageDto> {
         require(offset >= 0) { "offset must be >= 0, was $offset" }
         require(limit in 1..OpenRouterApi.MAX_PAGE_SIZE) {
             "limit must be in 1..${OpenRouterApi.MAX_PAGE_SIZE}, was $limit"
@@ -34,7 +41,20 @@ public class KtorOpenRouterApi(
             bearerAuth(apiKey.value)
             parameter("offset", offset)
             parameter("limit", limit)
+            sort?.let { parameter("sort", it) }
         }
+    }
+
+    override suspend fun listEndpoints(apiKey: ApiKey, modelId: String): NetworkResult<ModelEndpointsDto> {
+        val author = modelId.substringBefore('/')
+        val slug = modelId.substringAfter('/', missingDelimiterValue = "")
+        require(author.isNotEmpty() && slug.isNotEmpty()) { "not an author/slug model id: $modelId" }
+        return client.safeRequest<EndpointsResponseDto> {
+            method = HttpMethod.Get
+            // Each part is one encoded segment, so a slug's ':free' or '.' cannot change the path.
+            url { path("models", author, slug, "endpoints") }
+            bearerAuth(apiKey.value)
+        }.map(EndpointsResponseDto::data)
     }
 
     override suspend fun getCurrentKey(apiKey: ApiKey): NetworkResult<CurrentKeyDto> =

@@ -28,6 +28,9 @@ public sealed interface DataError {
     /** This device could not store or remove the key. */
     public data object KeyStorage : DataError
 
+    /** The on-device database could not read or write, for example because the disk is full. */
+    public data object Storage : DataError
+
     public companion object {
         /** Interprets a non-success status from OpenRouter, with the message from its error envelope. */
         public fun fromHttpStatus(status: Int, message: String): DataError = when (status) {

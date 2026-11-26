@@ -1,41 +1,62 @@
 package dev.opendungeon.feature.connect.domain
 
 import dev.opendungeon.core.model.DataError
+import dev.opendungeon.core.model.KeyInfo
+import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.domain.openrouter.Catalog
 import dev.opendungeon.domain.openrouter.ModelCatalogRepository
+import dev.opendungeon.domain.openrouter.ModelSetupRepository
 import dev.opendungeon.domain.openrouter.OpenRouterAccountRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The stored key drives the state: whenever one appears, its details and the catalog are fetched; whenever
- * it is gone, the state returns to key entry.
+ * The stored key drives the link: whenever one appears, its details are fetched, and the catalog too if
+ * none is stored; whenever it is gone, the state returns to key entry. The chosen model comes from the
+ * stored catalog and choice, so a choice made elsewhere shows here at once.
  *
- * Every verb is called from the screen's thread and changes the state before it returns, so the checks
+ * Every verb is called from the screen's thread and changes [link] before it returns, so the checks
  * below see each verb's effect before the next verb arrives.
  */
 internal class DefaultConnectInteractor(
     private val scope: CoroutineScope,
     private val account: OpenRouterAccountRepository,
     private val catalog: ModelCatalogRepository,
+    private val setup: ModelSetupRepository,
 ) : ConnectInteractor {
 
-    private val mutableState = MutableStateFlow<Connection>(Connection.Loading)
-    override val state: StateFlow<Connection> = mutableState.asStateFlow()
+    private sealed interface Link {
+        data object Loading : Link
+
+        data class Disconnected(val error: DataError?) : Link
+
+        data object Validating : Link
+
+        /** @property catalogFetch the catalog fetch this connection ran, if one is running or failed. */
+        data class Connected(val key: Remote<KeyInfo>, val catalogFetch: Remote<Unit>?) : Link
+    }
+
+    private val link = MutableStateFlow<Link>(Link.Loading)
+
+    override val state: StateFlow<Connection> = combine(link, catalog.catalog, setup.chosenModel, ::render)
+        .stateIn(scope, SharingStarted.Eagerly, Connection.Loading)
 
     private val failureChannel = Channel<DataError>(Channel.BUFFERED)
     override val failures: Flow<DataError> = failureChannel.receiveAsFlow()
@@ -44,54 +65,79 @@ internal class DefaultConnectInteractor(
 
     init {
         account.isConnected
-            .onEach { connected -> if (connected) load() else forget(error = null) }
+            .onEach { connected -> if (connected) load(refreshCatalog = false) else forget() }
             .launchIn(scope)
     }
 
     override fun connect(rawKey: String) {
-        if (mutableState.value !is Connection.Disconnected) return
-        mutableState.value = Connection.Validating
+        if (link.value !is Link.Disconnected) return
+        link.value = Link.Validating
         scope.launch {
             // On success the stored key appears through isConnected, which loads the rest.
             val result = account.connect(rawKey)
-            if (result is Outcome.Failure) mutableState.value = Connection.Disconnected(result.error)
+            if (result is Outcome.Failure) link.value = Link.Disconnected(result.error)
         }
     }
 
     override fun refresh() {
-        if (mutableState.value is Connection.Connected) load()
+        if (link.value is Link.Connected) load(refreshCatalog = true)
     }
 
     override fun disconnect() {
-        val before = mutableState.value as? Connection.Connected ?: return
-        forget(error = null)
+        val before = link.value as? Link.Connected ?: return
+        forget()
         scope.launch {
-            val result = account.disconnect()
-            if (result is Outcome.Failure) {
-                // A load the disconnect cut short is run again rather than left spinning.
-                val cutShort = before.key is Remote.Loading || before.models is Remote.Loading
-                if (cutShort) load() else mutableState.value = before
-                failureChannel.send(result.error)
+            when (val result = account.disconnect()) {
+                is Outcome.Success -> (catalog.clear() as? Outcome.Failure)?.let { failureChannel.send(it.error) }
+                is Outcome.Failure -> {
+                    // A load the disconnect cut short is run again rather than left spinning.
+                    val cutShort = before.key is Remote.Loading || before.catalogFetch is Remote.Loading
+                    if (cutShort) load(refreshCatalog = before.catalogFetch != null) else link.value = before
+                    failureChannel.send(result.error)
+                }
             }
         }
     }
 
-    /** Fetches the key's details and the catalog side by side. A newer load replaces an older one. */
-    private fun load() {
+    /**
+     * Fetches the key's details, and the catalog beside them when asked or when none is stored. A newer
+     * load replaces an older one.
+     */
+    private fun load(refreshCatalog: Boolean) {
         loading?.cancel()
-        mutableState.value = Connection.Connected(key = Remote.Loading, models = Remote.Loading)
+        link.value = Link.Connected(key = Remote.Loading, catalogFetch = null)
         loading = scope.launch {
-            coroutineScope {
-                val key = async { account.currentKey().toRemote() }
-                val models = async { catalog.fetchModels().toRemote() }
-                mutableState.value = Connection.Connected(key = key.await(), models = models.await())
+            launch {
+                val key = account.currentKey().toRemote()
+                link.update { (it as? Link.Connected)?.copy(key = key) ?: it }
+            }
+            if (refreshCatalog || catalog.catalog.first() == null) {
+                link.update { (it as? Link.Connected)?.copy(catalogFetch = Remote.Loading) ?: it }
+                val failure = catalog.refresh() as? Outcome.Failure
+                val fetch = failure?.let { Remote.Failed(it.error) }
+                link.update { (it as? Link.Connected)?.copy(catalogFetch = fetch) ?: it }
+                // With a catalog to show, a failed refresh is only news.
+                if (failure != null && catalog.catalog.first() != null) failureChannel.send(failure.error)
             }
         }
     }
 
-    private fun forget(error: DataError?) {
+    private fun forget() {
         loading?.cancel()
-        mutableState.value = Connection.Disconnected(error)
+        link.value = Link.Disconnected(error = null)
+    }
+
+    private fun render(link: Link, stored: Catalog?, chosen: ModelId?): Connection = when (link) {
+        Link.Loading -> Connection.Loading
+        is Link.Disconnected -> Connection.Disconnected(link.error)
+        Link.Validating -> Connection.Validating
+        is Link.Connected -> Connection.Connected(key = link.key, model = choiceOf(stored, chosen, link.catalogFetch))
+    }
+
+    private fun choiceOf(stored: Catalog?, chosen: ModelId?, fetch: Remote<Unit>?): ModelChoice = when {
+        stored != null -> chosen?.let(stored::get)?.let(ModelChoice::Chosen) ?: ModelChoice.None
+        fetch is Remote.Failed -> ModelChoice.Unavailable(fetch.error)
+        else -> ModelChoice.Loading
     }
 
     private fun <T> Outcome<T, DataError>.toRemote(): Remote<T> = when (this) {
@@ -105,6 +151,8 @@ internal class DefaultConnectInteractor(
 public class DefaultConnectInteractorFactory(
     private val account: OpenRouterAccountRepository,
     private val catalog: ModelCatalogRepository,
+    private val setup: ModelSetupRepository,
 ) : ConnectInteractor.Factory {
-    override fun create(scope: CoroutineScope): ConnectInteractor = DefaultConnectInteractor(scope, account, catalog)
+    override fun create(scope: CoroutineScope): ConnectInteractor =
+        DefaultConnectInteractor(scope, account, catalog, setup)
 }

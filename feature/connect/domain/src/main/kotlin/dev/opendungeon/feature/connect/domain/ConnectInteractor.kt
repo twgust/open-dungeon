@@ -21,10 +21,13 @@ public interface ConnectInteractor {
     /** Checks [rawKey] with OpenRouter and keeps it if accepted. Ignored while a key is being checked. */
     public fun connect(rawKey: String)
 
-    /** Fetches the key's details and the catalog again. Ignored unless connected. */
+    /** Fetches the key's details and the model catalog again. Ignored unless connected. */
     public fun refresh()
 
-    /** Forgets the key. If the device cannot remove it, the connection comes back and [failures] says so. */
+    /**
+     * Forgets the key and the catalog it fetched. If the device cannot remove the key, the connection comes
+     * back and [failures] says so.
+     */
     public fun disconnect()
 
     /** Makes an interactor whose work lives as long as [scope], typically a screen's. */
@@ -43,7 +46,21 @@ public sealed interface Connection {
 
     public data object Validating : Connection
 
-    public data class Connected(val key: Remote<KeyInfo>, val models: Remote<List<AiModel>>) : Connection
+    public data class Connected(val key: Remote<KeyInfo>, val model: ModelChoice) : Connection
+}
+
+/** The model the player writes with, as far as the stored catalog tells. */
+public sealed interface ModelChoice {
+    /** No catalog is stored yet and one is being fetched. */
+    public data object Loading : ModelChoice
+
+    /** No catalog is stored and fetching one failed. */
+    public data class Unavailable(val error: DataError) : ModelChoice
+
+    /** Nothing is chosen, or the chosen model is no longer offered. */
+    public data object None : ModelChoice
+
+    public data class Chosen(val model: AiModel) : ModelChoice
 }
 
 /** A value fetched from OpenRouter. */

@@ -1,8 +1,17 @@
 package dev.opendungeon.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import dev.opendungeon.core.database.model.CatalogDao
+import dev.opendungeon.core.database.model.CatalogFetchEntity
+import dev.opendungeon.core.database.model.CatalogModelEntity
+import dev.opendungeon.core.database.model.CatalogRankEntity
+import dev.opendungeon.core.database.model.ChosenModelEntity
+import dev.opendungeon.core.database.model.ModelTuningEntity
+import dev.opendungeon.core.database.model.RankingDao
+import dev.opendungeon.core.database.model.SetupDao
 import dev.opendungeon.core.database.story.DraftCharacterEntity
 import dev.opendungeon.core.database.story.DraftTakeEntity
 import dev.opendungeon.core.database.story.StoryDraftDao
@@ -16,13 +25,30 @@ import dev.opendungeon.core.database.story.StoryDraftEntity
  * reviewable diff and a migration to test against.
  */
 @Database(
-    entities = [StoryDraftEntity::class, DraftCharacterEntity::class, DraftTakeEntity::class],
-    version = 1,
+    entities = [
+        StoryDraftEntity::class,
+        DraftCharacterEntity::class,
+        DraftTakeEntity::class,
+        CatalogModelEntity::class,
+        CatalogFetchEntity::class,
+        CatalogRankEntity::class,
+        ChosenModelEntity::class,
+        ModelTuningEntity::class,
+    ],
+    version = 2,
     exportSchema = true,
+    // 2 adds the model catalog, the chosen model and tunings: new tables only.
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 @TypeConverters(StorageConverters::class)
 public abstract class OpenDungeonDatabase : RoomDatabase() {
     public abstract fun storyDraftDao(): StoryDraftDao
+
+    public abstract fun catalogDao(): CatalogDao
+
+    public abstract fun rankingDao(): RankingDao
+
+    public abstract fun setupDao(): SetupDao
 
     public companion object {
         public const val FILE_NAME: String = "open-dungeon.db"

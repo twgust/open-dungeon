@@ -37,6 +37,24 @@ class GenerationFailuresTest {
     }
 
     @Test
+    fun `no provider for the request is not an access problem`() {
+        assertEquals(GenerationError.NoProvider, koog(status = 404, body = "{}").toGenerationErrorOrNull())
+    }
+
+    @Test
+    fun `an error inside a 200 response keeps key, credit and rate meanings, and is otherwise an interruption`() {
+        assertEquals(
+            GenerationError.Access(DataError.InsufficientCredits("Out of credits")),
+            koog(OpenRouterFailure(402, "Out of credits")).toGenerationErrorOrNull(),
+        )
+        assertEquals(
+            GenerationError.Interrupted,
+            OpenRouterFailure(502, "Provider disconnected").toGenerationErrorOrNull(),
+        )
+        assertEquals(GenerationError.Interrupted, OpenRouterFailure(null, "Unknown").toGenerationErrorOrNull())
+    }
+
+    @Test
     fun `transport and decoding failures are named for what they are`() {
         assertEquals(GenerationError.Access(DataError.Network), koog(IOException("reset")).toGenerationErrorOrNull())
         assertEquals(

@@ -37,7 +37,7 @@ public class KoogTextGenerator(
             emit(TextEvent.Failed(GenerationError.Access(DataError.MissingApiKey)))
             return@flow
         }
-        val params = request.sampling.toOpenRouterParams(request.model, request.sessionId, requireParameters = false)
+        val params = request.tuning.toOpenRouterParams(request.model, request.sessionId, requireParameters = false)
         val frames = executor.executeStreaming(
             prompt = request.messages.toPrompt(id = PROMPT_ID, params = params),
             model = request.model.toLLModel(),
@@ -51,7 +51,7 @@ public class KoogTextGenerator(
 }
 
 /**
- * Text deltas pass through; the end frame becomes the single terminal event; anything else is dropped.
+ * Text and reasoning deltas pass through; the end frame becomes the single terminal event; anything else is dropped.
  * A stream that stops without an end frame reports [GenerationError.Interrupted], so collectors can
  * rely on exactly one terminal event.
  */
@@ -60,6 +60,7 @@ internal fun Flow<StreamFrame>.toTextEvents(): Flow<TextEvent> = flow {
     mapNotNull { frame ->
         when (frame) {
             is StreamFrame.TextDelta -> frame.text.takeIf(String::isNotEmpty)?.let(TextEvent::Delta)
+            is StreamFrame.ReasoningDelta -> frame.text?.takeIf(String::isNotEmpty)?.let(TextEvent::Reasoning)
             is StreamFrame.End -> frame.toTerminalEvent()
             else -> null
         }
@@ -81,7 +82,7 @@ private val TextEvent.isTerminal: Boolean
 
 private fun StreamFrame.End.toTerminalEvent(): TextEvent = when (finishReason) {
     FINISH_CONTENT_FILTER -> TextEvent.Failed(GenerationError.Refused)
-    FINISH_ERROR -> TextEvent.Failed(GenerationError.Interrupted)
-    FINISH_LENGTH -> TextEvent.Completed(usage = metaInfo.toTokenUsage(), cutOff = true)
-    else -> TextEvent.Completed(usage = metaInfo.toTokenUsage(), cutOff = false)
+    FINISH_ERROR -> TextEvent.Failed(metaInfo.reportedFailure()?.toGenerationError() ?: GenerationError.Interrupted)
+    FINISH_LENGTH -> TextEvent.Completed(usage = metaInfo.toUsage(), cutOff = true)
+    else -> TextEvent.Completed(usage = metaInfo.toUsage(), cutOff = false)
 }

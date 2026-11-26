@@ -2,7 +2,6 @@ package dev.opendungeon.data.generation
 
 import ai.koog.http.client.ktor.KtorKoogHttpClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -47,7 +46,7 @@ internal fun openRouterPromptExecutor(
         modelsPath = "models",
         embeddingsPath = "embeddings",
     )
-    val client = OpenRouterLLMClient(settings = settings, httpClient = httpClient)
+    val client = OpenRouterChatClient(settings = settings, httpClient = httpClient)
     return MultiLLMPromptExecutor(mapOf(LLMProvider.OpenRouter to client))
 }
 

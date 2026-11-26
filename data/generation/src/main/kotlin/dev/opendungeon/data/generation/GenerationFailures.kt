@@ -19,11 +19,13 @@ import java.io.IOException
  */
 internal fun Throwable.toGenerationErrorOrNull(): GenerationError? {
     val chain = generateSequence(this) { it.cause }.toList()
-    val http = chain.filterIsInstance<KoogHttpClientException>().firstNotNullOfOrNull { e ->
-        e.statusCode?.let { status -> DataError.fromHttpStatus(status, e.errorBody.errorMessage()) }
+    chain.firstNotNullOfOrNull { it as? OpenRouterFailure }?.let { return it.toGenerationError() }
+    val status = chain.filterIsInstance<KoogHttpClientException>().firstNotNullOfOrNull { e ->
+        e.statusCode?.let { it to e.errorBody.errorMessage() }
     }
     return when {
-        http != null -> GenerationError.Access(http)
+        status?.first == NOT_FOUND -> GenerationError.NoProvider
+        status != null -> GenerationError.Access(DataError.fromHttpStatus(status.first, status.second))
         chain.any { it is IOException } -> GenerationError.Access(DataError.Network)
         chain.any { it is SerializationException } -> GenerationError.Access(DataError.UnexpectedResponse)
         chain.any { it is IncompleteStreamException } -> GenerationError.Interrupted
@@ -31,6 +33,25 @@ internal fun Throwable.toGenerationErrorOrNull(): GenerationError? {
         // without a response. Anything else in the chain would be a bug, and is not caught here.
         chain.all { it.isKoogRequestFailure } -> GenerationError.Interrupted
         else -> null
+    }
+}
+
+/**
+ * OpenRouter's chat completions answer 404 when no provider of the model takes the request as sent,
+ * typically because none honours every parameter while `require_parameters` is set.
+ */
+private const val NOT_FOUND = 404
+
+/**
+ * A failure inside a 200 response. Key, credit and rate problems keep their meaning; anything else, such
+ * as a provider failing mid-answer, broke off the generation.
+ */
+internal fun OpenRouterFailure.toGenerationError(): GenerationError {
+    val error = status?.let { DataError.fromHttpStatus(it, message) }
+    return when (error) {
+        is DataError.Unauthorized, is DataError.InsufficientCredits, is DataError.RateLimited ->
+            GenerationError.Access(error)
+        else -> GenerationError.Interrupted
     }
 }
 

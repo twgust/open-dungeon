@@ -1,0 +1,568 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "6f47525ec4319bb49a9f61a33c47eebf",
+    "entities": [
+      {
+        "tableName": "story_draft",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `step` TEXT NOT NULL, `genres` TEXT NOT NULL, `limit_desire` TEXT NOT NULL, `limit_violence` TEXT NOT NULL, `limit_note` TEXT, `first_line` TEXT NOT NULL, `chosen_take_id` TEXT, `twist_text` TEXT, `twist_own` INTEGER, `tone_text` TEXT, `tone_own` INTEGER, `setting_text` TEXT, `setting_own` INTEGER, `premise_text` TEXT, `premise_own` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "step",
+            "columnName": "step",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "genres",
+            "columnName": "genres",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "limitDesire",
+            "columnName": "limit_desire",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "limitViolence",
+            "columnName": "limit_violence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "limitNote",
+            "columnName": "limit_note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "firstLine",
+            "columnName": "first_line",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chosenTakeId",
+            "columnName": "chosen_take_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "twist.text",
+            "columnName": "twist_text",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "twist.own",
+            "columnName": "twist_own",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tone.text",
+            "columnName": "tone_text",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tone.own",
+            "columnName": "tone_own",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "setting.text",
+            "columnName": "setting_text",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "setting.own",
+            "columnName": "setting_own",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "premise.text",
+            "columnName": "premise_text",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "premise.own",
+            "columnName": "premise_own",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "draft_character",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `draft_id` TEXT NOT NULL, `slot` TEXT NOT NULL, `position` INTEGER NOT NULL, `origin` TEXT, `in_story` INTEGER NOT NULL, `role` TEXT, `name` TEXT, `age` TEXT, `gender` TEXT, `appearance` TEXT, `personality` TEXT NOT NULL, `speech` TEXT, `voice_line` TEXT, `wants` TEXT, `flaw` TEXT, `habit` TEXT, `good_at` TEXT, `secret_kind` TEXT NOT NULL, `secret_text` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`draft_id`) REFERENCES `story_draft`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "draftId",
+            "columnName": "draft_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "origin",
+            "columnName": "origin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "inStory",
+            "columnName": "in_story",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "age",
+            "columnName": "age",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "gender",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appearance",
+            "columnName": "appearance",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "personality",
+            "columnName": "personality",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "speech",
+            "columnName": "speech",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "voiceLine",
+            "columnName": "voice_line",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "wants",
+            "columnName": "wants",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "flaw",
+            "columnName": "flaw",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "habit",
+            "columnName": "habit",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "goodAt",
+            "columnName": "good_at",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "secretKind",
+            "columnName": "secret_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "secretText",
+            "columnName": "secret_text",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_draft_character_draft_id",
+            "unique": false,
+            "columnNames": [
+              "draft_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_draft_character_draft_id` ON `${TABLE_NAME}` (`draft_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "story_draft",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "draft_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "draft_take",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `draft_id` TEXT NOT NULL, `position` INTEGER NOT NULL, `model_id` TEXT NOT NULL, `text` TEXT NOT NULL, `state` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`draft_id`) REFERENCES `story_draft`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "draftId",
+            "columnName": "draft_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelId",
+            "columnName": "model_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_draft_take_draft_id",
+            "unique": false,
+            "columnNames": [
+              "draft_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_draft_take_draft_id` ON `${TABLE_NAME}` (`draft_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "story_draft",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "draft_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "catalog_model",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `position` INTEGER NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `context_length` INTEGER, `max_completion_tokens` INTEGER, `input_modalities` TEXT NOT NULL, `output_modalities` TEXT NOT NULL, `supported_parameters` TEXT NOT NULL, `is_moderated` INTEGER, `price_kind` TEXT NOT NULL, `price_prompt` TEXT, `price_completion` TEXT, `default_temperature` REAL, `default_top_p` REAL, `default_top_k` INTEGER, `default_frequency_penalty` REAL, `default_presence_penalty` REAL, `default_repetition_penalty` REAL, `reasoning_mandatory` INTEGER, `reasoning_enabled_by_default` INTEGER, `reasoning_efforts` TEXT, `reasoning_default_effort` TEXT, `reasoning_supports_budget` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "contextLength",
+            "columnName": "context_length",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "maxCompletionTokens",
+            "columnName": "max_completion_tokens",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "inputModalities",
+            "columnName": "input_modalities",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "outputModalities",
+            "columnName": "output_modalities",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "supportedParameters",
+            "columnName": "supported_parameters",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isModerated",
+            "columnName": "is_moderated",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pricing.kind",
+            "columnName": "price_kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pricing.prompt",
+            "columnName": "price_prompt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pricing.completion",
+            "columnName": "price_completion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "defaults.temperature",
+            "columnName": "default_temperature",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "defaults.topP",
+            "columnName": "default_top_p",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "defaults.topK",
+            "columnName": "default_top_k",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "defaults.frequencyPenalty",
+            "columnName": "default_frequency_penalty",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "defaults.presencePenalty",
+            "columnName": "default_presence_penalty",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "defaults.repetitionPenalty",
+            "columnName": "default_repetition_penalty",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "reasoning.mandatory",
+            "columnName": "reasoning_mandatory",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reasoning.enabledByDefault",
+            "columnName": "reasoning_enabled_by_default",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reasoning.efforts",
+            "columnName": "reasoning_efforts",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reasoning.defaultEffort",
+            "columnName": "reasoning_default_effort",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reasoning.supportsBudget",
+            "columnName": "reasoning_supports_budget",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "catalog_fetch",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` INTEGER NOT NULL, `fetched_at_millis` INTEGER NOT NULL, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fetchedAtMillis",
+            "columnName": "fetched_at_millis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      },
+      {
+        "tableName": "catalog_rank",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sort` TEXT NOT NULL, `position` INTEGER NOT NULL, `model_id` TEXT NOT NULL, PRIMARY KEY(`sort`, `position`))",
+        "fields": [
+          {
+            "fieldPath": "sort",
+            "columnName": "sort",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelId",
+            "columnName": "model_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "sort",
+            "position"
+          ]
+        }
+      },
+      {
+        "tableName": "chosen_model",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`slot` INTEGER NOT NULL, `model_id` TEXT NOT NULL, PRIMARY KEY(`slot`))",
+        "fields": [
+          {
+            "fieldPath": "slot",
+            "columnName": "slot",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelId",
+            "columnName": "model_id",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "slot"
+          ]
+        }
+      },
+      {
+        "tableName": "model_tuning",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`model_id` TEXT NOT NULL, `tuning` TEXT NOT NULL, PRIMARY KEY(`model_id`))",
+        "fields": [
+          {
+            "fieldPath": "modelId",
+            "columnName": "model_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tuning",
+            "columnName": "tuning",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "model_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f47525ec4319bb49a9f61a33c47eebf')"
+    ]
+  }
+}

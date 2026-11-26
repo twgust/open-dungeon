@@ -8,6 +8,7 @@ import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.android.MetroAppComponentProviders
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
+import kotlin.time.Clock
 
 /**
  * The application-wide graph. Modules contribute to [AppScope] with `@ContributesBinding`,
@@ -24,6 +25,9 @@ interface AppGraph :
     @Provides
     fun provideAppAttribution(): AppAttribution =
         AppAttribution(title = "Open Dungeon", siteUrl = "https://github.com/twgust/open-dungeon")
+
+    @Provides
+    fun provideClock(): Clock = Clock.System
 
     @DependencyGraph.Factory
     fun interface Factory {

@@ -7,6 +7,12 @@ public sealed interface GenerationError {
     /** The request failed before the model answered: no key, no credits, offline, rate limited, rejected. */
     public data class Access(val error: DataError) : GenerationError
 
+    /**
+     * No provider of the model accepts this request as sent, typically because no single one supports
+     * every tuned parameter. Changing the tuning or the model helps; retrying does not.
+     */
+    public data object NoProvider : GenerationError
+
     /** The provider's moderation stopped the output. Another model may write it. */
     public data object Refused : GenerationError
 

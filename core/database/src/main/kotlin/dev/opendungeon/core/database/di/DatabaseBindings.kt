@@ -3,6 +3,9 @@ package dev.opendungeon.core.database.di
 import android.content.Context
 import androidx.room.Room
 import dev.opendungeon.core.database.OpenDungeonDatabase
+import dev.opendungeon.core.database.model.CatalogDao
+import dev.opendungeon.core.database.model.RankingDao
+import dev.opendungeon.core.database.model.SetupDao
 import dev.opendungeon.core.database.story.StoryDraftDao
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -24,4 +27,13 @@ public object DatabaseBindings {
 
     @Provides
     public fun provideStoryDraftDao(database: OpenDungeonDatabase): StoryDraftDao = database.storyDraftDao()
+
+    @Provides
+    public fun provideCatalogDao(database: OpenDungeonDatabase): CatalogDao = database.catalogDao()
+
+    @Provides
+    public fun provideRankingDao(database: OpenDungeonDatabase): RankingDao = database.rankingDao()
+
+    @Provides
+    public fun provideSetupDao(database: OpenDungeonDatabase): SetupDao = database.setupDao()
 }

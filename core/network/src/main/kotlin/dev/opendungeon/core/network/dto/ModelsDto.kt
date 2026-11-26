@@ -2,6 +2,7 @@ package dev.opendungeon.core.network.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 // Mirrors `ModelsListResponse` / `Model` in https://openrouter.ai/openapi.json (checked 2026-11-25).
 // Only fields the app reads are declared; unknown fields are ignored. Fields the spec marks
@@ -33,6 +34,8 @@ public data class ModelDto(
     @SerialName("supported_parameters") val supportedParameters: List<String> = emptyList(),
     @SerialName("default_parameters") val defaultParameters: DefaultParametersDto? = null,
     val reasoning: ModelReasoningDto? = null,
+    /** Request paths that serve the model, such as `/api/v1/chat/completions`. Absent on older responses. */
+    val endpoints: List<String>? = null,
 )
 
 @Serializable
@@ -49,6 +52,7 @@ public data class PricingDto(val prompt: String, val completion: String)
 public data class TopProviderDto(
     @SerialName("context_length") val contextLength: Int? = null,
     @SerialName("max_completion_tokens") val maxCompletionTokens: Int? = null,
+    @SerialName("is_moderated") val isModerated: Boolean? = null,
 )
 
 @Serializable
@@ -65,6 +69,11 @@ public data class DefaultParametersDto(
 public data class ModelReasoningDto(
     val mandatory: Boolean = false,
     @SerialName("default_enabled") val defaultEnabled: Boolean = false,
-    @SerialName("supported_efforts") val supportedEfforts: List<String> = emptyList(),
+    /**
+     * Highest effort first. The spec tells three cases apart: a list, JSON `null` (every effort is
+     * accepted) and absent (no choice of effort). Kotlin `null` here is absent; JSON `null` is `JsonNull`.
+     */
+    @SerialName("supported_efforts") val supportedEfforts: JsonElement? = null,
     @SerialName("default_effort") val defaultEffort: String? = null,
+    @SerialName("supports_max_tokens") val supportsMaxTokens: Boolean = false,
 )

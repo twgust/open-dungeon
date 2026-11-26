@@ -52,6 +52,7 @@ internal fun aiModel(
     supportedParameters = parameters.mapTo(linkedSetOf(), ModelParameter::fromWireName),
     defaultParameters = DefaultParameters(),
     reasoning = null,
+    isModerated = false,
 )
 
 /**
@@ -101,8 +102,17 @@ internal fun eventStream(vararg events: String): MockResponse = MockResponse.Bui
     .body(events.joinToString(separator = "") { "data: $it\n\n" } + "data: [DONE]\n\n")
     .build()
 
-internal fun chunk(content: String? = null, finishReason: String? = null, usage: String? = null): String {
-    val delta = content?.let { """{"role":"assistant","content":${Json.encodeToString(it)}}""" } ?: "{}"
+internal fun chunk(
+    content: String? = null,
+    reasoning: String? = null,
+    finishReason: String? = null,
+    usage: String? = null,
+): String {
+    val delta = when {
+        content != null -> """{"role":"assistant","content":${Json.encodeToString(content)}}"""
+        reasoning != null -> """{"role":"assistant","content":"","reasoning":${Json.encodeToString(reasoning)}}"""
+        else -> "{}"
+    }
     val finish = finishReason?.let { "\"$it\"" } ?: "null"
     val usageField = usage?.let { ""","usage":$it""" }.orEmpty()
     return """{"id":"gen-1","object":"chat.completion.chunk","created":1764100000,"model":"nous/hermes-4-405b",""" +
