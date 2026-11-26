@@ -1,12 +1,9 @@
 package dev.opendungeon.feature.newstory.domain
 
-import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
 import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.Secret
-import dev.opendungeon.domain.story.Take
-import dev.opendungeon.domain.story.TakeId
 
 /*
  * The cards a step shows, already decided by its policy: which lines, in which order, and what a secret
@@ -38,16 +35,6 @@ public data class PersonCard(
     val lines: List<ShownLine>,
     val secret: ShownSecret,
     val inStory: Boolean,
-)
-
-/** One audition of the opening turn. [canBeChosen] is false while it is writing or after it was cut short. */
-public data class Audition(
-    val id: TakeId,
-    val model: ModelId,
-    val text: String,
-    val state: Take.State,
-    val chosen: Boolean,
-    val canBeChosen: Boolean,
 )
 
 /** [lines] in order, empty ones shown blank. */

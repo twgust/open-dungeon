@@ -14,5 +14,5 @@ public sealed interface DraftEdit {
 
     public data class Premise(override val text: String) : DraftEdit
 
-    public data class FirstLine(override val text: String) : DraftEdit
+    public data class Opening(override val text: String) : DraftEdit
 }

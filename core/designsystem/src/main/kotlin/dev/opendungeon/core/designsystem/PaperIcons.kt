@@ -48,6 +48,42 @@ public object PaperIcons {
         lineTo(17.5f, 10.5f)
     }
 
+    /** A wand with sparks, for asking a model to write. */
+    public val Wand: ImageVector = stroked("Wand") {
+        moveTo(4f, 20f)
+        lineTo(14.5f, 9.5f)
+        moveTo(13f, 8f)
+        lineTo(16f, 11f)
+        moveTo(18f, 3f)
+        verticalLineTo(6f)
+        moveTo(16.5f, 4.5f)
+        horizontalLineTo(19.5f)
+        moveTo(20.5f, 9f)
+        verticalLineTo(11f)
+        moveTo(19.5f, 10f)
+        horizontalLineTo(21.5f)
+        moveTo(11f, 3.5f)
+        verticalLineTo(5f)
+        moveTo(10.25f, 4.25f)
+        horizontalLineTo(11.75f)
+    }
+
+    /** A filled square, for stopping what runs. */
+    public val Stop: ImageVector = ImageVector.Builder("Stop", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = SolidColor(Color.Black)) {
+            moveTo(7.5f, 5f)
+            horizontalLineTo(16.5f)
+            arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 19f, y1 = 7.5f)
+            verticalLineTo(16.5f)
+            arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 16.5f, y1 = 19f)
+            horizontalLineTo(7.5f)
+            arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 5f, y1 = 16.5f)
+            verticalLineTo(7.5f)
+            arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 7.5f, y1 = 5f)
+            close()
+        }
+    }.build()
+
     /** A die showing three, for the step's roll. */
     public val Die: ImageVector = die("Die", pips = listOf(9f to 9f, 12f to 12f, 15f to 15f))
 

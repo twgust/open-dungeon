@@ -18,6 +18,13 @@ public interface StepPolicy {
 
     public fun body(draft: StoryDraft): StepBody
 
+    /**
+     * The body with the step's [writer] in it. Most steps show what is written so far as if it were
+     * the draft; a step that tells the model's words apart from the player's overrides this.
+     */
+    public fun body(draft: StoryDraft, writer: WriterStatus): StepBody =
+        body((writer as? WriterStatus.Writing)?.preview ?: draft)
+
     public fun canAdvance(draft: StoryDraft): Boolean
 
     public fun canRoll(draft: StoryDraft): Boolean = false
@@ -60,6 +67,36 @@ public interface StepWriter {
      * Cancelling the collector cancels the request.
      */
     public fun write(draft: StoryDraft, model: DraftingModel): Flow<WriterEvent>
+
+    /**
+     * Stopping keeps what is written so far, as if the writing had ended there. Otherwise stopping
+     * keeps what was there before it started. Leaving the step while it writes never keeps anything.
+     */
+    public val keepsWhenStopped: Boolean get() = false
+
+    /** What the writing keeps can be taken back with [StoryWizard.undo], until the draft changes again. */
+    public val undoable: Boolean get() = false
+
+    /**
+     * A failure shows on the step, which offers to try again, rather than as a passing notice. Either
+     * way the draft stays as it was before the writing started.
+     */
+    public val failsInPlace: Boolean get() = false
+}
+
+/** The writer's part in what the current step shows, as the wizard hands it to the step's policy. */
+public sealed interface WriterStatus {
+    /** Nothing is writing, and the last writing left nothing to offer. */
+    public data object Idle : WriterStatus
+
+    /** A model is writing on [from]. [preview] is what it has so far, or `null` before its first words. */
+    public data class Writing(val from: StoryDraft, val preview: StoryDraft?) : WriterStatus
+
+    /** The last writing was kept and can still be taken back. [stopped] when the player cut it short. */
+    public data class Kept(val stopped: Boolean) : WriterStatus
+
+    /** The last writing failed. The draft is as it was before it started. */
+    public data class Failed(val error: DraftingError) : WriterStatus
 }
 
 public sealed interface WriterEvent {

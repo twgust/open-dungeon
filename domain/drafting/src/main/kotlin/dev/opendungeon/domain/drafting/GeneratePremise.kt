@@ -16,19 +16,10 @@ import kotlinx.coroutines.flow.flow
 public interface GeneratePremise {
     /**
      * A cold flow: nothing is requested until it is collected, and cancelling the collector cancels the
-     * request. It ends with exactly one [PremiseProgress.Written] or [PremiseProgress.Failed]. A premise
+     * request. It ends with exactly one [WritingProgress.Written] or [WritingProgress.Failed]. A premise
      * already in [draft] is one to move away from, so a reroll changes what is on screen.
      */
-    public operator fun invoke(draft: StoryDraft, model: DraftingModel): Flow<PremiseProgress>
-}
-
-public sealed interface PremiseProgress {
-    /** The premise so far. */
-    public data class Writing(val text: String) : PremiseProgress
-
-    public data class Written(val text: String) : PremiseProgress
-
-    public data class Failed(val error: DraftingError) : PremiseProgress
+    public operator fun invoke(draft: StoryDraft, model: DraftingModel): Flow<WritingProgress>
 }
 
 @Inject
@@ -38,7 +29,7 @@ public class DefaultGeneratePremise(private val generator: TextGenerator, senten
 
     private val prompt = PremisePrompt(StoryBrief(sentences))
 
-    override fun invoke(draft: StoryDraft, model: DraftingModel): Flow<PremiseProgress> = flow {
+    override fun invoke(draft: StoryDraft, model: DraftingModel): Flow<WritingProgress> = flow {
         val request = TextRequest(
             model = model.model,
             messages = prompt.messages(draft),
@@ -51,20 +42,20 @@ public class DefaultGeneratePremise(private val generator: TextGenerator, senten
                 is TextEvent.Delta -> {
                     text.append(event.text)
                     // Leading whitespace and an opening quote arrive first and would only flicker.
-                    text.toString().cleaned().takeIf(String::isNotEmpty)?.let { emit(PremiseProgress.Writing(it)) }
+                    text.toString().cleaned().takeIf(String::isNotEmpty)?.let { emit(WritingProgress.Writing(it)) }
                 }
                 is TextEvent.Reasoning -> Unit
                 is TextEvent.Completed -> {
                     val premise = text.toString().cleaned()
                     emit(
                         if (premise.isEmpty()) {
-                            PremiseProgress.Failed(DraftingError.Unusable)
+                            WritingProgress.Failed(DraftingError.Unusable)
                         } else {
-                            PremiseProgress.Written(premise)
+                            WritingProgress.Written(premise)
                         },
                     )
                 }
-                is TextEvent.Failed -> emit(PremiseProgress.Failed(DraftingError.Generation(event.error)))
+                is TextEvent.Failed -> emit(WritingProgress.Failed(DraftingError.Generation(event.error)))
             }
         }
     }

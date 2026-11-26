@@ -56,7 +56,15 @@ internal fun AppScreens() {
             entry<Models> { ModelPickerRoute(onBack = backStack::pop, onOpenTuning = { backStack.add(Tuning) }) }
             entry<Tuning> { ModelTunerRoute(onBack = backStack::pop, onTry = { backStack.add(Trial) }) }
             entry<Trial> { TryRoute(onLeave = backStack::pop) }
-            entry<NewStory> { NewStoryRoute(onLeave = backStack::pop, onModels = { backStack.add(Models) }) }
+            entry<NewStory> {
+                NewStoryRoute(
+                    onLeave = backStack::pop,
+                    onModels = { backStack.add(Models) },
+                    // Play is not built yet. The begun draft is saved, opening and all, and stays the open
+                    // draft, so New story resumes it on the opening until play takes over from here.
+                    onBegin = { backStack.pop() },
+                )
+            }
         },
     )
 }

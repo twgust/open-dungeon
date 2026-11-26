@@ -69,4 +69,22 @@ class SentenceBuilderTest {
         )
         assertTrue(builder.cast(full).isEmpty())
     }
+
+    @Test
+    fun `the whole story ends with who is in it`() {
+        val maren = CastMember(Character(id = CharacterId("m"), name = "Maren Kask"), CastMember.Origin.Offered, true)
+        val ottilie =
+            CastMember(Character(id = CharacterId("o"), name = "Sister Ottilie"), CastMember.Origin.Offered, true)
+
+        assertEquals(
+            "A gothic noir story, twisted by a heist, starring a disgraced smuggler, told tenderly, " +
+                "set in a lighthouse on stilts, among Maren Kask and Sister Ottilie.",
+            builder.whole(full.copy(cast = listOf(maren, ottilie))).text,
+        )
+        assertEquals(
+            "A gothic noir story, twisted by a heist, starring a disgraced smuggler, told tenderly, " +
+                "set in a lighthouse on stilts.",
+            builder.whole(full).text,
+        )
+    }
 }

@@ -6,7 +6,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
-/** One draft's scalar choices. Characters and takes live in their own tables. */
+/** One draft's scalar choices. Characters live in their own table. */
 @Entity(tableName = "story_draft")
 public data class StoryDraftEntity(
     @PrimaryKey val id: String,
@@ -19,8 +19,7 @@ public data class StoryDraftEntity(
     @ColumnInfo(name = "limit_desire") val limitDesire: String,
     @ColumnInfo(name = "limit_violence") val limitViolence: String,
     @ColumnInfo(name = "limit_note") val limitNote: String?,
-    @ColumnInfo(name = "first_line") val firstLine: String,
-    @ColumnInfo(name = "chosen_take_id") val chosenTakeId: String?,
+    val opening: String,
 )
 
 /** A choice in the story's sentence: its words, and whether the player wrote them. */

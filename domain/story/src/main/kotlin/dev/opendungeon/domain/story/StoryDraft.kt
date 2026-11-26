@@ -12,15 +12,14 @@ public data class StoryDraft(
     val limits: ContentLimits = ContentLimits(),
     val premise: Phrase? = null,
     val cast: List<CastMember> = emptyList(),
-    val firstLine: String = "",
-    val takes: List<Take> = emptyList(),
-    val chosenTake: TakeId? = null,
+    /** How the story begins, as the player wrote it or kept it from a model. Play starts from it. */
+    val opening: String = "",
 ) {
     val castInStory: List<Character>
         get() = cast.filter(CastMember::inStory).map(CastMember::character)
 
     public companion object {
         public const val MAX_GENRES: Int = 2
-        public const val MAX_FIRST_LINE_LENGTH: Int = 4_000
+        public const val MAX_OPENING_LENGTH: Int = 4_000
     }
 }

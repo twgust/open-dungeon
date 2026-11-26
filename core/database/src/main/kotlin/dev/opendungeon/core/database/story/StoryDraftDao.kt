@@ -28,8 +28,6 @@ public interface StoryDraftDao {
         upsert(stored.draft)
         deleteCharacters(id)
         insertCharacters(stored.characters)
-        deleteTakes(id)
-        insertTakes(stored.takes)
     }
 
     @Query("DELETE FROM story_draft WHERE id = :id")
@@ -47,10 +45,4 @@ public interface StoryDraftDao {
 
     @Insert
     public suspend fun insertCharacters(characters: List<DraftCharacterEntity>)
-
-    @Query("DELETE FROM draft_take WHERE draft_id = :draftId")
-    public suspend fun deleteTakes(draftId: String)
-
-    @Insert
-    public suspend fun insertTakes(takes: List<DraftTakeEntity>)
 }

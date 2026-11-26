@@ -29,23 +29,28 @@ public interface StoryWizard {
 
     public fun edit(edit: DraftEdit)
 
-    public fun roll()
-
-    public fun rollLine(line: CharacterLine)
+    /** Rolls the step's die, or with [line] the die beside that line of a character card. */
+    public fun roll(line: CharacterLine? = null)
 
     public fun next()
 
     /** Steps back. While a model writes, it asks first: [WizardState.confirmingLeave]. */
     public fun back()
 
-    /** Stops the model writing the current step. What was there before it started stays. */
+    /**
+     * Stops the model writing the current step. What was there before it started stays, and on a step
+     * whose writer keeps what it wrote, so does what was written so far.
+     */
     public fun stop()
 
-    /** Leaving after all: stops the writing, then steps back. */
-    public fun confirmLeave()
+    /** Takes back what a model last added, where the step allows it, as long as nothing changed since. */
+    public fun undo()
 
-    /** Staying after all: the writing goes on. */
-    public fun stay()
+    /** Begins the story from the last step, once the step is complete and nothing is writing. */
+    public fun begin()
+
+    /** Answers [WizardState.confirmingLeave]: staying lets the writing go on, leaving stops it and steps back. */
+    public fun answerLeave(answer: LeaveAnswer)
 
     /** Makes a wizard whose work lives as long as [scope], typically a screen's. */
     public fun interface Factory {

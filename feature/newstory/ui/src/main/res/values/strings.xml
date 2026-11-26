@@ -11,8 +11,7 @@
     <string name="wizard_prompt_limits">How far?</string>
     <string name="wizard_prompt_premise">It begins</string>
     <string name="wizard_prompt_cast">Among them</string>
-    <string name="wizard_prompt_first_line">The first line</string>
-    <string name="wizard_prompt_first_turn">The first turn</string>
+    <string name="wizard_prompt_opening">The opening</string>
 
     <string name="wizard_own">my own</string>
     <string name="wizard_own_limits">my own limits</string>
@@ -73,14 +72,19 @@
 
     <string name="wizard_premise_label">Premise</string>
     <string name="wizard_premise_hint">in your own words…</string>
-    <string name="wizard_first_line_label">First line</string>
-    <string name="wizard_first_line_hint">or leave it to the story</string>
-    <string name="wizard_first_line_count">%1$d / %2$d</string>
-
-    <string name="wizard_take_writing">%1$s is writing…</string>
-    <string name="wizard_take_interrupted">%1$s · STOPPED EARLY</string>
-    <string name="wizard_take_choose">this one</string>
-    <string name="wizard_take_chosen">chosen</string>
+    <string name="wizard_opening_label">The opening</string>
+    <string name="wizard_opening_hint">Write how the story begins</string>
+    <string name="wizard_opening_write">Write it for me</string>
+    <string name="wizard_opening_continue">Continue my text</string>
+    <string name="wizard_opening_writing">Writing…</string>
+    <!-- What tapping the text does while a model writes it, read out by screen readers. -->
+    <string name="wizard_opening_stop_and_edit">Stop and edit</string>
+    <string name="wizard_opening_stopped">Stopped.</string>
+    <string name="wizard_opening_undo">Undo</string>
+    <string name="wizard_opening_failed">Couldn’t generate the text.</string>
+    <string name="wizard_opening_unchanged">Your text is unchanged.</string>
+    <string name="wizard_opening_retry">Try again</string>
+    <string name="wizard_begin">Begin</string>
 
     <string name="wizard_failure_storage_full">Storage full</string>
     <string name="wizard_failure_storage">Storage error</string>
@@ -96,7 +100,8 @@
     <string name="wizard_model_writing">%1$s is writing…</string>
     <string name="wizard_model_none">Choose a model</string>
     <string name="wizard_stop">Stop</string>
-    <string name="wizard_leave_title">Stop writing?</string>
-    <string name="wizard_leave">Stop</string>
-    <string name="wizard_stay">Keep writing</string>
+    <string name="wizard_leave_title">Stop generating?</string>
+    <string name="wizard_leave">Stop and go back</string>
+    <string name="wizard_stay">Keep generating</string>
+    <string name="wizard_leave_note_opening">Going back discards the generated text. Your own text is kept.</string>
 </resources>

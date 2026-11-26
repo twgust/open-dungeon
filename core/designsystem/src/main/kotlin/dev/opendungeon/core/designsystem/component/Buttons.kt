@@ -116,6 +116,39 @@ public fun GhostTextButton(
     }
 }
 
+/**
+ * A hairline pill with an icon that asks for something to be done, such as the wand. [running] fills
+ * it with ink, for the one thing that is under way and can be stopped from it.
+ */
+@Composable
+public fun ActionPill(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    running: Boolean = false,
+    enabled: Boolean = true,
+) {
+    val colors = Paper.colors
+    val fill = if (running) colors.ink else Color.Transparent
+    val content = if (running) colors.onInk else colors.ink
+    PillFrame(
+        modifier = modifier
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .border(1.dp, if (running) colors.ink else colors.hairline, CircleShape)
+            .background(fill, CircleShape),
+        onToggle = onClick,
+        picked = null,
+        enabled = enabled,
+        padding = PaddingValues(start = 14.dp, top = 12.dp, end = 18.dp, bottom = 12.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
+            Text(text, style = Paper.type.button, color = content)
+        }
+    }
+}
+
 /** The die in the step's bottom bar. */
 @Composable
 public fun DieButton(
@@ -163,15 +196,18 @@ public fun NextArrow(
     }
 }
 
-/** The last step's ink pill that starts the story. */
+/** The last step's ink pill that starts the story. Faded until the story can start. */
 @Composable
-public fun BeginButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+public fun BeginButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val colors = Paper.colors
     PillFrame(
-        modifier = modifier.border(1.dp, colors.ink, CircleShape).background(colors.ink, CircleShape),
+        modifier = modifier
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .border(1.dp, colors.ink, CircleShape)
+            .background(colors.ink, CircleShape),
         onToggle = onClick,
         picked = null,
-        enabled = true,
+        enabled = enabled,
         padding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
     ) {
         Text(

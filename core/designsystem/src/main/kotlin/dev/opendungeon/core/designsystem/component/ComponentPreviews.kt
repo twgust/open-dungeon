@@ -54,6 +54,11 @@ private fun SentenceStepPreview() = OnPaper {
         NextArrow("Next", onClick = {})
         BeginButton("Begin", onClick = {})
     }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        ActionPill("Write it for me", PaperIcons.Wand, onClick = {})
+        ActionPill("Stop", PaperIcons.Stop, onClick = {}, running = true)
+    }
+    BeginButton("Begin", onClick = {}, enabled = false)
 }
 
 @PreviewOnPaper

@@ -29,9 +29,9 @@ class GeneratePremiseTest {
 
         assertEquals(
             listOf(
-                PremiseProgress.Writing("You owe"),
-                PremiseProgress.Writing("You owe the salt."),
-                PremiseProgress.Written("You owe the salt."),
+                WritingProgress.Writing("You owe"),
+                WritingProgress.Writing("You owe the salt."),
+                WritingProgress.Written("You owe the salt."),
             ),
             generate(fullDraft, drafter).toList(),
         )
@@ -45,9 +45,9 @@ class GeneratePremiseTest {
             TextEvent.Completed(null, cutOff = false),
         )
 
-        assertEquals(PremiseProgress.Written("You run."), wrapped(fullDraft, drafter).toList().last())
+        assertEquals(WritingProgress.Written("You run."), wrapped(fullDraft, drafter).toList().last())
         assertEquals(
-            PremiseProgress.Written("\"Run,\" she says. \"Now.\""),
+            WritingProgress.Written("\"Run,\" she says. \"Now.\""),
             quoting(fullDraft, drafter).toList().last(),
         )
     }
@@ -56,7 +56,7 @@ class GeneratePremiseTest {
     fun `a model that writes nothing has written nothing usable`() = runTest {
         val (_, generate) = premise(TextEvent.Delta("  \n"), TextEvent.Completed(null, cutOff = false))
 
-        assertEquals(listOf(PremiseProgress.Failed(DraftingError.Unusable)), generate(fullDraft, drafter).toList())
+        assertEquals(listOf(WritingProgress.Failed(DraftingError.Unusable)), generate(fullDraft, drafter).toList())
     }
 
     @Test
@@ -65,7 +65,7 @@ class GeneratePremiseTest {
         val (_, generate) = premise(TextEvent.Delta("You"), TextEvent.Failed(error))
 
         assertEquals(
-            PremiseProgress.Failed(DraftingError.Generation(error)),
+            WritingProgress.Failed(DraftingError.Generation(error)),
             generate(fullDraft, drafter).toList().last(),
         )
     }

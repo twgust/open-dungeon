@@ -9,16 +9,8 @@ import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
-import dev.opendungeon.feature.newstory.domain.policy.CastPolicy
-import dev.opendungeon.feature.newstory.domain.policy.FirstLinePolicy
-import dev.opendungeon.feature.newstory.domain.policy.FirstTurnPolicy
 import dev.opendungeon.feature.newstory.domain.policy.GenrePolicy
 import dev.opendungeon.feature.newstory.domain.policy.LimitsPolicy
-import dev.opendungeon.feature.newstory.domain.policy.PremisePolicy
-import dev.opendungeon.feature.newstory.domain.policy.SettingPolicy
-import dev.opendungeon.feature.newstory.domain.policy.StarringPolicy
-import dev.opendungeon.feature.newstory.domain.policy.TonePolicy
-import dev.opendungeon.feature.newstory.domain.policy.TwistPolicy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -41,18 +33,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultStoryWizardTest {
 
-    private val policies: Set<StepPolicy> = setOf(
-        GenrePolicy(TestVocabulary, FirstWordsRoll()),
-        TwistPolicy(TestVocabulary, FirstWordsRoll()),
-        StarringPolicy(TestVocabulary, FirstWordsRoll(), CountingIds("you")),
-        TonePolicy(TestVocabulary, FirstWordsRoll()),
-        SettingPolicy(TestVocabulary, FirstWordsRoll()),
-        LimitsPolicy(),
-        PremisePolicy(ScriptedPremise()),
-        CastPolicy(ScriptedCast()),
-        FirstLinePolicy(),
-        FirstTurnPolicy(),
-    )
+    private val policies: Set<StepPolicy> = wizardPolicies()
 
     private fun wizard(
         scope: CoroutineScope,
@@ -168,15 +149,24 @@ class DefaultStoryWizardTest {
     }
 
     @Test
-    fun `the last step never offers a next that leads nowhere`() = runTest(UnconfinedTestDispatcher()) {
-        val wizard =
-            wizard(backgroundScope, InMemoryDraftRepository(StoryDraft(DraftId("d"), step = CreationStep.FirstTurn)))
+    fun `the last step moves forward by beginning, never by a next that leads nowhere`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val draft = StoryDraft(DraftId("d"), step = CreationStep.Opening, opening = "Rain.")
+            val wizard = wizard(backgroundScope, InMemoryDraftRepository(draft))
 
+            wizard.start()
+            wizard.next()
+
+            assertTrue(wizard.current().controls.begins)
+            assertTrue(wizard.current().controls.canAdvance)
+            assertEquals(CreationStep.Opening, wizard.current().step)
+        }
+
+    @Test
+    fun `every step but the last moves forward by next`() = test { wizard, _ ->
         wizard.start()
-        wizard.next()
 
-        assertFalse(wizard.current().controls.canAdvance)
-        assertEquals(CreationStep.FirstTurn, wizard.current().step)
+        assertFalse(wizard.current().controls.begins)
     }
 
     @Test

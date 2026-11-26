@@ -2,7 +2,7 @@ package dev.opendungeon.feature.newstory.domain.policy
 
 import dev.opendungeon.domain.drafting.DraftingModel
 import dev.opendungeon.domain.drafting.GeneratePremise
-import dev.opendungeon.domain.drafting.PremiseProgress
+import dev.opendungeon.domain.drafting.WritingProgress
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.StoryDraft
@@ -55,9 +55,9 @@ public class PremisePolicy(private val generatePremise: GeneratePremise) :
     override fun write(draft: StoryDraft, model: DraftingModel): Flow<WriterEvent> =
         generatePremise(draft, model).map { progress ->
             when (progress) {
-                is PremiseProgress.Writing -> WriterEvent.Preview(draft.copy(premise = Phrase.Offered(progress.text)))
-                is PremiseProgress.Written -> WriterEvent.Done(draft.copy(premise = Phrase.Offered(progress.text)))
-                is PremiseProgress.Failed -> WriterEvent.Failed(progress.error)
+                is WritingProgress.Writing -> WriterEvent.Preview(draft.copy(premise = Phrase.Offered(progress.text)))
+                is WritingProgress.Written -> WriterEvent.Done(draft.copy(premise = Phrase.Offered(progress.text)))
+                is WritingProgress.Failed -> WriterEvent.Failed(progress.error)
             }
         }
 

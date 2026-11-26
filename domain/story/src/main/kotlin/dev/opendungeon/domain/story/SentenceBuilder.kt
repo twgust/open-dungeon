@@ -15,6 +15,12 @@ public interface SentenceBuilder {
     /** "Among them, Maren Kask and Sister Ottilie." or [Sentence.Empty] when nobody is in the story yet. */
     public fun cast(draft: StoryDraft): Sentence
 
+    /**
+     * The whole story in one sentence, as the opening shows it: the story clause, then who is in it.
+     * "A gothic noir story, twisted by a heist, …, set in a salt town, among Maren Kask and Sister Ottilie."
+     */
+    public fun whole(draft: StoryDraft): Sentence
+
     public enum class Ending(public val text: String) { Comma(","), Period("."), None("") }
 }
 
@@ -46,19 +52,31 @@ public class DefaultSentenceBuilder : SentenceBuilder {
     }
 
     override fun cast(draft: StoryDraft): Sentence {
-        val names = draft.castInStory.map { it.name ?: SOMEONE_OF_YOUR_OWN }
+        val names = names(draft)
         if (names.isEmpty()) return Sentence.Empty
-        val segments = mutableListOf<Sentence.Segment>(Sentence.Segment.Fixed("Among them, "))
-        names.forEachIndexed { index, name ->
-            when (index) {
-                0 -> Unit
-                names.lastIndex -> segments += Sentence.Segment.Fixed(" and ")
-                else -> segments += Sentence.Segment.Fixed(", ")
+        return Sentence(listOf(Sentence.Segment.Fixed("Among them, ")) + names + Sentence.Segment.Fixed("."))
+    }
+
+    override fun whole(draft: StoryDraft): Sentence {
+        val story = story(draft, before = CreationStep.Opening, ending = SentenceBuilder.Ending.None)
+        val names = names(draft)
+        val among = if (names.isEmpty()) emptyList() else listOf(Sentence.Segment.Fixed(", among ")) + names
+        return story + Sentence(among + Sentence.Segment.Fixed("."))
+    }
+
+    /** "Maren Kask, Sister Ottilie and someone of your own", or nothing when nobody is in the story yet. */
+    private fun names(draft: StoryDraft): List<Sentence.Segment> {
+        val names = draft.castInStory.map { it.name ?: SOMEONE_OF_YOUR_OWN }
+        return buildList {
+            names.forEachIndexed { index, name ->
+                when (index) {
+                    0 -> Unit
+                    names.lastIndex -> add(Sentence.Segment.Fixed(" and "))
+                    else -> add(Sentence.Segment.Fixed(", "))
+                }
+                add(Sentence.Segment.Chosen(name, own = false))
             }
-            segments += Sentence.Segment.Chosen(name, own = false)
         }
-        segments += Sentence.Segment.Fixed(".")
-        return Sentence(segments)
     }
 
     private fun genreClause(genres: List<Phrase>): List<Sentence.Segment> {

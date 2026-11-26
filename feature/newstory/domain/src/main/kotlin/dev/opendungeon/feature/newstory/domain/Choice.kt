@@ -2,7 +2,6 @@ package dev.opendungeon.feature.newstory.domain
 
 import dev.opendungeon.domain.story.CharacterId
 import dev.opendungeon.domain.story.ContentLimits
-import dev.opendungeon.domain.story.TakeId
 
 /** Something on the current step the player can tap. Screens pass back the choice an [Option] carries. */
 public sealed interface Choice {
@@ -15,8 +14,6 @@ public sealed interface Choice {
 
     /** Puts a cast member in the story, or takes them out. */
     public data class CastMember(val id: CharacterId) : Choice
-
-    public data class Take(val id: TakeId) : Choice
 }
 
 /** A pill as the current step offers it. */
