@@ -2,7 +2,7 @@ package dev.opendungeon.data.generation
 
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.streaming.StreamFrame
-import dev.opendungeon.core.data.ApiKeyStore
+import dev.opendungeon.core.credentials.ApiKeyStore
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.data.generation.di.OpenRouterExecutor
 import dev.opendungeon.domain.generation.GenerationError

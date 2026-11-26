@@ -1,7 +1,7 @@
 package dev.opendungeon.data.generation
 
 import ai.koog.prompt.executor.model.PromptExecutor
-import dev.opendungeon.core.data.ApiKeyStore
+import dev.opendungeon.core.credentials.ApiKeyStore
 import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.ApiKey
 import dev.opendungeon.core.model.DefaultParameters

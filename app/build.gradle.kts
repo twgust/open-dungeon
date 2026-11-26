@@ -23,13 +23,14 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.data)
+    implementation(projects.core.credentials)
     implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(projects.core.model)
     implementation(projects.core.network)
     implementation(projects.core.ui)
     implementation(projects.data.generation)
+    implementation(projects.data.openrouter)
     implementation(projects.data.story)
     implementation(projects.feature.newstory.domain)
     implementation(projects.feature.newstory.ui)

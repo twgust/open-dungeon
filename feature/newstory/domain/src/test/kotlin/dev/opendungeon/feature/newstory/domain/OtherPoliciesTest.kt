@@ -4,8 +4,10 @@ import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.domain.story.CastMember
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
+import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.domain.story.Phrase
+import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.domain.story.Take
 import dev.opendungeon.domain.story.TakeId
@@ -17,6 +19,7 @@ import dev.opendungeon.feature.newstory.domain.policy.PremisePolicy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -63,6 +66,31 @@ class OtherPoliciesTest {
     }
 
     @Test
+    fun `a cast card shows a sealed secret only as a flag, and only the lines that are filled`() {
+        val maren = Character(
+            id = CharacterId("maren"),
+            role = "your employer",
+            name = "Maren Kask",
+            wants = "Her mother's bones back.",
+            flaw = "Trusts no one twice.",
+            voiceLine = "Count it again.",
+            secret = Secret.Sealed("She sold them herself."),
+        )
+        val draft = emptyDraft.copy(cast = listOf(CastMember(maren, CastMember.Origin.Offered, inStory = true)))
+
+        val body = assertIs<StepBody.Cast>(CastPolicy().body(draft))
+
+        val card = body.people.single()
+        assertEquals(ShownSecret.Sealed, card.secret)
+        assertFalse("She sold them herself." in body.toString())
+        assertEquals(
+            listOf(ShownLine(CharacterLine.Wants, "Her mother's bones back."), ShownLine(CharacterLine.VoiceLine, "Count it again.")),
+            card.lines,
+        )
+        assertTrue(card.inStory)
+    }
+
+    @Test
     fun `the first line is kept as typed, up to the limit`() {
         val firstLine = FirstLinePolicy()
 
@@ -87,5 +115,21 @@ class OtherPoliciesTest {
         assertEquals(TakeId("a"), chosen.chosenTake)
         assertTrue(firstTurn.canAdvance(chosen))
         assertFalse(firstTurn.canAdvance(draft))
+    }
+
+    @Test
+    fun `auditions say which take is chosen and which can be`() {
+        val firstTurn = FirstTurnPolicy()
+        val takes = listOf(
+            Take(TakeId("a"), ModelId("m/one"), "Rain.", Take.State.Written),
+            Take(TakeId("b"), ModelId("m/two"), "Mid", Take.State.Writing),
+            Take(TakeId("c"), ModelId("m/three"), "The", Take.State.Interrupted),
+        )
+
+        val body = assertIs<StepBody.Auditions>(firstTurn.body(emptyDraft.copy(takes = takes, chosenTake = TakeId("a"))))
+
+        assertEquals(listOf(true, false, false), body.auditions.map { it.chosen })
+        assertEquals(listOf(true, false, false), body.auditions.map { it.canBeChosen })
+        assertEquals(takes.map { it.state }, body.auditions.map { it.state })
     }
 }

@@ -27,7 +27,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StoryWizardViewModelTest {
@@ -60,7 +59,7 @@ class StoryWizardViewModelTest {
 
     @Test
     fun `the wizard is started once, and each intent reaches its verb unchanged`() {
-        val viewModel = StoryWizardViewModel(factory, DefaultWizardUiMapper())
+        val viewModel = StoryWizardViewModel(factory)
 
         viewModel.onIntent(WizardIntent.Pick(Choice.Word("Gothic")))
         viewModel.onIntent(WizardIntent.Own("salt-punk"))
@@ -86,11 +85,11 @@ class StoryWizardViewModelTest {
     }
 
     @Test
-    fun `the wizard's state maps through to the screen`() {
-        val viewModel = StoryWizardViewModel(factory, DefaultWizardUiMapper())
+    fun `the wizard's state reaches the screen unchanged`() {
+        val viewModel = StoryWizardViewModel(factory)
         assertEquals(WizardUiState.Loading, viewModel.state.value)
 
-        wizard.state.value = WizardState(
+        val state = WizardState(
             draft = DraftId("d"),
             step = CreationStep.FirstLine,
             progress = 0.9f,
@@ -98,15 +97,14 @@ class StoryWizardViewModelTest {
             body = StepBody.FirstLine("I come in.", maxLength = 4000),
             controls = StepControls(canGoBack = true, canAdvance = true, advancesOnPick = false, canRoll = false, takesOwnWords = false),
         )
+        wizard.state.value = state
 
-        val step = assertIs<WizardUiState.Step>(viewModel.state.value)
-        assertEquals(CreationStep.FirstLine, step.step)
-        assertEquals(StepBodyUi.FirstLine("I come in.", 4000), step.body)
+        assertEquals(WizardUiState.Ready(state), viewModel.state.value)
     }
 
     @Test
     fun `leaving the wizard becomes a leave effect`() = runTest {
-        val viewModel = StoryWizardViewModel(factory, DefaultWizardUiMapper())
+        val viewModel = StoryWizardViewModel(factory)
 
         viewModel.effects.test {
             wizard.outcomeChannel.send(WizardOutcome.Left)

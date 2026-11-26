@@ -18,28 +18,28 @@ import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.component.ChoicePill
 import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.feature.newstory.domain.Choice
+import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
-import dev.opendungeon.feature.newstory.ui.StepBodyUi
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
 @Composable
-internal fun LimitsBody(body: StepBodyUi.Limits, onIntent: (WizardIntent) -> Unit) {
+internal fun LimitsBody(body: StepBody.Limits, onIntent: (WizardIntent) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.dp)) {
         Dial(
             label = stringResource(R.string.wizard_dial_desire),
             levels = ContentLimits.Desire.entries.map { level ->
-                Level(stringResource(level.labelRes()), level == body.desire, Choice.Desire(level))
+                Level(stringResource(level.labelRes()), level == body.limits.desire, Choice.Desire(level))
             },
             onIntent = onIntent,
         )
         Dial(
             label = stringResource(R.string.wizard_dial_violence),
             levels = ContentLimits.Violence.entries.map { level ->
-                Level(stringResource(level.labelRes()), level == body.violence, Choice.Violence(level))
+                Level(stringResource(level.labelRes()), level == body.limits.violence, Choice.Violence(level))
             },
             onIntent = onIntent,
         )
-        body.note?.let { note ->
+        body.limits.note?.let { note ->
             Text(
                 stringResource(R.string.wizard_limits_note, note),
                 style = Paper.type.own,

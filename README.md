@@ -28,26 +28,32 @@ Requires JDK 21 and an Android SDK with platform `android-37.2`.
 ## Modules
 
 ```
-app                      Application, Metro AppGraph, MainActivity
+app                      Application, Metro AppGraph, MainActivity; binds every data implementation
 feature/connect          Connect an OpenRouter key and list the models it unlocks
 feature/newstory/ui      Story creation screens and their thin ViewModel
 feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, vocabulary    (JVM)
+data/openrouter          Model catalog and account repositories over the REST client   (JVM)
 data/story               StoryDraftRepository over Room (Android)
 data/generation          Text and structured generation on Koog's OpenRouter client    (JVM)
-domain/story             Drafts, characters, takes, the sentence builder              (JVM)
+domain/openrouter        ModelCatalogRepository, OpenRouterAccountRepository           (JVM)
+domain/story             Drafts, characters, takes, the sentence builder, StoryDraftRepository (JVM)
 domain/generation        TextGenerator, StructuredGenerator, sampling, typed errors    (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
 core/ui                  Compose helpers
 core/database            Room database, entities, DAOs (Android)
 core/datastore           Encrypted on-device key storage (Android)
-core/data                Repositories: domain-facing, map network results to typed errors   (JVM)
+core/credentials         ApiKeyStore, the contract core/datastore implements           (JVM)
 core/network             OpenRouter REST client and DTOs                                   (JVM)
 core/mvi                 MviViewModel base                                                 (JVM)
 core/model               Domain types: ApiKey, AiModel, ModelParameter, Outcome, DataError (JVM)
 ```
 
-Dependencies point downwards only. Features never depend on each other. Everything that can be pure
-Kotlin is, so most tests run on the JVM without Robolectric or an emulator.
+Dependencies point downwards only. A repository's interface lives in a `domain` module and its
+implementation in the matching `data` module. Features depend on `core` and `domain` modules and on their
+own feature's modules, never on `data` modules or on each other; the feature convention plugin fails the
+build otherwise. Screens render domain state directly: `compose-stability.conf` declares the domain
+models stable, so there are no mirror UI types. Everything that can be pure Kotlin is, so most tests run
+on the JVM without Robolectric or an emulator.
 
 ## OpenRouter
 

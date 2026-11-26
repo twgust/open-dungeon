@@ -1,7 +1,7 @@
 package dev.opendungeon.data.generation.di
 
 import ai.koog.prompt.executor.model.PromptExecutor
-import dev.opendungeon.core.data.ApiKeyStore
+import dev.opendungeon.core.credentials.ApiKeyStore
 import dev.opendungeon.core.network.AppAttribution
 import dev.opendungeon.data.generation.openRouterPromptExecutor
 import dev.zacsweers.metro.AppScope

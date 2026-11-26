@@ -2,12 +2,12 @@ package dev.opendungeon.feature.connect
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.opendungeon.core.data.ModelCatalogRepository
-import dev.opendungeon.core.data.OpenRouterAccountRepository
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.Outcome
 import dev.opendungeon.core.model.map
 import dev.opendungeon.core.mvi.MviViewModel
+import dev.opendungeon.domain.openrouter.ModelCatalogRepository
+import dev.opendungeon.domain.openrouter.OpenRouterAccountRepository
 import dev.opendungeon.feature.connect.ConnectState.Phase
 import dev.opendungeon.feature.connect.ConnectState.Remote
 import dev.zacsweers.metro.AppScope

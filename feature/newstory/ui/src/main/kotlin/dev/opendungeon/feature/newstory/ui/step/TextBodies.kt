@@ -15,13 +15,13 @@ import androidx.compose.ui.unit.sp
 import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.component.PaperField
 import dev.opendungeon.feature.newstory.domain.DraftEdit
+import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
-import dev.opendungeon.feature.newstory.ui.StepBodyUi
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
 /** The premise, written straight onto the page and editable in place. */
 @Composable
-internal fun PremiseBody(body: StepBodyUi.Premise, onIntent: (WizardIntent) -> Unit) {
+internal fun PremiseBody(body: StepBody.Premise, onIntent: (WizardIntent) -> Unit) {
     val text = rememberEditedText(body.text) { onIntent(WizardIntent.Edit(DraftEdit.Premise(it))) }
     PaperField(
         state = text,
@@ -35,7 +35,7 @@ internal fun PremiseBody(body: StepBodyUi.Premise, onIntent: (WizardIntent) -> U
 
 /** The player's optional first line, with a count toward the limit. */
 @Composable
-internal fun FirstLineBody(body: StepBodyUi.FirstLine, onIntent: (WizardIntent) -> Unit) {
+internal fun FirstLineBody(body: StepBody.FirstLine, onIntent: (WizardIntent) -> Unit) {
     val text = rememberEditedText(body.text) { onIntent(WizardIntent.Edit(DraftEdit.FirstLine(it))) }
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         PaperField(

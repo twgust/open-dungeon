@@ -16,20 +16,18 @@ import kotlinx.coroutines.flow.onEach
 
 /**
  * A translator: intents go to the wizard as verbs, the wizard's state comes back as UI state, its
- * outcomes as effects. Every rule lives in the wizard; nothing here asks whether something is allowed.
+ * outcomes as effects. Every rule and every choice of what to show lives in the wizard; nothing here
+ * asks whether something is allowed.
  */
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-class StoryWizardViewModel(
-    wizardFactory: StoryWizard.Factory,
-    private val toUi: WizardUiMapper,
-) : MviViewModel<WizardUiState, WizardIntent, WizardEffect>(WizardUiState.Loading) {
+class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) : MviViewModel<WizardUiState, WizardIntent, WizardEffect>(WizardUiState.Loading) {
 
     private val wizard = wizardFactory.create(viewModelScope)
 
     init {
-        wizard.state.filterNotNull().onEach { state -> reduce { toUi(state) } }.launchIn(viewModelScope)
+        wizard.state.filterNotNull().onEach { state -> reduce { WizardUiState.Ready(state) } }.launchIn(viewModelScope)
         wizard.outcomes.onEach { sendEffect(it.toEffect()) }.launchIn(viewModelScope)
         wizard.start()
     }

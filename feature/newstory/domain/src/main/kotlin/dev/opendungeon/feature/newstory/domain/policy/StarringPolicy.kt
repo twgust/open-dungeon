@@ -12,6 +12,8 @@ import dev.opendungeon.feature.newstory.domain.Option
 import dev.opendungeon.feature.newstory.domain.Selection
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.domain.StepPolicy
+import dev.opendungeon.feature.newstory.domain.YouCard
+import dev.opendungeon.feature.newstory.domain.allLines
 import dev.opendungeon.feature.newstory.domain.vocabulary.RollChoice
 import dev.opendungeon.feature.newstory.domain.vocabulary.VocabularyList
 import dev.opendungeon.feature.newstory.domain.vocabulary.WizardVocabulary
@@ -39,7 +41,7 @@ public class StarringPolicy(
         val own = role?.takeIf { it !in offered }?.let { listOf(Option(Choice.Word(it), it, picked = true, own = true)) }
         return StepBody.Starring(
             roles = own.orEmpty() + offered.map { Option(Choice.Word(it), it, picked = it == role) },
-            you = draft.protagonist,
+            you = draft.protagonist?.let { YouCard(it.allLines(CARD_LINES.keys)) },
         )
     }
 
@@ -80,6 +82,7 @@ public class StarringPolicy(
     }
 
     private companion object {
+        /** The card's lines, in the order it shows them, each with the list its die rolls from. */
         val CARD_LINES: Map<CharacterLine, VocabularyList> = mapOf(
             CharacterLine.Wants to VocabularyList.Wants,
             CharacterLine.Flaw to VocabularyList.Flaws,
