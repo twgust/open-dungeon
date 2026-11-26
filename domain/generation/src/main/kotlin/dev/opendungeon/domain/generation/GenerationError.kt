@@ -10,11 +10,11 @@ public sealed interface GenerationError {
     /** The provider's moderation stopped the output. Another model may write it. */
     public data object Refused : GenerationError
 
-    /** The stream broke off after it started, for example a provider error mid-answer. */
+    /**
+     * The stream broke off after it started, for example a provider error mid-answer. Hitting the token
+     * limit is not a failure: the text completes with [TextEvent.Completed.cutOff] set.
+     */
     public data object Interrupted : GenerationError
-
-    /** The output hit the token limit before the answer was complete. */
-    public data object Truncated : GenerationError
 
     /** The model answered, but not in the requested structure, even after repair attempts. */
     public data class SchemaMismatch(val detail: String) : GenerationError

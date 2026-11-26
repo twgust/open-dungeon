@@ -30,7 +30,7 @@ class KtorOpenRouterApiTest {
             requests += request
             handler(request)
         }
-        return KtorOpenRouterApi(openRouterHttpClient(engine, openRouterJson(), attribution))
+        return KtorOpenRouterApi(openRouterBaseClient(engine, attribution))
     }
 
     private fun MockRequestHandleScope.json(body: String, status: HttpStatusCode = HttpStatusCode.OK) =

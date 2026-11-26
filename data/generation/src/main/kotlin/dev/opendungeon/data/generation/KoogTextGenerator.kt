@@ -64,7 +64,7 @@ internal fun Flow<StreamFrame>.toTextEvents(): Flow<TextEvent> = flow {
             else -> null
         }
     }
-        .catch { cause -> emit(TextEvent.Failed(cause.toGenerationError())) }
+        .catch { cause -> emit(TextEvent.Failed(cause.toGenerationErrorOrNull() ?: throw cause)) }
         .transformWhile { event ->
             emit(event)
             !event.isTerminal

@@ -17,9 +17,9 @@ import io.ktor.http.path
 
 @Inject
 @ContributesBinding(AppScope::class)
-public class KtorOpenRouterApi(
-    @OpenRouterHttpClient private val client: HttpClient,
-) : OpenRouterApi {
+public class KtorOpenRouterApi(@OpenRouterHttpClient baseClient: HttpClient) : OpenRouterApi {
+
+    private val client = baseClient.forRest()
 
     override suspend fun listModelsForKey(apiKey: ApiKey, offset: Int, limit: Int): NetworkResult<ModelsPageDto> {
         require(offset >= 0) { "offset must be >= 0, was $offset" }

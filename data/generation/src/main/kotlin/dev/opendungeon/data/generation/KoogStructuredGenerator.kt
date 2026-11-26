@@ -12,6 +12,7 @@ import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import dev.opendungeon.core.credentials.ApiKeyStore
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.core.network.OpenRouterJson
 import dev.opendungeon.data.generation.di.OpenRouterExecutor
 import dev.opendungeon.domain.generation.GenerationError
 import dev.opendungeon.domain.generation.StructuredGenerator
@@ -44,7 +45,7 @@ public class KoogStructuredGenerator(
         val structure = JsonStructure.create(
             id = request.serializer.descriptor.serialName.substringAfterLast('.'),
             serializer = request.serializer,
-            json = OpenRouterKoogJson,
+            json = OpenRouterJson,
             schemaGenerator = if (native) executor.getStandardJsonSchemaGenerator(model) else StandardJsonSchemaGenerator,
             descriptionOverrides = request.descriptions,
             examples = request.examples,
@@ -61,11 +62,11 @@ public class KoogStructuredGenerator(
                 config = config,
                 fixingParser = StructureFixingParser(model = model, retries = FIXING_RETRIES),
             )
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
+        } catch (e: LLMClientException) {
             // Koog surfaces transport and HTTP failures as exceptions from the request itself.
-            return Outcome.Failure(e.toGenerationError())
+            return Outcome.Failure(e.toGenerationErrorOrNull() ?: throw e)
+        } catch (e: KoogHttpClientException) {
+            return Outcome.Failure(e.toGenerationErrorOrNull() ?: throw e)
         }
         return result.fold(
             onSuccess = { Outcome.Success(it.data) },
@@ -86,10 +87,9 @@ public class KoogStructuredGenerator(
         val chain = generateSequence(this) { it.cause }.toList()
         val fromClient = chain.any { it is LLMClientException || it is KoogHttpClientException }
         val parseFailure = chain.firstOrNull { it is SerializationException }
-        return if (!fromClient && parseFailure != null) {
-            GenerationError.SchemaMismatch(parseFailure.message.orEmpty())
-        } else {
-            toGenerationError()
+        return when {
+            !fromClient && parseFailure != null -> GenerationError.SchemaMismatch(parseFailure.message.orEmpty())
+            else -> toGenerationErrorOrNull() ?: throw this
         }
     }
 

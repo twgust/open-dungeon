@@ -14,9 +14,9 @@ dependencies {
     implementation(libs.koog.http.client.ktor)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.okhttp)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.ktor.client.okhttp)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.turbine)
 }
