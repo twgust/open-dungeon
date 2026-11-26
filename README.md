@@ -43,8 +43,8 @@ data/models              Catalog cache, chosen model and tunings over Room (Andr
 data/story               StoryDraftRepository over Room (Android)
 data/generation          Text and structured generation on Koog, OpenRouterChatClient   (JVM)
 domain/openrouter        Catalog, setup and account repositories; test fixtures        (JVM)
-domain/story             Drafts, characters, takes, the sentence builder, StoryDraftRepository (JVM)
-domain/drafting          Drafting model, premise and cast use cases, their prompts      (JVM)
+domain/story             Drafts, characters, the sentence builder, StoryDraftRepository     (JVM)
+domain/drafting          Drafting model; premise, cast and opening use cases, prompts    (JVM)
 domain/generation        TextGenerator, StructuredGenerator, usage, typed errors        (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
 core/ui                  Compose helpers, error messages

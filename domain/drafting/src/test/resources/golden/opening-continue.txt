@@ -1,0 +1,34 @@
+## system
+You write the opening of an interactive story. The player plays its main character, who is addressed as "you", in the second person and the present tense.
+Use only what the story gives you and what follows from it. Bring in the people it names by name.
+Never decide what the player does, says, thinks or feels. Stop at a moment the player can answer.
+Answer with the story text alone: plain prose, no title, no headings, no preamble, no list of choices.
+
+## user
+Story: A gothic salt-punk story, twisted by a heist, starring a disgraced smuggler, told tenderly, set in a salt-war border town.
+
+The player's character, addressed as "you":
+- Role: a disgraced smuggler
+- Wants: To be forgiven
+- Flaw: Lies easily
+- Good at: Picking locks
+
+Premise: You owe the salt-wardens a cargo you sank.
+
+Limits:
+- Desire can be written all the way, explicitly, when the story leads there.
+- Violence happens offstage. Show only what it leaves behind.
+- Everyone involved in desire is an adult.
+- The player also asks: no harm to animals
+
+People in the story:
+- Maren Kask, reliquary keeper
+  - Looks: Ink-stained fingers and a coat two winters too thin.
+  - Says: Saints don't haggle. I do.
+  - Wants: To buy back the relic her brother sold
+  - Habit: Counts the coins twice when she is lying
+
+The opening so far:
+You wait under the tannery awning. The rain has not stopped in three
+
+Continue the opening from exactly where it stops, in the same voice, in one or two short paragraphs. Do not repeat or rewrite any of it. If it stops mid-sentence, finish that sentence first.

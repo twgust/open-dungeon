@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import dev.opendungeon.core.database.OpenDungeonDatabase
-import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.core.model.Outcome
 import dev.opendungeon.domain.story.CastMember
 import dev.opendungeon.domain.story.Character
@@ -16,8 +15,6 @@ import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
-import dev.opendungeon.domain.story.Take
-import dev.opendungeon.domain.story.TakeId
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
@@ -48,14 +45,9 @@ class DefaultStoryDraftRepositoryTest {
     }
 
     @Test
-    fun `saving again replaces the cast and takes rather than adding to them`() = runTest {
+    fun `saving again replaces the cast rather than adding to it`() = runTest {
         repository.save(fullDraft)
-        val trimmed = fullDraft.copy(
-            step = CreationStep.Cast,
-            cast = fullDraft.cast.take(1),
-            takes = emptyList(),
-            chosenTake = null,
-        )
+        val trimmed = fullDraft.copy(step = CreationStep.Cast, cast = fullDraft.cast.take(1), opening = "")
 
         repository.save(trimmed)
 
@@ -81,7 +73,6 @@ class DefaultStoryDraftRepositoryTest {
 
         assertNull(repository.openDraft().value())
         assertEquals(0, database.query("SELECT * FROM draft_character", null).use { it.count })
-        assertEquals(0, database.query("SELECT * FROM draft_take", null).use { it.count })
     }
 
     @Test
@@ -95,9 +86,9 @@ class DefaultStoryDraftRepositoryTest {
     @Test
     fun `a write the database refuses is a storage failure, and the stored draft is untouched`() = runTest {
         repository.save(fullDraft)
-        val take = fullDraft.takes.first()
-        // Two takes with one id break the primary key, so SQLite fails the transaction part-way.
-        val broken = fullDraft.copy(firstLine = "Never stored.", takes = listOf(take, take))
+        val member = fullDraft.cast.first()
+        // Two people with one id break the primary key, so SQLite fails the transaction part-way.
+        val broken = fullDraft.copy(opening = "Never stored.", cast = listOf(member, member))
 
         val result = repository.save(broken)
 
@@ -105,18 +96,10 @@ class DefaultStoryDraftRepositoryTest {
         assertEquals(fullDraft, repository.openDraft().value(), "the transaction rolled back whole")
     }
 
-    @Test
-    fun `a take that was still writing comes back interrupted`() = runTest {
-        val writing = Take(TakeId("take-3"), ModelId("z-ai/glm-4.6"), "The bell", Take.State.Writing)
-        repository.save(fullDraft.copy(takes = listOf(writing)))
-
-        assertEquals(Take.State.Interrupted, repository.openDraft().value()?.takes?.single()?.state)
-    }
-
     private companion object {
         val fullDraft = StoryDraft(
             id = DraftId("draft-1"),
-            step = CreationStep.FirstTurn,
+            step = CreationStep.Opening,
             genres = listOf(Phrase.Offered("Gothic"), Phrase.Own("salt-punk")),
             twist = Phrase.Offered("a heist"),
             protagonist = Character(
@@ -152,12 +135,7 @@ class DefaultStoryDraftRepositoryTest {
                     inStory = false,
                 ),
             ),
-            firstLine = "I come in through the flooded nave.",
-            takes = listOf(
-                Take(TakeId("take-1"), ModelId("nous/hermes-4-405b"), "Water to the knee.", Take.State.Written),
-                Take(TakeId("take-2"), ModelId("deepseek/deepseek-v3.2"), "The candles", Take.State.Interrupted),
-            ),
-            chosenTake = TakeId("take-1"),
+            opening = "I come in through the flooded nave.\n\nWater to the knee, and the candles still lit.",
         )
     }
 

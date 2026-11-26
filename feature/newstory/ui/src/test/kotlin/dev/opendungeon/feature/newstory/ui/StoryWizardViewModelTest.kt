@@ -8,6 +8,7 @@ import dev.opendungeon.domain.story.Sentence
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.DraftEdit
+import dev.opendungeon.feature.newstory.domain.LeaveAnswer
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.domain.StepControls
 import dev.opendungeon.feature.newstory.domain.StoryWizard
@@ -56,12 +57,8 @@ class StoryWizardViewModelTest {
             calls += "edit($edit)"
         }
 
-        override fun roll() {
-            calls += "roll"
-        }
-
-        override fun rollLine(line: CharacterLine) {
-            calls += "rollLine($line)"
+        override fun roll(line: CharacterLine?) {
+            calls += "roll($line)"
         }
 
         override fun next() {
@@ -76,12 +73,16 @@ class StoryWizardViewModelTest {
             calls += "stop"
         }
 
-        override fun confirmLeave() {
-            calls += "confirmLeave"
+        override fun undo() {
+            calls += "undo"
         }
 
-        override fun stay() {
-            calls += "stay"
+        override fun begin() {
+            calls += "begin"
+        }
+
+        override fun answerLeave(answer: LeaveAnswer) {
+            calls += "answerLeave($answer)"
         }
     }
 
@@ -102,28 +103,32 @@ class StoryWizardViewModelTest {
         viewModel.onIntent(WizardIntent.Open)
         viewModel.onIntent(WizardIntent.Pick(Choice.Word("Gothic")))
         viewModel.onIntent(WizardIntent.Own("salt-punk"))
-        viewModel.onIntent(WizardIntent.Edit(DraftEdit.FirstLine("I come in.")))
-        viewModel.onIntent(WizardIntent.Roll)
-        viewModel.onIntent(WizardIntent.RollLine(CharacterLine.Flaw))
+        viewModel.onIntent(WizardIntent.Edit(DraftEdit.Opening("I come in.")))
+        viewModel.onIntent(WizardIntent.Roll())
+        viewModel.onIntent(WizardIntent.Roll(CharacterLine.Flaw))
         viewModel.onIntent(WizardIntent.Next)
         viewModel.onIntent(WizardIntent.Back)
         viewModel.onIntent(WizardIntent.Stop)
-        viewModel.onIntent(WizardIntent.ConfirmLeave)
-        viewModel.onIntent(WizardIntent.Stay)
+        viewModel.onIntent(WizardIntent.Undo)
+        viewModel.onIntent(WizardIntent.Begin)
+        viewModel.onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Leave))
+        viewModel.onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Stay))
 
         assertEquals(
             listOf(
                 "start(null)",
                 "select(Word(text=Gothic))",
                 "submitOwn(salt-punk)",
-                "edit(FirstLine(text=I come in.))",
-                "roll",
-                "rollLine(Flaw)",
+                "edit(Opening(text=I come in.))",
+                "roll(null)",
+                "roll(Flaw)",
                 "next",
                 "back",
                 "stop",
-                "confirmLeave",
-                "stay",
+                "undo",
+                "begin",
+                "answerLeave(Leave)",
+                "answerLeave(Stay)",
             ),
             wizard.calls,
         )
@@ -136,13 +141,21 @@ class StoryWizardViewModelTest {
 
         val state = WizardState(
             draft = DraftId("d"),
-            step = CreationStep.FirstLine,
-            progress = 0.9f,
+            step = CreationStep.Opening,
+            progress = 1f,
             lead = Sentence.Empty,
-            body = StepBody.FirstLine("I come in.", maxLength = 4000),
+            body = StepBody.Opening(
+                text = "I come in.",
+                writing = null,
+                wand = StepBody.Opening.Wand.ContinueMyText,
+                addition = null,
+                failed = false,
+                maxLength = 4000,
+            ),
             controls = StepControls(
                 canGoBack = true,
                 canAdvance = true,
+                begins = true,
                 advancesOnPick = false,
                 canRoll = false,
                 takesOwnWords = false,
@@ -160,6 +173,16 @@ class StoryWizardViewModelTest {
         viewModel.effects.test {
             wizard.outcomeChannel.send(WizardOutcome.Left)
             assertEquals(WizardEffect.Leave, awaitItem())
+        }
+    }
+
+    @Test
+    fun `beginning the story becomes a begin effect carrying the draft`() = runTest {
+        val viewModel = StoryWizardViewModel(factory)
+
+        viewModel.effects.test {
+            wizard.outcomeChannel.send(WizardOutcome.Begun(DraftId("d")))
+            assertEquals(WizardEffect.Begin(DraftId("d")), awaitItem())
         }
     }
 

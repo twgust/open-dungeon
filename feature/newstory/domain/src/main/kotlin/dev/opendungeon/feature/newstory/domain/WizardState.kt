@@ -30,10 +30,22 @@ public data class ModelLine(
     val writing: Boolean,
 )
 
+/** The player's answer to being asked whether to leave a step a model is writing. */
+public enum class LeaveAnswer {
+    /** The writing goes on. */
+    Stay,
+
+    /** The writing stops, keeping nothing of it, and the wizard steps back. */
+    Leave,
+}
+
 /** Which of the step's fixed controls are live. */
 public data class StepControls(
     val canGoBack: Boolean,
+    /** The step can be left forward: by next, or on the last step by Begin. */
     val canAdvance: Boolean,
+    /** This is the last step, so moving forward begins the story. */
+    val begins: Boolean,
     /** Picking completes the step, so it shows no next arrow; tapping the current pick moves on. */
     val advancesOnPick: Boolean,
     /** The step has a die, and rolling it would change something. */
@@ -46,6 +58,9 @@ public data class StepControls(
 public sealed interface WizardOutcome {
     /** Back from the first step, or before a draft could be opened: creation is left, the draft kept. */
     public data object Left : WizardOutcome
+
+    /** The player began the story. [draft] is saved, opening and all, for play to start from. */
+    public data class Begun(val draft: DraftId) : WizardOutcome
 
     /** Something the player did could not be kept. The state already shows the draft as it was before. */
     public data class Failed(val failure: WizardFailure) : WizardOutcome

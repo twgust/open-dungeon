@@ -10,8 +10,7 @@ public enum class CreationStep {
     Limits,
     Premise,
     Cast,
-    FirstLine,
-    FirstTurn,
+    Opening,
     ;
 
     public val previous: CreationStep? get() = entries.getOrNull(ordinal - 1)

@@ -46,8 +46,10 @@ import kotlin.time.Duration.Companion.milliseconds
  *
  * A step a model writes is the other exception, since writing takes seconds and the player must be able
  * to stop it. The writing runs beside the loop and hands each piece back to it; while it runs, every
- * verb but stopping and leaving waits. What it shows on the way is never saved, and only a finished
- * result is kept, so stopping or failing leaves the draft as it was.
+ * verb but stopping and leaving waits. What it shows on the way is never saved, and only a result is
+ * kept, so failing or leaving leaves the draft as it was. Stopping does too, unless the step's writer
+ * keeps what it wrote so far. What a writer kept can be taken back where the writer allows it, until
+ * the draft changes again.
  */
 internal class DefaultStoryWizard(
     private val scope: CoroutineScope,
@@ -91,6 +93,9 @@ internal class DefaultStoryWizard(
 
     /** The model writing the current step, if one is. */
     private var writing: Writing? = null
+
+    /** What the last writing left for the step to offer: its result to take back, or its failure. */
+    private var aftermath: Aftermath? = null
 
     private var confirmingLeave = false
 
@@ -143,6 +148,7 @@ internal class DefaultStoryWizard(
     override fun edit(edit: DraftEdit) = enqueue {
         val before = draft?.takeIf { writing == null } ?: return@enqueue
         val after = policyOf(before).edit(before, edit)?.takeIf { it != before } ?: return@enqueue
+        aftermath = null
         show(after)
         settling?.cancel()
         settling = scope.launch {
@@ -151,7 +157,11 @@ internal class DefaultStoryWizard(
         }
     }
 
-    override fun roll() = enqueue {
+    override fun roll(line: CharacterLine?) {
+        if (line != null) rollLine(line) else rollStep()
+    }
+
+    private fun rollStep() = enqueue {
         val before = draft?.takeIf { writing == null } ?: return@enqueue
         val policy = policyOf(before)
         if (!policy.canRoll(before)) return@enqueue
@@ -164,7 +174,7 @@ internal class DefaultStoryWizard(
         commit(before, after)
     }
 
-    override fun rollLine(line: CharacterLine) = change { policy, draft -> policy.rollLine(draft, line) }
+    private fun rollLine(line: CharacterLine) = change { policy, draft -> policy.rollLine(draft, line) }
 
     override fun next() = change { policy, draft -> if (policy.canAdvance(draft)) draft.forward() else null }
 
@@ -178,22 +188,44 @@ internal class DefaultStoryWizard(
     }
 
     override fun stop() = enqueue {
-        if (writing == null) return@enqueue
+        val run = writing ?: return@enqueue
         stopWriting()
-        render()
+        val kept = run.preview?.takeIf { run.writer.keepsWhenStopped && it != run.from }
+        if (kept == null) {
+            render()
+        } else {
+            commit(before = run.from, after = kept, aftermath = keptBy(run, kept, stopped = true))
+        }
     }
 
-    override fun confirmLeave() = enqueue {
-        if (!confirmingLeave) return@enqueue
-        stopWriting()
-        render()
-        goBack()
+    override fun undo() = enqueue {
+        val kept = aftermath as? Aftermath.Kept ?: return@enqueue
+        val current = draft?.takeIf { writing == null && it == kept.after } ?: return@enqueue
+        commit(before = current, after = kept.before)
     }
 
-    override fun stay() = enqueue {
+    override fun begin() = enqueue {
+        val current = draft?.takeIf { writing == null } ?: return@enqueue
+        if (current.step.following != null || !policyOf(current).canAdvance(current)) return@enqueue
+        when (val saved = save(current)) {
+            is Outcome.Failure -> report(WizardFailure.Storage(saved.error))
+            is Outcome.Success -> outcomeChannel.send(WizardOutcome.Begun(current.id))
+        }
+    }
+
+    override fun answerLeave(answer: LeaveAnswer) = enqueue {
         if (!confirmingLeave) return@enqueue
-        confirmingLeave = false
-        render()
+        when (answer) {
+            LeaveAnswer.Stay -> {
+                confirmingLeave = false
+                render()
+            }
+            LeaveAnswer.Leave -> {
+                stopWriting()
+                render()
+                goBack()
+            }
+        }
     }
 
     private suspend fun goBack() {
@@ -219,11 +251,18 @@ internal class DefaultStoryWizard(
         commit(before, after)
     }
 
-    /** Shows [after] at once, then saves it; if the save fails, [before] comes back and the failure is reported. */
-    private suspend fun commit(before: StoryDraft, after: StoryDraft) {
+    /**
+     * Shows [after] at once, then saves it; if the save fails, [before] comes back, with what the last
+     * writing left, and the failure is reported. Any change replaces what the last writing left with
+     * [aftermath], which is nothing unless the change is that writing's own result.
+     */
+    private suspend fun commit(before: StoryDraft, after: StoryDraft, aftermath: Aftermath? = null) {
+        val aftermathBefore = this.aftermath
+        this.aftermath = aftermath
         show(after)
         val saved = save(after)
         if (saved is Outcome.Failure) {
+            this.aftermath = aftermathBefore
             show(before)
             report(WizardFailure.Storage(saved.error))
         } else if (after.step != before.step) {
@@ -252,20 +291,21 @@ internal class DefaultStoryWizard(
      */
     private suspend fun startWriting(writer: StepWriter, from: StoryDraft) {
         val model = drafting ?: return report(WizardFailure.Drafting(DraftingError.NoModel))
-        val run = Writing()
-        run.job = scope.launch(start = CoroutineStart.LAZY) { write(run, writer, from, model) }
+        val run = Writing(writer, from)
+        run.job = scope.launch(start = CoroutineStart.LAZY) { write(run, model) }
         writing = run
+        aftermath = null
         render()
         run.job.start()
     }
 
     /** Runs off the loop: it only hands pieces to it. */
     @Suppress("TooGenericExceptionCaught")
-    private suspend fun write(run: Writing, writer: StepWriter, from: StoryDraft, model: DraftingModel) {
+    private suspend fun write(run: Writing, model: DraftingModel) {
         try {
-            writer.write(from, model).collect { event -> enqueue { onWritten(run, event) } }
+            run.writer.write(run.from, model).collect { event -> enqueue { onWritten(run, event) } }
             // Reached only when the writer ended without its last word, which no writer should do.
-            enqueue { endUnexpectedly(run, IllegalStateException("${from.step} writer ended without a result")) }
+            enqueue { endUnexpectedly(run, IllegalStateException("${run.from.step} writer ended without a result")) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -283,15 +323,25 @@ internal class DefaultStoryWizard(
             }
             is WriterEvent.Done -> {
                 endWriting()
-                commit(before = draft ?: return, after = event.draft)
+                val before = draft ?: return
+                commit(before, after = event.draft, aftermath = keptBy(run, event.draft, stopped = false))
             }
             is WriterEvent.Failed -> {
                 endWriting()
-                render()
-                report(WizardFailure.Drafting(event.error))
+                if (run.writer.failsInPlace) {
+                    aftermath = Aftermath.Failed(event.error)
+                    render()
+                } else {
+                    render()
+                    report(WizardFailure.Drafting(event.error))
+                }
             }
         }
     }
+
+    /** What keeping [kept] leaves to take back, if the run's writer lets it be taken back. */
+    private fun keptBy(run: Writing, kept: StoryDraft, stopped: Boolean): Aftermath? =
+        if (run.writer.undoable) Aftermath.Kept(before = run.from, after = kept, stopped = stopped) else null
 
     private suspend fun endUnexpectedly(run: Writing, cause: Exception) {
         if (writing !== run) return
@@ -351,6 +401,7 @@ internal class DefaultStoryWizard(
         val draftBefore = draft
         val stateBefore = mutableState.value
         val writingBefore = writing
+        val aftermathBefore = aftermath
         try {
             action()
         } catch (e: CancellationException) {
@@ -359,6 +410,7 @@ internal class DefaultStoryWizard(
             // Writing the verb started is stopped with it, so the step is never left waiting on nothing.
             if (writing != null && writing !== writingBefore) stopWriting()
             draft = draftBefore
+            aftermath = aftermathBefore
             mutableState.value = stateBefore
             report(WizardFailure.Unexpected(e))
         }
@@ -399,11 +451,11 @@ internal class DefaultStoryWizard(
             step = draft.step,
             progress = (draft.step.ordinal + 1f) / CreationStep.entries.size,
             lead = leadOf(draft),
-            body = policy.body(run?.preview ?: draft),
+            body = policy.body(draft, writerStatus(run)),
             controls = StepControls(
                 canGoBack = true,
-                // The last step's next is Begin, which only exists once a story can be committed.
-                canAdvance = idle && draft.step.following != null && policy.canAdvance(draft),
+                canAdvance = idle && policy.canAdvance(draft),
+                begins = draft.step.following == null,
                 advancesOnPick = policy.advancesOnPick,
                 canRoll = idle && policy.canRoll(draft),
                 takesOwnWords = idle && policy.takesOwnWords(draft),
@@ -415,13 +467,23 @@ internal class DefaultStoryWizard(
         )
     }
 
+    private fun writerStatus(run: Writing?): WriterStatus = when {
+        run != null -> WriterStatus.Writing(from = run.from, preview = run.preview)
+        else -> when (val left = aftermath) {
+            null -> WriterStatus.Idle
+            is Aftermath.Kept -> WriterStatus.Kept(left.stopped)
+            is Aftermath.Failed -> WriterStatus.Failed(left.error)
+        }
+    }
+
     /**
      * The words above the step's prompt. On the sentence steps it is the story so far, left open for the
      * prompt to finish ("A gothic noir story," above "twisted by"); on the limits it is the whole story
-     * clause, and on the first line it is the cast. The other steps lead with their prompt alone.
+     * clause, and on the opening it is the whole story, cast and all. The other steps lead with their
+     * prompt alone.
      */
     private fun leadOf(draft: StoryDraft): Sentence = when (draft.step) {
-        CreationStep.Genre, CreationStep.Premise, CreationStep.Cast, CreationStep.FirstTurn -> Sentence.Empty
+        CreationStep.Genre, CreationStep.Premise, CreationStep.Cast -> Sentence.Empty
         CreationStep.Twist, CreationStep.Starring, CreationStep.Tone, CreationStep.Setting ->
             sentences.story(draft, before = draft.step, ending = SentenceBuilder.Ending.Comma)
         CreationStep.Limits -> sentences.story(
@@ -429,15 +491,23 @@ internal class DefaultStoryWizard(
             before = CreationStep.Limits,
             ending = SentenceBuilder.Ending.Period,
         )
-        CreationStep.FirstLine -> sentences.cast(draft)
+        CreationStep.Opening -> sentences.whole(draft)
     }
 
-    /** One run of a model writing the current step. */
-    private class Writing {
+    /** One run of [writer] writing the current step, which started on [from]. */
+    private class Writing(val writer: StepWriter, val from: StoryDraft) {
         lateinit var job: Job
 
         /** What it has written so far, shown in place of the draft. */
         var preview: StoryDraft? = null
+    }
+
+    /** What the last writing left for the step to offer, until the draft changes. */
+    private sealed interface Aftermath {
+        /** [after] was kept from writing that started on [before], and can be taken back to it. */
+        data class Kept(val before: StoryDraft, val after: StoryDraft, val stopped: Boolean) : Aftermath
+
+        data class Failed(val error: DraftingError) : Aftermath
     }
 
     companion object {

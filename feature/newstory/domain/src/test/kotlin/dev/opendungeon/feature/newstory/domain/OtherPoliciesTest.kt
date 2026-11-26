@@ -1,6 +1,7 @@
 package dev.opendungeon.feature.newstory.domain
 
-import dev.opendungeon.core.model.ModelId
+import app.cash.turbine.test
+import dev.opendungeon.domain.drafting.DraftingError
 import dev.opendungeon.domain.story.CastMember
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
@@ -9,13 +10,11 @@ import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
-import dev.opendungeon.domain.story.Take
-import dev.opendungeon.domain.story.TakeId
 import dev.opendungeon.feature.newstory.domain.policy.CastPolicy
-import dev.opendungeon.feature.newstory.domain.policy.FirstLinePolicy
-import dev.opendungeon.feature.newstory.domain.policy.FirstTurnPolicy
 import dev.opendungeon.feature.newstory.domain.policy.LimitsPolicy
+import dev.opendungeon.feature.newstory.domain.policy.OpeningPolicy
 import dev.opendungeon.feature.newstory.domain.policy.PremisePolicy
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -44,7 +43,7 @@ class OtherPoliciesTest {
 
     @Test
     fun `the premise needs words, and edited words are the player's own, kept as typed`() {
-        val premise = PremisePolicy(ScriptedPremise())
+        val premise = PremisePolicy(ScriptedWriting())
         assertFalse(premise.canAdvance(emptyDraft))
 
         val written = premise.edit(
@@ -106,46 +105,104 @@ class OtherPoliciesTest {
     }
 
     @Test
-    fun `the first line is kept as typed, up to the limit`() {
-        val firstLine = FirstLinePolicy()
+    fun `the opening is kept as typed, up to the limit`() {
+        val opening = OpeningPolicy(ScriptedWriting())
 
-        val typed = firstLine.edit(emptyDraft, DraftEdit.FirstLine("I come in.\n"))!!
-        val long = firstLine.edit(emptyDraft, DraftEdit.FirstLine("x".repeat(StoryDraft.MAX_FIRST_LINE_LENGTH + 10)))!!
+        val typed = opening.edit(emptyDraft, DraftEdit.Opening("I come in.\n"))!!
+        val long = opening.edit(emptyDraft, DraftEdit.Opening("x".repeat(StoryDraft.MAX_OPENING_LENGTH + 10)))!!
 
-        assertEquals("I come in.\n", typed.firstLine)
-        assertEquals(StoryDraft.MAX_FIRST_LINE_LENGTH, long.firstLine.length)
-        assertTrue(firstLine.canAdvance(emptyDraft), "the first line is optional")
+        assertEquals("I come in.\n", typed.opening)
+        assertEquals(StoryDraft.MAX_OPENING_LENGTH, long.opening.length)
     }
 
     @Test
-    fun `only a finished take can be chosen`() {
-        val firstTurn = FirstTurnPolicy()
-        val written = Take(TakeId("a"), ModelId("m/one"), "Rain.", Take.State.Written)
-        val cut = Take(TakeId("b"), ModelId("m/two"), "The", Take.State.Interrupted)
-        val draft = emptyDraft.copy(takes = listOf(written, cut))
+    fun `the story can begin once the opening has words in it`() {
+        val opening = OpeningPolicy(ScriptedWriting())
 
-        assertNull(firstTurn.select(draft, Choice.Take(TakeId("b"))))
-        val chosen = firstTurn.select(draft, Choice.Take(TakeId("a")))!!.draft
-
-        assertEquals(TakeId("a"), chosen.chosenTake)
-        assertTrue(firstTurn.canAdvance(chosen))
-        assertFalse(firstTurn.canAdvance(draft))
+        assertFalse(opening.canAdvance(emptyDraft))
+        assertFalse(opening.canAdvance(emptyDraft.copy(opening = " \n")))
+        assertTrue(opening.canAdvance(emptyDraft.copy(opening = "R")))
     }
 
     @Test
-    fun `auditions say which take is chosen and which can be`() {
-        val firstTurn = FirstTurnPolicy()
-        val takes = listOf(
-            Take(TakeId("a"), ModelId("m/one"), "Rain.", Take.State.Written),
-            Take(TakeId("b"), ModelId("m/two"), "Mid", Take.State.Writing),
-            Take(TakeId("c"), ModelId("m/three"), "The", Take.State.Interrupted),
+    fun `the wand writes it all when the field is empty, and carries on when it is not`() {
+        val opening = OpeningPolicy(ScriptedWriting())
+
+        fun wand(text: String) = assertIs<StepBody.Opening>(opening.body(emptyDraft.copy(opening = text))).wand
+
+        assertEquals(StepBody.Opening.Wand.WriteForMe, wand(""))
+        assertEquals(StepBody.Opening.Wand.ContinueMyText, wand("You wait."))
+    }
+
+    @Test
+    fun `the wand works until the opening is full`() {
+        val opening = OpeningPolicy(ScriptedWriting())
+
+        assertTrue(opening.canRoll(emptyDraft))
+        assertTrue(opening.canRoll(emptyDraft.copy(opening = "x".repeat(StoryDraft.MAX_OPENING_LENGTH - 1))))
+        assertFalse(opening.canRoll(emptyDraft.copy(opening = "x".repeat(StoryDraft.MAX_OPENING_LENGTH))))
+    }
+
+    @Test
+    fun `while writing, the model's words stay apart from the text it started from`() {
+        val opening = OpeningPolicy(ScriptedWriting())
+        val from = emptyDraft.copy(opening = "You wait.")
+
+        val waiting = opening.body(from, WriterStatus.Writing(from, preview = null))
+        val adding = opening.body(from, WriterStatus.Writing(from, preview = from.copy(opening = "You wait. Maren")))
+
+        assertEquals(
+            StepBody.Opening(
+                text = "You wait.",
+                writing = StepBody.Opening.Writing.Waiting,
+                wand = StepBody.Opening.Wand.ContinueMyText,
+                addition = null,
+                failed = false,
+                maxLength = StoryDraft.MAX_OPENING_LENGTH,
+            ),
+            waiting,
         )
+        assertEquals(StepBody.Opening.Writing.Adding(" Maren"), assertIs<StepBody.Opening>(adding).writing)
+        assertEquals("You wait.", adding.text)
+    }
 
-        val body =
-            assertIs<StepBody.Auditions>(firstTurn.body(emptyDraft.copy(takes = takes, chosenTake = TakeId("a"))))
+    @Test
+    fun `what the last writing left shows on the step`() {
+        val opening = OpeningPolicy(ScriptedWriting())
+        val draft = emptyDraft.copy(opening = "You wait. Maren is late.")
 
-        assertEquals(listOf(true, false, false), body.auditions.map { it.chosen })
-        assertEquals(listOf(true, false, false), body.auditions.map { it.canBeChosen })
-        assertEquals(takes.map { it.state }, body.auditions.map { it.state })
+        val kept = assertIs<StepBody.Opening>(opening.body(draft, WriterStatus.Kept(stopped = true)))
+        val failed = assertIs<StepBody.Opening>(opening.body(draft, WriterStatus.Failed(DraftingError.Unusable)))
+
+        assertEquals(StepBody.Opening.Addition(stopped = true), kept.addition)
+        assertFalse(kept.failed)
+        assertTrue(failed.failed)
+        assertNull(failed.addition)
+    }
+
+    @Test
+    fun `the model only ever adds after the player's text, and only up to the limit`() = runTest {
+        val writing = ScriptedWriting()
+        val opening = OpeningPolicy(writing)
+        val mine = "x".repeat(StoryDraft.MAX_OPENING_LENGTH - 3)
+        val from = emptyDraft.copy(opening = mine)
+
+        opening.write(from, storyteller).test {
+            writing.last.writing(" Maren")
+            assertEquals(WriterEvent.Preview(from.copy(opening = "$mine Ma")), awaitItem())
+            writing.last.written(" Maren is late.")
+            assertEquals(WriterEvent.Done(from.copy(opening = "$mine Ma")), awaitItem())
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `the opening's writer keeps what it stopped at, can be taken back, and fails in place`() {
+        val opening = OpeningPolicy(ScriptedWriting())
+
+        assertFalse(opening.writesOnArrival(emptyDraft), "writing waits for the wand")
+        assertTrue(opening.keepsWhenStopped)
+        assertTrue(opening.undoable)
+        assertTrue(opening.failsInPlace)
     }
 }

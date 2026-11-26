@@ -1,11 +1,9 @@
 package dev.opendungeon.data.story
 
 import dev.opendungeon.core.database.story.DraftCharacterEntity
-import dev.opendungeon.core.database.story.DraftTakeEntity
 import dev.opendungeon.core.database.story.PhraseColumns
 import dev.opendungeon.core.database.story.StoredDraft
 import dev.opendungeon.core.database.story.StoryDraftEntity
-import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.domain.story.CastMember
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
@@ -15,8 +13,6 @@ import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
-import dev.opendungeon.domain.story.Take
-import dev.opendungeon.domain.story.TakeId
 
 /*
  * Enum values are written as fixed storage names rather than `name`, so renaming a Kotlin constant
@@ -36,8 +32,7 @@ internal fun StoryDraft.toStored(): StoredDraft = StoredDraft(
         limitDesire = limits.desire.storageName,
         limitViolence = limits.violence.storageName,
         limitNote = limits.note,
-        firstLine = firstLine,
-        chosenTakeId = chosenTake?.value,
+        opening = opening,
     ),
     characters =
         listOfNotNull(protagonist?.toEntity(id, Slot.PROTAGONIST, position = 0, origin = null, inStory = true)) +
@@ -50,7 +45,6 @@ internal fun StoryDraft.toStored(): StoredDraft = StoredDraft(
                     inStory = member.inStory,
                 )
             },
-    takes = takes.mapIndexed { index, take -> take.toEntity(id, index) },
 )
 
 internal fun StoredDraft.toDomain(): StoryDraft {
@@ -79,9 +73,7 @@ internal fun StoredDraft.toDomain(): StoryDraft {
                 inStory = entity.inStory,
             )
         },
-        firstLine = draft.firstLine,
-        takes = takes.sortedBy(DraftTakeEntity::position).map { it.toTake() },
-        chosenTake = draft.chosenTakeId?.let(::TakeId),
+        opening = draft.opening,
     )
 }
 
@@ -148,28 +140,7 @@ private fun DraftCharacterEntity.toCharacter() = Character(
     } ?: Secret.None,
 )
 
-private fun Take.toEntity(draftId: DraftId, position: Int) = DraftTakeEntity(
-    id = id.value,
-    draftId = draftId.value,
-    position = position,
-    modelId = model.value,
-    text = text,
-    state = state.storageName,
-)
-
-/** A take that was still writing when it was stored did not finish: the writer is gone. */
-private fun DraftTakeEntity.toTake() = Take(
-    id = TakeId(id),
-    model = ModelId(modelId),
-    text = text,
-    state = when (state) {
-        WRITTEN_TAKE -> Take.State.Written
-        else -> Take.State.Interrupted
-    },
-)
-
 private const val KNOWN_SECRET = "known"
-private const val WRITTEN_TAKE = "written"
 
 private val CreationStep.storageName: String
     get() = when (this) {
@@ -181,8 +152,7 @@ private val CreationStep.storageName: String
         CreationStep.Limits -> "limits"
         CreationStep.Premise -> "premise"
         CreationStep.Cast -> "cast"
-        CreationStep.FirstLine -> "first_line"
-        CreationStep.FirstTurn -> "first_turn"
+        CreationStep.Opening -> "opening"
     }
 
 private val ContentLimits.Desire.storageName: String
@@ -210,11 +180,4 @@ private val Secret.storageName: String
         Secret.None -> "none"
         is Secret.Known -> KNOWN_SECRET
         is Secret.Sealed -> "sealed"
-    }
-
-private val Take.State.storageName: String
-    get() = when (this) {
-        Take.State.Writing -> "writing"
-        Take.State.Written -> WRITTEN_TAKE
-        Take.State.Interrupted -> "interrupted"
     }

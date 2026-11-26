@@ -15,10 +15,9 @@ import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.feature.newstory.domain.policy.CastPolicy
-import dev.opendungeon.feature.newstory.domain.policy.FirstLinePolicy
-import dev.opendungeon.feature.newstory.domain.policy.FirstTurnPolicy
 import dev.opendungeon.feature.newstory.domain.policy.GenrePolicy
 import dev.opendungeon.feature.newstory.domain.policy.LimitsPolicy
+import dev.opendungeon.feature.newstory.domain.policy.OpeningPolicy
 import dev.opendungeon.feature.newstory.domain.policy.PremisePolicy
 import dev.opendungeon.feature.newstory.domain.policy.SettingPolicy
 import dev.opendungeon.feature.newstory.domain.policy.StarringPolicy
@@ -45,7 +44,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class WritingStepsTest {
 
-    private val premise = ScriptedPremise()
+    private val premise = ScriptedWriting()
     private val cast = ScriptedCast()
     private val drafter = FakeDrafter(storyteller)
 
@@ -64,8 +63,7 @@ class WritingStepsTest {
         LimitsPolicy(),
         premisePolicy,
         CastPolicy(cast),
-        FirstLinePolicy(),
-        FirstTurnPolicy(),
+        OpeningPolicy(ScriptedWriting()),
     )
 
     private fun wizard(
@@ -163,7 +161,7 @@ class WritingStepsTest {
         assertEquals(CreationStep.Premise, wizard.current().step)
         assertFalse(premise.last.cancelled)
 
-        wizard.stay()
+        wizard.answerLeave(LeaveAnswer.Stay)
 
         assertFalse(wizard.current().confirmingLeave)
         premise.last.written("You owe the salt.")
@@ -176,7 +174,7 @@ class WritingStepsTest {
         premise.last.writing("You owe")
         wizard.back()
 
-        wizard.confirmLeave()
+        wizard.answerLeave(LeaveAnswer.Leave)
 
         assertTrue(premise.last.cancelled)
         assertEquals(CreationStep.Limits, wizard.current().step)
@@ -193,7 +191,7 @@ class WritingStepsTest {
         premise.last.written("You owe the salt.")
 
         assertFalse(wizard.current().confirmingLeave)
-        wizard.confirmLeave()
+        wizard.answerLeave(LeaveAnswer.Leave)
         assertEquals(CreationStep.Premise, wizard.current().step, "a late answer to a closed question does nothing")
     }
 

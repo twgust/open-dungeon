@@ -1,8 +1,10 @@
 package dev.opendungeon.feature.newstory.ui
 
 import dev.opendungeon.domain.story.CharacterLine
+import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.DraftEdit
+import dev.opendungeon.feature.newstory.domain.LeaveAnswer
 import dev.opendungeon.feature.newstory.domain.WizardFailure
 import dev.opendungeon.feature.newstory.domain.WizardState
 
@@ -27,22 +29,24 @@ sealed interface WizardIntent {
 
     data class Edit(val edit: DraftEdit) : WizardIntent
 
-    data object Roll : WizardIntent
-
-    data class RollLine(val line: CharacterLine) : WizardIntent
+    /** The step's die, or with [line] the die beside that line of the player's card. */
+    data class Roll(val line: CharacterLine? = null) : WizardIntent
 
     data object Next : WizardIntent
 
     data object Back : WizardIntent
 
-    /** Stop the model writing the step. */
+    /** Stop the model writing the step, by its stop button or by tapping the text it writes. */
     data object Stop : WizardIntent
 
-    /** Leave the step after all, stopping the model writing it. */
-    data object ConfirmLeave : WizardIntent
+    /** Take back what the model last added. */
+    data object Undo : WizardIntent
 
-    /** Stay on the step, letting the model write on. */
-    data object Stay : WizardIntent
+    /** Begin the story from the last step. */
+    data object Begin : WizardIntent
+
+    /** The answer to whether to leave a step a model is writing. */
+    data class AnswerLeave(val answer: LeaveAnswer) : WizardIntent
 
     /** The model line was tapped: the player wants another model to write. */
     data object ChooseModel : WizardIntent
@@ -51,6 +55,9 @@ sealed interface WizardIntent {
 sealed interface WizardEffect {
     /** Creation was left from its first step; the draft is kept to resume. */
     data object Leave : WizardEffect
+
+    /** The player began the story; [draft] is saved, opening and all, for play to start from. */
+    data class Begin(val draft: DraftId) : WizardEffect
 
     /** Something the player did could not be kept; the screen already shows it taken back. */
     data class ShowFailure(val failure: WizardFailure) : WizardEffect

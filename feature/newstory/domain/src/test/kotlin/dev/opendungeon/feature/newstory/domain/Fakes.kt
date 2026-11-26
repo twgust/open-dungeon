@@ -6,8 +6,9 @@ import dev.opendungeon.domain.drafting.CastPeople
 import dev.opendungeon.domain.drafting.DraftingError
 import dev.opendungeon.domain.drafting.DraftingModel
 import dev.opendungeon.domain.drafting.GeneratePremise
-import dev.opendungeon.domain.drafting.PremiseProgress
 import dev.opendungeon.domain.drafting.ResolveDraftingModel
+import dev.opendungeon.domain.drafting.WriteOpening
+import dev.opendungeon.domain.drafting.WritingProgress
 import dev.opendungeon.domain.openrouter.testing.aiModel
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.DraftId
@@ -15,6 +16,15 @@ import dev.opendungeon.domain.story.IdGenerator
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.domain.story.StoryDraftRepository
+import dev.opendungeon.feature.newstory.domain.policy.CastPolicy
+import dev.opendungeon.feature.newstory.domain.policy.GenrePolicy
+import dev.opendungeon.feature.newstory.domain.policy.LimitsPolicy
+import dev.opendungeon.feature.newstory.domain.policy.OpeningPolicy
+import dev.opendungeon.feature.newstory.domain.policy.PremisePolicy
+import dev.opendungeon.feature.newstory.domain.policy.SettingPolicy
+import dev.opendungeon.feature.newstory.domain.policy.StarringPolicy
+import dev.opendungeon.feature.newstory.domain.policy.TonePolicy
+import dev.opendungeon.feature.newstory.domain.policy.TwistPolicy
 import dev.opendungeon.feature.newstory.domain.vocabulary.RollChoice
 import dev.opendungeon.feature.newstory.domain.vocabulary.VocabularyList
 import dev.opendungeon.feature.newstory.domain.vocabulary.WizardVocabulary
@@ -103,6 +113,23 @@ internal class InMemoryDraftRepository(vararg drafts: StoryDraft) : StoryDraftRe
 
 internal val emptyDraft = StoryDraft(DraftId("draft"))
 
+/** One policy per step, as the app binds them, with the model's work scripted. */
+internal fun wizardPolicies(
+    premise: GeneratePremise = ScriptedWriting(),
+    cast: CastPeople = ScriptedCast(),
+    opening: WriteOpening = ScriptedWriting(),
+): Set<StepPolicy> = setOf(
+    GenrePolicy(TestVocabulary, FirstWordsRoll()),
+    TwistPolicy(TestVocabulary, FirstWordsRoll()),
+    StarringPolicy(TestVocabulary, FirstWordsRoll(), CountingIds("you")),
+    TonePolicy(TestVocabulary, FirstWordsRoll()),
+    SettingPolicy(TestVocabulary, FirstWordsRoll()),
+    LimitsPolicy(),
+    PremisePolicy(premise),
+    CastPolicy(cast),
+    OpeningPolicy(opening),
+)
+
 internal val storyteller = DraftingModel(aiModel("acme/storyteller", name = "Storyteller"), Tuning.Untouched)
 
 /** The drafting model a test sets; none until it does. */
@@ -112,24 +139,26 @@ internal class FakeDrafter(model: DraftingModel? = null) : ResolveDraftingModel 
     override fun invoke(): Flow<DraftingModel?> = model
 }
 
-/** Premises the test writes by hand: every run waits for what the test sends it. */
-internal class ScriptedPremise : GeneratePremise {
+/** Story text the test writes by hand, a premise or an opening: every run waits for what the test sends it. */
+internal class ScriptedWriting :
+    GeneratePremise,
+    WriteOpening {
     val runs = mutableListOf<Run>()
 
     class Run(val draft: StoryDraft, val model: DraftingModel) {
-        private val progress = Channel<PremiseProgress>(Channel.UNLIMITED)
+        private val progress = Channel<WritingProgress>(Channel.UNLIMITED)
         var cancelled = false
             internal set
 
-        fun writing(text: String) = progress.trySend(PremiseProgress.Writing(text))
+        fun writing(text: String) = progress.trySend(WritingProgress.Writing(text))
 
-        fun written(text: String) = finish(PremiseProgress.Written(text))
+        fun written(text: String) = finish(WritingProgress.Written(text))
 
-        fun failed(error: DraftingError) = finish(PremiseProgress.Failed(error))
+        fun failed(error: DraftingError) = finish(WritingProgress.Failed(error))
 
         internal fun flow() = progress.consumeAsFlow()
 
-        private fun finish(last: PremiseProgress) {
+        private fun finish(last: WritingProgress) {
             progress.trySend(last)
             progress.close()
         }
@@ -137,7 +166,7 @@ internal class ScriptedPremise : GeneratePremise {
 
     val last: Run get() = runs.last()
 
-    override fun invoke(draft: StoryDraft, model: DraftingModel): Flow<PremiseProgress> = flow {
+    override fun invoke(draft: StoryDraft, model: DraftingModel): Flow<WritingProgress> = flow {
         val run = Run(draft, model)
         runs += run
         emitAll(run.flow().onCompletion { cause -> if (cause is CancellationException) run.cancelled = true })

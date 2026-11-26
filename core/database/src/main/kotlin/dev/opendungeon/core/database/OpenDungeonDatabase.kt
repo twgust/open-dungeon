@@ -13,7 +13,6 @@ import dev.opendungeon.core.database.model.ModelTuningEntity
 import dev.opendungeon.core.database.model.RankingDao
 import dev.opendungeon.core.database.model.SetupDao
 import dev.opendungeon.core.database.story.DraftCharacterEntity
-import dev.opendungeon.core.database.story.DraftTakeEntity
 import dev.opendungeon.core.database.story.StoryDraftDao
 import dev.opendungeon.core.database.story.StoryDraftEntity
 
@@ -28,17 +27,20 @@ import dev.opendungeon.core.database.story.StoryDraftEntity
     entities = [
         StoryDraftEntity::class,
         DraftCharacterEntity::class,
-        DraftTakeEntity::class,
         CatalogModelEntity::class,
         CatalogFetchEntity::class,
         CatalogRankEntity::class,
         ChosenModelEntity::class,
         ModelTuningEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    // 2 adds the model catalog, the chosen model and tunings: new tables only.
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [
+        // 2 adds the model catalog, the chosen model and tunings: new tables only.
+        AutoMigration(from = 1, to = 2),
+        // 3 replaces the auditioned takes with one opening: see [OpeningMigration].
+        AutoMigration(from = 2, to = 3, spec = OpeningMigration::class),
+    ],
 )
 @TypeConverters(StorageConverters::class)
 public abstract class OpenDungeonDatabase : RoomDatabase() {

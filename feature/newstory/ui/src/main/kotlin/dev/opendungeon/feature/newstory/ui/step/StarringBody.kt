@@ -58,7 +58,7 @@ private fun YouCard(lines: List<ShownLine>, onIntent: (WizardIntent) -> Unit) {
                 label = label,
                 trailing = {
                     LineDieButton(stringResource(R.string.wizard_reroll_line, label), onClick = {
-                        onIntent(WizardIntent.RollLine(line.line))
+                        onIntent(WizardIntent.Roll(line.line))
                     })
                 },
             ) {

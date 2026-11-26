@@ -37,19 +37,20 @@ class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) :
         is WizardIntent.Pick -> wizard.select(intent.choice)
         is WizardIntent.Own -> wizard.submitOwn(intent.text)
         is WizardIntent.Edit -> wizard.edit(intent.edit)
-        WizardIntent.Roll -> wizard.roll()
-        is WizardIntent.RollLine -> wizard.rollLine(intent.line)
+        is WizardIntent.Roll -> wizard.roll(intent.line)
         WizardIntent.Next -> wizard.next()
         WizardIntent.Back -> wizard.back()
         WizardIntent.Stop -> wizard.stop()
-        WizardIntent.ConfirmLeave -> wizard.confirmLeave()
-        WizardIntent.Stay -> wizard.stay()
+        WizardIntent.Undo -> wizard.undo()
+        WizardIntent.Begin -> wizard.begin()
+        is WizardIntent.AnswerLeave -> wizard.answerLeave(intent.answer)
         // Choosing a model is the models screen's work; going there is navigation, not a rule.
         WizardIntent.ChooseModel -> sendEffect(WizardEffect.OpenModels)
     }
 
     private fun WizardOutcome.toEffect(): WizardEffect = when (this) {
         WizardOutcome.Left -> WizardEffect.Leave
+        is WizardOutcome.Begun -> WizardEffect.Begin(draft)
         is WizardOutcome.Failed -> WizardEffect.ShowFailure(failure)
     }
 }

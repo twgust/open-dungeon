@@ -2,6 +2,8 @@ package dev.opendungeon.feature.newstory.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +17,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,10 +31,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.PaperIcons
@@ -46,15 +58,17 @@ import dev.opendungeon.core.ui.errorMessages
 import dev.opendungeon.domain.drafting.DraftingError
 import dev.opendungeon.domain.generation.GenerationError
 import dev.opendungeon.domain.story.CreationStep
+import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.StorageError
+import dev.opendungeon.feature.newstory.domain.LeaveAnswer
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.domain.WizardFailure
 import dev.opendungeon.feature.newstory.domain.WizardState
-import dev.opendungeon.feature.newstory.ui.step.AuditionsBody
 import dev.opendungeon.feature.newstory.ui.step.CastBody
-import dev.opendungeon.feature.newstory.ui.step.FirstLineBody
 import dev.opendungeon.feature.newstory.ui.step.LimitsBody
 import dev.opendungeon.feature.newstory.ui.step.ModelLineText
+import dev.opendungeon.feature.newstory.ui.step.OpeningBar
+import dev.opendungeon.feature.newstory.ui.step.OpeningStage
 import dev.opendungeon.feature.newstory.ui.step.OwnWordsBar
 import dev.opendungeon.feature.newstory.ui.step.PremiseBody
 import dev.opendungeon.feature.newstory.ui.step.StarringBody
@@ -62,7 +76,12 @@ import dev.opendungeon.feature.newstory.ui.step.WordsBody
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Composable
-fun NewStoryRoute(onLeave: () -> Unit, onModels: () -> Unit, viewModel: StoryWizardViewModel = metroViewModel()) {
+fun NewStoryRoute(
+    onLeave: () -> Unit,
+    onModels: () -> Unit,
+    onBegin: (DraftId) -> Unit,
+    viewModel: StoryWizardViewModel = metroViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notices = remember { SnackbarHostState() }
     val failures = failureMessages()
@@ -70,6 +89,7 @@ fun NewStoryRoute(onLeave: () -> Unit, onModels: () -> Unit, viewModel: StoryWiz
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             WizardEffect.Leave -> onLeave()
+            is WizardEffect.Begin -> onBegin(effect.draft)
             WizardEffect.OpenModels -> onModels()
             is WizardEffect.ShowFailure -> {
                 notices.currentSnackbarData?.dismiss()
@@ -171,14 +191,20 @@ private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) ->
     }
     StepTransition(state = state, stepOf = WizardState::step, modifier = Modifier.weight(1f)) { shown ->
         Column(Modifier.fillMaxSize()) {
-            Stage(shown, onIntent, Modifier.weight(1f))
+            val body = shown.body
+            if (body is StepBody.Opening) {
+                OpeningStage(shown, body, onIntent, Modifier.weight(1f))
+            } else {
+                Stage(shown, onIntent, Modifier.weight(1f))
+            }
             if (shown.controls.takesOwnWords) {
                 OwnWordsBar(step = shown.step, onUse = { onIntent(WizardIntent.Own(it)) })
             }
         }
     }
-    BottomBar(state, onIntent)
-    if (state.confirmingLeave) LeaveDialog(onIntent)
+    val body = state.body
+    if (body is StepBody.Opening) OpeningBar(state, body, onIntent) else BottomBar(state, onIntent)
+    if (state.confirmingLeave) LeaveSheet(note = stepCopy(state.step).leaveNote, onIntent = onIntent)
 }
 
 @Composable
@@ -203,32 +229,72 @@ private fun Stage(state: WizardState, onIntent: (WizardIntent) -> Unit, modifier
                 is StepBody.Limits -> LimitsBody(body, onIntent)
                 is StepBody.Premise -> PremiseBody(body, writing, onIntent)
                 is StepBody.Cast -> CastBody(body, writing, onIntent)
-                is StepBody.FirstLine -> FirstLineBody(body, onIntent)
-                is StepBody.Auditions -> AuditionsBody(body, onIntent)
+                // The opening lays out its own page, around a text that fills it.
+                is StepBody.Opening -> Unit
             }
         }
         state.writer?.let { ModelLineText(it, onChoose = { onIntent(WizardIntent.ChooseModel) }) }
     }
 }
 
-/** Leaving a step a model is writing stops it, so the player says so first. */
+/**
+ * Leaving a step a model is writing stops it, so the player says so first, on a sheet from the bottom.
+ * Dismissing the sheet is staying.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LeaveDialog(onIntent: (WizardIntent) -> Unit) {
-    AlertDialog(
-        onDismissRequest = { onIntent(WizardIntent.Stay) },
-        title = { Text(stringResource(R.string.wizard_leave_title), style = Paper.type.cardText) },
-        confirmButton = {
-            GhostTextButton(
-                stringResource(R.string.wizard_leave),
-                onClick = { onIntent(WizardIntent.ConfirmLeave) },
-                emphasised = true,
+private fun LeaveSheet(note: Int?, onIntent: (WizardIntent) -> Unit) {
+    val colors = Paper.colors
+    ModalBottomSheet(
+        onDismissRequest = { onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Stay)) },
+        containerColor = colors.card,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = colors.hairline) },
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                stringResource(R.string.wizard_leave_title),
+                style = Paper.type.cardName.copy(fontSize = 30.sp, lineHeight = 1.1.em),
+                color = colors.ink,
+                modifier = Modifier.semantics { heading() },
             )
-        },
-        dismissButton = {
-            GhostTextButton(stringResource(R.string.wizard_stay), onClick = { onIntent(WizardIntent.Stay) })
-        },
-        containerColor = Paper.colors.card,
-    )
+            note?.let { Text(stringResource(it), style = Paper.type.button, color = colors.muted) }
+            Row(
+                Modifier.fillMaxWidth().padding(top = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+            ) {
+                SheetButton(stringResource(R.string.wizard_stay), onClick = {
+                    onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Stay))
+                })
+                SheetButton(
+                    stringResource(R.string.wizard_leave),
+                    onClick = { onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Leave)) },
+                    ink = true,
+                )
+            }
+        }
+    }
+}
+
+/** A sans pill for the sheet's answers; [ink] marks the one that acts. */
+@Composable
+private fun SheetButton(text: String, onClick: () -> Unit, ink: Boolean = false) {
+    val colors = Paper.colors
+    Box(
+        Modifier
+            .heightIn(min = 48.dp)
+            .clip(CircleShape)
+            .border(1.dp, if (ink) colors.ink else colors.hairline, CircleShape)
+            .background(if (ink) colors.ink else colors.card, CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = Paper.type.button, color = if (ink) colors.onInk else colors.ink)
+    }
 }
 
 @Composable
@@ -245,11 +311,11 @@ private fun BottomBar(state: WizardState, onIntent: (WizardIntent) -> Unit) {
         } else if (controls.canRoll) {
             DieButton(
                 contentDescription = stringResource(stepCopy(state.step).die),
-                onClick = { onIntent(WizardIntent.Roll) },
+                onClick = { onIntent(WizardIntent.Roll()) },
                 modifier = Modifier.align(Alignment.Center),
             )
         }
-        if (!controls.advancesOnPick && state.step.following != null) {
+        if (!controls.advancesOnPick && !controls.begins) {
             NextArrow(
                 contentDescription = stringResource(R.string.wizard_next),
                 onClick = { onIntent(WizardIntent.Next) },
@@ -268,6 +334,8 @@ internal data class StepCopy(
     val ownHint: Int? = null,
     val die: Int = R.string.wizard_die,
     val topPadding: Dp = 56.dp,
+    /** What leaving while a model writes costs, when the sheet's question alone does not say it. */
+    val leaveNote: Int? = null,
 )
 
 internal fun stepCopy(step: CreationStep): StepCopy = when (step) {
@@ -297,6 +365,5 @@ internal fun stepCopy(step: CreationStep): StepCopy = when (step) {
         die = R.string.wizard_die_cast,
         topPadding = 24.dp,
     )
-    CreationStep.FirstLine -> StepCopy(R.string.wizard_prompt_first_line)
-    CreationStep.FirstTurn -> StepCopy(R.string.wizard_prompt_first_turn, topPadding = 20.dp)
+    CreationStep.Opening -> StepCopy(R.string.wizard_prompt_opening, leaveNote = R.string.wizard_leave_note_opening)
 }

@@ -1,20 +1,16 @@
 package dev.opendungeon.feature.newstory.ui.step
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,8 +29,6 @@ import dev.opendungeon.core.designsystem.component.CharacterCard
 import dev.opendungeon.core.designsystem.component.ChoicePill
 import dev.opendungeon.core.designsystem.component.SealedSecret
 import dev.opendungeon.domain.story.CharacterLine
-import dev.opendungeon.domain.story.Take
-import dev.opendungeon.feature.newstory.domain.Audition
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.PersonCard
 import dev.opendungeon.feature.newstory.domain.ShownSecret
@@ -108,49 +102,6 @@ private fun CastCard(person: PersonCard, enabled: Boolean, onIntent: (WizardInte
                 enabled = enabled,
                 style = Paper.type.pill.copy(fontSize = 18.sp),
                 modifier = Modifier.padding(top = 4.dp, bottom = 6.dp),
-            )
-        }
-    }
-}
-
-/** The auditioned openings, side by side; one can be chosen once it is written. */
-@Composable
-internal fun AuditionsBody(body: StepBody.Auditions, onIntent: (WizardIntent) -> Unit) {
-    Deck(cardWidth = 300.dp, items = body.auditions, key = {
-        it.id.value
-    }) { audition -> AuditionCard(audition, onIntent) }
-}
-
-@Composable
-private fun AuditionCard(audition: Audition, onIntent: (WizardIntent) -> Unit) {
-    val colors = Paper.colors
-    val shape = RoundedCornerShape(22.dp)
-    Column(
-        modifier = Modifier
-            .height(270.dp)
-            .border(1.dp, if (audition.chosen) colors.ink else colors.hairline, shape)
-            .background(colors.card, shape)
-            .padding(start = 18.dp, top = 16.dp, end = 18.dp, bottom = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        val model = audition.model.value
-        val meta = when (audition.state) {
-            Take.State.Writing -> stringResource(R.string.wizard_take_writing, model)
-            Take.State.Interrupted -> stringResource(R.string.wizard_take_interrupted, model.uppercase())
-            Take.State.Written -> model.uppercase()
-        }
-        Text(meta, style = Paper.type.label, color = colors.muted)
-        Box(Modifier.weight(1f)) {
-            Text(audition.text, style = Paper.type.body.copy(fontSize = 18.sp), color = colors.ink)
-        }
-        if (audition.canBeChosen) {
-            ChoicePill(
-                text = stringResource(
-                    if (audition.chosen) R.string.wizard_take_chosen else R.string.wizard_take_choose,
-                ),
-                picked = audition.chosen,
-                onClick = { onIntent(WizardIntent.Pick(Choice.Take(audition.id))) },
-                style = Paper.type.pill.copy(fontSize = 17.sp),
             )
         }
     }
