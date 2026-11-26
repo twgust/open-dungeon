@@ -34,6 +34,18 @@ sealed interface WizardIntent {
     data object Next : WizardIntent
 
     data object Back : WizardIntent
+
+    /** Stop the model writing the step. */
+    data object Stop : WizardIntent
+
+    /** Leave the step after all, stopping the model writing it. */
+    data object ConfirmLeave : WizardIntent
+
+    /** Stay on the step, letting the model write on. */
+    data object Stay : WizardIntent
+
+    /** The model line was tapped: the player wants another model to write. */
+    data object ChooseModel : WizardIntent
 }
 
 sealed interface WizardEffect {
@@ -42,4 +54,7 @@ sealed interface WizardEffect {
 
     /** Something the player did could not be kept; the screen already shows it taken back. */
     data class ShowFailure(val failure: WizardFailure) : WizardEffect
+
+    /** Open the models, to choose the one that writes. The wizard stays open beneath. */
+    data object OpenModels : WizardEffect
 }

@@ -35,7 +35,17 @@ public interface StoryWizard {
 
     public fun next()
 
+    /** Steps back. While a model writes, it asks first: [WizardState.confirmingLeave]. */
     public fun back()
+
+    /** Stops the model writing the current step. What was there before it started stays. */
+    public fun stop()
+
+    /** Leaving after all: stops the writing, then steps back. */
+    public fun confirmLeave()
+
+    /** Staying after all: the writing goes on. */
+    public fun stay()
 
     /** Makes a wizard whose work lives as long as [scope], typically a screen's. */
     public fun interface Factory {

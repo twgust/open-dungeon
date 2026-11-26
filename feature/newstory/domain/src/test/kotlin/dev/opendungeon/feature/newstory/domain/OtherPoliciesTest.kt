@@ -44,7 +44,7 @@ class OtherPoliciesTest {
 
     @Test
     fun `the premise needs words, and edited words are the player's own, kept as typed`() {
-        val premise = PremisePolicy()
+        val premise = PremisePolicy(ScriptedPremise())
         assertFalse(premise.canAdvance(emptyDraft))
 
         val written = premise.edit(
@@ -64,7 +64,7 @@ class OtherPoliciesTest {
 
     @Test
     fun `cast members go in and out of the story, and one must be in`() {
-        val cast = CastPolicy()
+        val cast = CastPolicy(ScriptedCast())
         val maren =
             CastMember(Character(CharacterId("maren"), name = "Maren"), CastMember.Origin.Offered, inStory = false)
         val draft = emptyDraft.copy(cast = listOf(maren))
@@ -90,7 +90,7 @@ class OtherPoliciesTest {
         )
         val draft = emptyDraft.copy(cast = listOf(CastMember(maren, CastMember.Origin.Offered, inStory = true)))
 
-        val body = assertIs<StepBody.Cast>(CastPolicy().body(draft))
+        val body = assertIs<StepBody.Cast>(CastPolicy(ScriptedCast()).body(draft))
 
         val card = body.people.single()
         assertEquals(ShownSecret.Sealed, card.secret)

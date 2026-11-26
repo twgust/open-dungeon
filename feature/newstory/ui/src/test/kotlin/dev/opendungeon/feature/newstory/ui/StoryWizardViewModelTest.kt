@@ -71,6 +71,18 @@ class StoryWizardViewModelTest {
         override fun back() {
             calls += "back"
         }
+
+        override fun stop() {
+            calls += "stop"
+        }
+
+        override fun confirmLeave() {
+            calls += "confirmLeave"
+        }
+
+        override fun stay() {
+            calls += "stay"
+        }
     }
 
     private val wizard = RecordingWizard()
@@ -95,6 +107,9 @@ class StoryWizardViewModelTest {
         viewModel.onIntent(WizardIntent.RollLine(CharacterLine.Flaw))
         viewModel.onIntent(WizardIntent.Next)
         viewModel.onIntent(WizardIntent.Back)
+        viewModel.onIntent(WizardIntent.Stop)
+        viewModel.onIntent(WizardIntent.ConfirmLeave)
+        viewModel.onIntent(WizardIntent.Stay)
 
         assertEquals(
             listOf(
@@ -106,6 +121,9 @@ class StoryWizardViewModelTest {
                 "rollLine(Flaw)",
                 "next",
                 "back",
+                "stop",
+                "confirmLeave",
+                "stay",
             ),
             wizard.calls,
         )
@@ -143,6 +161,17 @@ class StoryWizardViewModelTest {
             wizard.outcomeChannel.send(WizardOutcome.Left)
             assertEquals(WizardEffect.Leave, awaitItem())
         }
+    }
+
+    @Test
+    fun `asking for another model opens the models, and asks the wizard nothing`() = runTest {
+        val viewModel = StoryWizardViewModel(factory)
+
+        viewModel.effects.test {
+            viewModel.onIntent(WizardIntent.ChooseModel)
+            assertEquals(WizardEffect.OpenModels, awaitItem())
+        }
+        assertEquals(emptyList(), wizard.calls)
     }
 
     @Test
