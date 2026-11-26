@@ -1,17 +1,16 @@
-package dev.opendungeon.feature.connect
+package dev.opendungeon.feature.connect.ui
 
 import app.cash.turbine.test
-import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.DataError
-import dev.opendungeon.core.model.KeyInfo
-import dev.opendungeon.core.model.Outcome
-import dev.opendungeon.domain.openrouter.ModelCatalogRepository
-import dev.opendungeon.domain.openrouter.OpenRouterAccountRepository
-import dev.opendungeon.feature.connect.ConnectState.Phase
-import dev.opendungeon.feature.connect.ConnectState.Remote
+import dev.opendungeon.feature.connect.domain.ConnectInteractor
+import dev.opendungeon.feature.connect.domain.Connection
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -20,24 +19,24 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectViewModelTest {
 
-    private val keyInfo = KeyInfo(label = "story key", isFreeTier = false, usage = 0.0, limit = null, limitRemaining = null)
+    /** Records the verbs it is called with, and lets a test push state and failures. */
+    private class RecordingInteractor : ConnectInteractor {
+        val calls = mutableListOf<String>()
+        override val state = MutableStateFlow<Connection>(Connection.Loading)
+        val failureChannel = Channel<DataError>(Channel.UNLIMITED)
+        override val failures: Flow<DataError> = failureChannel.receiveAsFlow()
 
-    private class FakeAccount(private val connectResult: Outcome<KeyInfo, DataError>, private val keyInfo: KeyInfo) :
-        OpenRouterAccountRepository {
-        override val isConnected = MutableStateFlow(false)
-        override suspend fun connect(rawKey: String) = connectResult.also { if (it is Outcome.Success) isConnected.value = true }
-        override suspend fun currentKey(): Outcome<KeyInfo, DataError> = Outcome.Success(keyInfo)
-        override suspend fun disconnect() { isConnected.value = false }
+        override fun connect(rawKey: String) { calls += "connect($rawKey)" }
+        override fun refresh() { calls += "refresh" }
+        override fun disconnect() { calls += "disconnect" }
     }
 
-    private val noModels = object : ModelCatalogRepository {
-        override suspend fun fetchModels(): Outcome<List<AiModel>, DataError> = Outcome.Success(emptyList())
-    }
+    private val interactor = RecordingInteractor()
+    private val factory = ConnectInteractor.Factory { _: CoroutineScope -> interactor }
 
     @BeforeEach
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -46,30 +45,37 @@ class ConnectViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun `a rejected key returns to key entry with the error`() = runTest {
-        val viewModel = ConnectViewModel(FakeAccount(Outcome.Failure(DataError.Unauthorized("no")), keyInfo), noModels)
+    fun `each intent reaches its verb unchanged`() {
+        val viewModel = ConnectViewModel(factory)
 
-        viewModel.onIntent(ConnectIntent.Submit("sk-or-v1-whatever"))
+        viewModel.onIntent(ConnectIntent.Submit("key"))
+        viewModel.onIntent(ConnectIntent.Refresh)
+        viewModel.onIntent(ConnectIntent.Disconnect)
 
-        assertEquals(Phase.Disconnected(DataError.Unauthorized("no")), viewModel.state.value.phase)
+        assertEquals(listOf("connect(key)", "refresh", "disconnect"), interactor.calls)
     }
 
     @Test
-    fun `an accepted key loads key details and the catalog, and disconnect resets`() = runTest {
-        val viewModel = ConnectViewModel(FakeAccount(Outcome.Success(keyInfo), keyInfo), noModels)
+    fun `the interactor's state reaches the screen unchanged`() {
+        val viewModel = ConnectViewModel(factory)
 
-        viewModel.state.test {
-            assertIs<Phase.Disconnected>(awaitItem().phase)
+        interactor.state.value = Connection.Disconnected(DataError.Network)
 
-            viewModel.onIntent(ConnectIntent.Submit("key"))
+        assertEquals(Connection.Disconnected(DataError.Network), viewModel.state.value)
+    }
 
-            val connected = expectMostRecentItem()
-            val phase = assertIs<Phase.Connected>(connected.phase)
-            assertEquals(Remote.Loaded(keyInfo), phase.key)
-            assertEquals(0, assertIs<Remote.Loaded<List<AiModel>>>(phase.models).value.size)
+    @Test
+    fun `a failure becomes an effect`() = runTest {
+        val viewModel = ConnectViewModel(factory)
 
-            viewModel.onIntent(ConnectIntent.Disconnect)
-            assertEquals(Phase.Disconnected(), expectMostRecentItem().phase)
+        viewModel.effects.test {
+            interactor.failureChannel.send(DataError.KeyStorage)
+            assertEquals(ConnectEffect.ShowFailure(DataError.KeyStorage), awaitItem())
         }
+    }
+
+    @Test
+    fun `the key never shows up in a state or intent dump`() {
+        assertEquals("Submit(rawKey=██)", ConnectIntent.Submit("sk-or-v1-secret").toString())
     }
 }

@@ -3,11 +3,9 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.domain.openrouter)
+    implementation(projects.feature.connect.domain)
     implementation(libs.metrox.viewmodel.compose)
-}
 
-dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
 }

@@ -15,7 +15,7 @@ class MviViewModelTest {
 
         override fun onIntent(intent: Intent) = when (intent) {
             Intent.Increment -> reduce { this + 1 }
-            Intent.Announce -> sendEffect("count=$currentState")
+            Intent.Announce -> sendEffect("announced")
         }
     }
 
@@ -28,6 +28,25 @@ class MviViewModelTest {
         viewModel.onIntent(CounterViewModel.Intent.Announce)
 
         assertEquals(2, viewModel.state.value)
-        viewModel.effects.test { assertEquals("count=2", awaitItem()) }
+        viewModel.effects.test { assertEquals("announced", awaitItem()) }
+    }
+
+    @Test
+    fun `an effect sent before anyone collects is delivered once, to the first collector`() = runTest {
+        val viewModel = CounterViewModel()
+
+        viewModel.onIntent(CounterViewModel.Intent.Announce)
+
+        viewModel.effects.test { assertEquals("announced", awaitItem()) }
+        viewModel.effects.test { expectNoEvents() }
+    }
+
+    @Test
+    fun `reductions apply in order, each to the state the last one left`() = runTest {
+        val viewModel = CounterViewModel()
+
+        repeat(100) { viewModel.onIntent(CounterViewModel.Intent.Increment) }
+
+        assertEquals(100, viewModel.state.value)
     }
 }

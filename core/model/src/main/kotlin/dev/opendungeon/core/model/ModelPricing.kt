@@ -12,6 +12,9 @@ import java.math.BigDecimal
 public sealed interface ModelPricing {
     public data object Dynamic : ModelPricing
 
+    /** OpenRouter sent prices that are not decimals. The model stays selectable; what it costs is not known. */
+    public data object Unknown : ModelPricing
+
     public data object Free : ModelPricing
 
     public data class Metered(

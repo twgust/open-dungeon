@@ -15,5 +15,6 @@ public interface OpenRouterAccountRepository {
     /** Details of the stored key, fetched fresh. */
     public suspend fun currentKey(): Outcome<KeyInfo, DataError>
 
-    public suspend fun disconnect()
+    /** Removes the stored key. Fails only when the device cannot remove it. */
+    public suspend fun disconnect(): Outcome<Unit, DataError>
 }

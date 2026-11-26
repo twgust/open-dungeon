@@ -34,7 +34,8 @@ dependencies {
     implementation(projects.data.story)
     implementation(projects.feature.newstory.domain)
     implementation(projects.feature.newstory.ui)
-    implementation(projects.feature.connect)
+    implementation(projects.feature.connect.domain)
+    implementation(projects.feature.connect.ui)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
