@@ -11,11 +11,17 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 public interface CatalogDao {
 
-    @Query("SELECT * FROM catalog_model ORDER BY position")
-    public fun observeModels(): Flow<List<CatalogModelEntity>>
-
-    @Query("SELECT * FROM catalog_fetch WHERE slot = 0")
-    public fun observeFetch(): Flow<CatalogFetchEntity?>
+    /**
+     * The stored catalog in one read, so a write in a transaction is seen whole: one row per model in
+     * OpenRouter's order, each carrying when the catalog was fetched; a single row without a model when
+     * the fetched catalog is empty; no rows when nothing was fetched. Two separate flows would each
+     * re-query on their own and could show models from one catalog beside the fetch of another.
+     */
+    @Query(
+        "SELECT catalog_fetch.fetched_at_millis, catalog_model.* FROM catalog_fetch " +
+            "LEFT JOIN catalog_model ON 1 = 1 WHERE catalog_fetch.slot = 0 ORDER BY catalog_model.position",
+    )
+    public fun observeCatalog(): Flow<List<StoredCatalogRow>>
 
     /** Replaces the catalog whole, so readers never see half of one. Rankings belong to the old one and go too. */
     @Transaction

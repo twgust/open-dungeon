@@ -55,6 +55,12 @@ public data class CatalogFetchEntity(
     }
 }
 
+/** One row of [CatalogDao.observeCatalog]: when the catalog was fetched, and one of its models, if it has any. */
+public data class StoredCatalogRow(
+    @ColumnInfo(name = "fetched_at_millis") val fetchedAtMillis: Long,
+    @Embedded val model: CatalogModelEntity?,
+)
+
 /** One place in OpenRouter's ranking for [sort], a `sort` wire value. */
 @Entity(tableName = "catalog_rank", primaryKeys = ["sort", "position"])
 public data class CatalogRankEntity(

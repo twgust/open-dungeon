@@ -4,6 +4,7 @@ import dev.opendungeon.core.database.model.CatalogDao
 import dev.opendungeon.core.database.model.CatalogFetchEntity
 import dev.opendungeon.core.database.model.CatalogRankEntity
 import dev.opendungeon.core.database.model.RankingDao
+import dev.opendungeon.core.database.model.StoredCatalogRow
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.ModelEndpoint
 import dev.opendungeon.core.model.ModelId
@@ -17,8 +18,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -32,12 +33,12 @@ public class DefaultModelCatalogRepository(
     private val clock: Clock,
 ) : ModelCatalogRepository {
 
-    override val catalog: Flow<Catalog?> = combine(catalogDao.observeModels(), catalogDao.observeFetch()) {
-        rows,
-        fetch,
-        ->
-        if (fetch == null) return@combine null
-        val models = rows.map { it.toDomainOrNull() ?: return@combine null }
+    override val catalog: Flow<Catalog?> = catalogDao.observeCatalog().map { rows ->
+        val fetch = rows.firstOrNull() ?: return@map null
+        val stored = rows.mapNotNull(StoredCatalogRow::model)
+        val models = stored.mapNotNull { it.toDomainOrNull() }
+        // A row that no longer reads back is a catalog that has to be fetched again, not a shorter one.
+        if (models.size != stored.size) return@map null
         Catalog(models, Instant.fromEpochMilliseconds(fetch.fetchedAtMillis))
     }.distinctUntilChanged()
 
