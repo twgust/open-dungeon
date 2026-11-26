@@ -42,47 +42,46 @@ internal fun CurrentKeyDto.toKeyInfo() = KeyInfo(
     limitRemaining = limitRemaining,
 )
 
-/** Returns `null` for a model whose prices cannot be read, so one bad entry never hides the whole catalog. */
-internal fun ModelDto.toAiModel(): AiModel? {
-    val pricing = pricing.toModelPricing() ?: return null
-    return AiModel(
-        id = ModelId(id),
-        name = name,
-        description = description,
-        contextLength = topProvider?.contextLength ?: contextLength,
-        maxCompletionTokens = topProvider?.maxCompletionTokens,
-        pricing = pricing,
-        inputModalities = architecture?.inputModalities.orEmpty().toSet(),
-        outputModalities = architecture?.outputModalities.orEmpty().toSet(),
-        supportedParameters = supportedParameters.mapTo(linkedSetOf(), ModelParameter::fromWireName),
-        defaultParameters = defaultParameters?.let {
-            DefaultParameters(
-                temperature = it.temperature,
-                topP = it.topP,
-                topK = it.topK,
-                frequencyPenalty = it.frequencyPenalty,
-                presencePenalty = it.presencePenalty,
-                repetitionPenalty = it.repetitionPenalty,
-            )
-        } ?: DefaultParameters(),
-        reasoning = reasoning?.let {
-            ReasoningSupport(
-                mandatory = it.mandatory,
-                enabledByDefault = it.defaultEnabled,
-                supportedEfforts = it.supportedEfforts,
-                defaultEffort = it.defaultEffort,
-            )
-        },
-    )
-}
+/** Every listed model is kept: one whose prices cannot be read is still selectable, priced [ModelPricing.Unknown]. */
+internal fun ModelDto.toAiModel(): AiModel = AiModel(
+    id = ModelId(id),
+    name = name,
+    description = description,
+    contextLength = topProvider?.contextLength ?: contextLength,
+    maxCompletionTokens = topProvider?.maxCompletionTokens,
+    pricing = pricing.toModelPricing(),
+    inputModalities = architecture?.inputModalities.orEmpty().toSet(),
+    outputModalities = architecture?.outputModalities.orEmpty().toSet(),
+    supportedParameters = supportedParameters.mapTo(linkedSetOf(), ModelParameter::fromWireName),
+    defaultParameters = defaultParameters?.let {
+        DefaultParameters(
+            temperature = it.temperature,
+            topP = it.topP,
+            topK = it.topK,
+            frequencyPenalty = it.frequencyPenalty,
+            presencePenalty = it.presencePenalty,
+            repetitionPenalty = it.repetitionPenalty,
+        )
+    } ?: DefaultParameters(),
+    reasoning = reasoning?.let {
+        ReasoningSupport(
+            mandatory = it.mandatory,
+            enabledByDefault = it.defaultEnabled,
+            supportedEfforts = it.supportedEfforts,
+            defaultEffort = it.defaultEffort,
+        )
+    },
+)
 
 private val DYNAMIC_PRICE = BigDecimal("-1")
 
-internal fun PricingDto.toModelPricing(): ModelPricing? {
-    val promptPrice = prompt.toBigDecimalOrNull() ?: return null
-    val completionPrice = completion.toBigDecimalOrNull() ?: return null
+internal fun PricingDto.toModelPricing(): ModelPricing {
+    val promptPrice = prompt.toBigDecimalOrNull() ?: return ModelPricing.Unknown
+    val completionPrice = completion.toBigDecimalOrNull() ?: return ModelPricing.Unknown
     return when {
-        promptPrice.compareTo(DYNAMIC_PRICE) == 0 || completionPrice.compareTo(DYNAMIC_PRICE) == 0 -> ModelPricing.Dynamic
+        promptPrice.compareTo(
+            DYNAMIC_PRICE,
+        ) == 0 || completionPrice.compareTo(DYNAMIC_PRICE) == 0 -> ModelPricing.Dynamic
         promptPrice.signum() == 0 && completionPrice.signum() == 0 -> ModelPricing.Free
         else -> ModelPricing.Metered(promptPerToken = promptPrice, completionPerToken = completionPrice)
     }

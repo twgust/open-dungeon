@@ -32,7 +32,9 @@ class ModelCatalogRepositoryTest {
         val fullPage = List(OpenRouterApi.MAX_PAGE_SIZE) { model("a/$it") }
         val api = FakeOpenRouterApi(pages = { offset ->
             when (offset) {
-                0 -> Outcome.Success(ModelsPageDto(fullPage, links = PageLinksDto(next = "/api/v1/models/user?offset=1000")))
+                0 -> Outcome.Success(
+                    ModelsPageDto(fullPage, links = PageLinksDto(next = "/api/v1/models/user?offset=1000")),
+                )
                 1000 -> Outcome.Success(ModelsPageDto(listOf(model("b/last")), links = PageLinksDto(next = null)))
                 else -> error("unexpected offset $offset")
             }
@@ -51,7 +53,7 @@ class ModelCatalogRepositoryTest {
     }
 
     @Test
-    fun `models price sentinels explicitly and skips unreadable prices`() = runTest {
+    fun `models price sentinels explicitly and keeps models whose prices it cannot read`() = runTest {
         val api = FakeOpenRouterApi(pages = {
             Outcome.Success(
                 ModelsPageDto(
@@ -74,6 +76,7 @@ class ModelCatalogRepositoryTest {
                 ModelPricing.Dynamic,
                 ModelPricing.Free,
                 ModelPricing.Metered(BigDecimal("0.000001"), BigDecimal("0.000002")),
+                ModelPricing.Unknown,
             ),
             models.map(AiModel::pricing),
         )
@@ -93,6 +96,37 @@ class ModelCatalogRepositoryTest {
 
         assertEquals(
             Outcome.Failure(DataError.Network),
+            DefaultModelCatalogRepository(api, FakeApiKeyStore(VALID_KEY)).fetchModels(),
+        )
+    }
+
+    @Test
+    fun `a next link that never ends fails instead of looping`() = runTest {
+        val fullPage = List(OpenRouterApi.MAX_PAGE_SIZE) { model("a/$it") }
+        val api =
+            FakeOpenRouterApi(pages = {
+                Outcome.Success(ModelsPageDto(fullPage, links = PageLinksDto(next = "/again")))
+            })
+
+        val result = DefaultModelCatalogRepository(api, FakeApiKeyStore(VALID_KEY)).fetchModels()
+
+        assertEquals(Outcome.Failure(DataError.UnexpectedResponse), result)
+        assertEquals(50, api.requestedOffsets.size)
+    }
+
+    @Test
+    fun `a page that fails midway fails the whole catalog`() = runTest {
+        val fullPage = List(OpenRouterApi.MAX_PAGE_SIZE) { model("a/$it") }
+        val api = FakeOpenRouterApi(pages = { offset ->
+            if (offset == 0) {
+                Outcome.Success(ModelsPageDto(fullPage, links = PageLinksDto(next = "/next")))
+            } else {
+                Outcome.Failure(NetworkError.Http(429, null))
+            }
+        })
+
+        assertEquals(
+            Outcome.Failure(DataError.RateLimited("")),
             DefaultModelCatalogRepository(api, FakeApiKeyStore(VALID_KEY)).fetchModels(),
         )
     }

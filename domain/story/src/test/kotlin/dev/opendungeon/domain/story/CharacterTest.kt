@@ -9,9 +9,9 @@ class CharacterTest {
     private val maren = Character(id = CharacterId("m"), name = "Maren Kask")
 
     @Test
-    fun `lines read and write through one door`() {
-        val edited = maren.with(CharacterLine.Wants, "  Her mother's bones back.  ")
-        assertEquals("Her mother's bones back.", edited[CharacterLine.Wants])
+    fun `lines read and write through one door, kept as typed`() {
+        val edited = maren.with(CharacterLine.Wants, "Her mother's bones back ")
+        assertEquals("Her mother's bones back ", edited[CharacterLine.Wants], "a field mid-word keeps its space")
         assertNull(edited.with(CharacterLine.Wants, " ")[CharacterLine.Wants], "blank clears the line")
     }
 

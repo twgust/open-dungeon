@@ -25,6 +25,7 @@ public class DefaultSentenceBuilder : SentenceBuilder {
     override fun story(draft: StoryDraft, before: CreationStep, ending: SentenceBuilder.Ending): Sentence {
         val segments = mutableListOf<Sentence.Segment>()
         segments += genreClause(draft.genres)
+
         fun clause(step: CreationStep, connector: String, phrase: Phrase?) {
             if (step < before && phrase != null) {
                 segments += Sentence.Segment.Fixed(", $connector ")

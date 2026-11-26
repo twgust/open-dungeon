@@ -16,10 +16,12 @@ private val LocalPaperType = staticCompositionLocalOf { PaperType.Default }
 /** Reads the paper theme inside [PaperTheme]. */
 public object Paper {
     public val colors: PaperColors
-        @Composable @ReadOnlyComposable get() = LocalPaperColors.current
+        @Composable @ReadOnlyComposable
+        get() = LocalPaperColors.current
 
     public val type: PaperType
-        @Composable @ReadOnlyComposable get() = LocalPaperType.current
+        @Composable @ReadOnlyComposable
+        get() = LocalPaperType.current
 }
 
 /**
@@ -27,10 +29,7 @@ public object Paper {
  * matching colour scheme and the sans, so screens built from them sit on the same page.
  */
 @Composable
-public fun PaperTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+public fun PaperTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) PaperColors.Dark else PaperColors.Light
     CompositionLocalProvider(LocalPaperColors provides colors, LocalPaperType provides PaperType.Default) {
         MaterialTheme(colorScheme = colors.toColorScheme(darkTheme), typography = SansTypography, content = content)

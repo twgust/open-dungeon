@@ -89,7 +89,10 @@ class WordPoliciesTest {
     fun `own words are shown first and picked`() {
         val body = twist.body(emptyDraft.copy(twist = Phrase.Own("a stolen saint"))) as StepBody.Words
 
-        assertEquals(Option(Choice.Word("a stolen saint"), "a stolen saint", picked = true, own = true), body.options.first())
+        assertEquals(
+            Option(Choice.Word("a stolen saint"), "a stolen saint", picked = true, own = true),
+            body.options.first(),
+        )
         assertEquals(1, body.options.count(Option::picked))
         assertEquals(1, body.maxPicks)
     }

@@ -29,7 +29,11 @@ import dev.opendungeon.feature.newstory.ui.WizardIntent
 
 @Composable
 internal fun StarringBody(body: StepBody.Starring, onIntent: (WizardIntent) -> Unit) {
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    Column(
+        Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
         PillRow(body.roles, onIntent, style = Paper.type.pill.copy(fontSize = 20.sp))
         AnimatedVisibility(visible = body.you != null, enter = fadeIn()) {
             body.you?.let { you -> YouCard(you.lines, onIntent) }
@@ -52,10 +56,15 @@ private fun YouCard(lines: List<ShownLine>, onIntent: (WizardIntent) -> Unit) {
             val label = stringResource(line.line.labelRes())
             CardLine(
                 label = label,
-                trailing = { LineDieButton(stringResource(R.string.wizard_reroll_line, label), onClick = { onIntent(WizardIntent.RollLine(line.line)) }) },
+                trailing = {
+                    LineDieButton(stringResource(R.string.wizard_reroll_line, label), onClick = {
+                        onIntent(WizardIntent.RollLine(line.line))
+                    })
+                },
             ) {
                 if (editing) {
-                    val text = rememberEditedText(line.text) { onIntent(WizardIntent.Edit(DraftEdit.YouLine(line.line, it))) }
+                    val text =
+                        rememberEditedText(line.text) { onIntent(WizardIntent.Edit(DraftEdit.YouLine(line.line, it))) }
                     PaperField(text, label = label, underlined = true, singleLine = true)
                 } else {
                     Text(line.text, style = Paper.type.body, color = Paper.colors.ink)

@@ -6,7 +6,9 @@ import dev.opendungeon.feature.newstory.domain.Option
 
 /** The player's own picks first, so they stay in view, then every offered word. */
 internal fun wordOptions(offered: List<String>, picked: List<Phrase>): List<Option> {
-    val own = picked.filterIsInstance<Phrase.Own>().map { Option(Choice.Word(it.text), it.text, picked = true, own = true) }
+    val own = picked.filterIsInstance<Phrase.Own>().map {
+        Option(Choice.Word(it.text), it.text, picked = true, own = true)
+    }
     val offeredPicks = picked.filterIsInstance<Phrase.Offered>().mapTo(HashSet(), Phrase::text)
     return own + offered.map { Option(Choice.Word(it), it, picked = it in offeredPicks) }
 }

@@ -17,10 +17,7 @@ import dev.zacsweers.metro.Inject
 /** Up to two genres, offered or the player's own. Tapping a picked genre drops it; the die picks two and moves on. */
 @Inject
 @ContributesIntoSet(AppScope::class)
-public class GenrePolicy(
-    private val vocabulary: WizardVocabulary,
-    private val rollChoice: RollChoice,
-) : StepPolicy {
+public class GenrePolicy(private val vocabulary: WizardVocabulary, private val rollChoice: RollChoice) : StepPolicy {
 
     override val step: CreationStep = CreationStep.Genre
 

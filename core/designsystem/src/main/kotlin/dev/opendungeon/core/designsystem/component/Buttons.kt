@@ -38,16 +38,17 @@ internal fun Modifier.toggleableAsButton(
     interactions: MutableInteractionSource,
     enabled: Boolean,
     onClick: () -> Unit,
-): Modifier = clickable(interactionSource = interactions, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+): Modifier = clickable(
+    interactionSource = interactions,
+    indication = null,
+    enabled = enabled,
+    role = Role.Button,
+    onClick = onClick,
+)
 
 /** The player's own words: a dashed, italic pill with a pen. */
 @Composable
-public fun OwnPill(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
+public fun OwnPill(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val colors = Paper.colors
     PillFrame(
         modifier = modifier
@@ -128,12 +129,15 @@ public fun DieButton(
 
 /** The small die beside one line of a card. */
 @Composable
-public fun LineDieButton(
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    GhostIconButton(PaperIcons.SmallDie, contentDescription, onClick, modifier, tint = Paper.colors.faint, iconSize = 18)
+public fun LineDieButton(contentDescription: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    GhostIconButton(
+        PaperIcons.SmallDie,
+        contentDescription,
+        onClick,
+        modifier,
+        tint = Paper.colors.faint,
+        iconSize = 18,
+    )
 }
 
 /** The ink disc that moves to the next step. */
@@ -161,11 +165,7 @@ public fun NextArrow(
 
 /** The last step's ink pill that starts the story. */
 @Composable
-public fun BeginButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+public fun BeginButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = Paper.colors
     PillFrame(
         modifier = modifier.border(1.dp, colors.ink, CircleShape).background(colors.ink, CircleShape),
@@ -174,6 +174,10 @@ public fun BeginButton(
         enabled = true,
         padding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
     ) {
-        Text(text, style = TextStyle(fontFamily = Paper.type.pill.fontFamily, fontSize = 21.sp, fontStyle = FontStyle.Italic), color = colors.onInk)
+        Text(
+            text,
+            style = TextStyle(fontFamily = Paper.type.pill.fontFamily, fontSize = 21.sp, fontStyle = FontStyle.Italic),
+            color = colors.onInk,
+        )
     }
 }

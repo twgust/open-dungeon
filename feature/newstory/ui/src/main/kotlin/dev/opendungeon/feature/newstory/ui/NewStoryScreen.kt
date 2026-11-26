@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,12 +33,15 @@ import dev.opendungeon.core.designsystem.PaperIcons
 import dev.opendungeon.core.designsystem.component.DieButton
 import dev.opendungeon.core.designsystem.component.GhostIconButton
 import dev.opendungeon.core.designsystem.component.NextArrow
+import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.designsystem.component.ProgressLine
 import dev.opendungeon.core.designsystem.component.SentenceLead
 import dev.opendungeon.core.designsystem.component.StepTransition
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.domain.story.CreationStep
+import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.feature.newstory.domain.StepBody
+import dev.opendungeon.feature.newstory.domain.WizardFailure
 import dev.opendungeon.feature.newstory.domain.WizardState
 import dev.opendungeon.feature.newstory.ui.step.AuditionsBody
 import dev.opendungeon.feature.newstory.ui.step.CastBody
@@ -51,39 +56,81 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 @Composable
 fun NewStoryRoute(onLeave: () -> Unit, viewModel: StoryWizardViewModel = metroViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val notices = remember { SnackbarHostState() }
+    val failures = failureMessages()
+    LaunchedEffect(viewModel) { viewModel.onIntent(WizardIntent.Open) }
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             WizardEffect.Leave -> onLeave()
+            is WizardEffect.ShowFailure -> {
+                notices.currentSnackbarData?.dismiss()
+                notices.showSnackbar(failures.of(effect.failure))
+            }
         }
     }
-    NewStoryScreen(state = state, onIntent = viewModel::onIntent)
+    NewStoryScreen(state = state, notices = notices, onIntent = viewModel::onIntent)
 }
 
 /** Stateless: one paper page that rewrites itself for each step. */
 @Composable
-fun NewStoryScreen(state: WizardUiState, onIntent: (WizardIntent) -> Unit, modifier: Modifier = Modifier) {
+fun NewStoryScreen(
+    state: WizardUiState,
+    notices: SnackbarHostState,
+    onIntent: (WizardIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = Paper.colors
     BackHandler { onIntent(WizardIntent.Back) }
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(colors.paper)
             .safeDrawingPadding()
             .imePadding(),
     ) {
-        when (state) {
-            WizardUiState.Loading -> ProgressLine(progress = 0f)
-            is WizardUiState.Ready -> StepPage(state.wizard, onIntent)
+        Column(Modifier.fillMaxSize()) {
+            when (state) {
+                WizardUiState.Loading -> ProgressLine(progress = 0f)
+                is WizardUiState.Ready -> StepPage(state.wizard, onIntent)
+            }
         }
+        PaperNotices(notices, Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+/** The words for each failure, read while composing so effects can show them later. */
+private class FailureMessages(
+    private val storageFull: String,
+    private val storage: String,
+    private val unexpected: String,
+) {
+    fun of(failure: WizardFailure): String = when (failure) {
+        is WizardFailure.Storage -> when (failure.error) {
+            StorageError.Full -> storageFull
+            is StorageError.Failed -> storage
+        }
+        is WizardFailure.Unexpected -> unexpected
     }
 }
 
 @Composable
+private fun failureMessages() = FailureMessages(
+    storageFull = stringResource(R.string.wizard_failure_storage_full),
+    storage = stringResource(R.string.wizard_failure_storage),
+    unexpected = stringResource(R.string.wizard_failure_unexpected),
+)
+
+@Composable
 private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) -> Unit) {
     ProgressLine(progress = state.progress)
-    Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         if (state.controls.canGoBack) {
-            GhostIconButton(PaperIcons.Back, stringResource(R.string.wizard_back), onClick = { onIntent(WizardIntent.Back) })
+            GhostIconButton(PaperIcons.Back, stringResource(R.string.wizard_back), onClick = {
+                onIntent(WizardIntent.Back)
+            })
         }
     }
     StepTransition(state = state, stepOf = WizardState::step, modifier = Modifier.weight(1f)) { shown ->
@@ -158,19 +205,32 @@ internal data class StepCopy(
 )
 
 internal fun stepCopy(step: CreationStep): StepCopy = when (step) {
-    CreationStep.Genre -> StepCopy(R.string.wizard_prompt_genre, lead = R.string.wizard_lead_genre, ownHint = R.string.wizard_own_hint_genre)
+    CreationStep.Genre -> StepCopy(
+        R.string.wizard_prompt_genre,
+        lead = R.string.wizard_lead_genre,
+        ownHint = R.string.wizard_own_hint_genre,
+    )
     CreationStep.Twist -> StepCopy(R.string.wizard_prompt_twist, ownHint = R.string.wizard_own_hint_twist)
     CreationStep.Starring -> StepCopy(R.string.wizard_prompt_starring, topPadding = 32.dp)
     CreationStep.Tone -> StepCopy(R.string.wizard_prompt_tone, ownHint = R.string.wizard_own_hint_tone)
     CreationStep.Setting -> StepCopy(R.string.wizard_prompt_setting, ownHint = R.string.wizard_own_hint_setting)
-    CreationStep.Limits -> StepCopy(R.string.wizard_prompt_limits, ownLabel = R.string.wizard_own_limits, ownHint = R.string.wizard_own_hint_limits)
+    CreationStep.Limits -> StepCopy(
+        R.string.wizard_prompt_limits,
+        ownLabel = R.string.wizard_own_limits,
+        ownHint = R.string.wizard_own_hint_limits,
+    )
     CreationStep.Premise -> StepCopy(
         R.string.wizard_prompt_premise,
         ownLabel = R.string.wizard_own_premise,
         ownHint = R.string.wizard_own_hint_premise,
         die = R.string.wizard_die_premise,
     )
-    CreationStep.Cast -> StepCopy(R.string.wizard_prompt_cast, ownLabel = R.string.wizard_own_cast, die = R.string.wizard_die_cast, topPadding = 24.dp)
+    CreationStep.Cast -> StepCopy(
+        R.string.wizard_prompt_cast,
+        ownLabel = R.string.wizard_own_cast,
+        die = R.string.wizard_die_cast,
+        topPadding = 24.dp,
+    )
     CreationStep.FirstLine -> StepCopy(R.string.wizard_prompt_first_line)
     CreationStep.FirstTurn -> StepCopy(R.string.wizard_prompt_first_turn, topPadding = 20.dp)
 }

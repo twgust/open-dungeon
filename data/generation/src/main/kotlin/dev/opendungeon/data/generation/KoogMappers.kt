@@ -53,6 +53,7 @@ internal fun Sampling.toOpenRouterParams(
     requireParameters: Boolean,
 ): OpenRouterParams {
     val supported = model.supportedParameters
+
     fun <T> T?.ifSupported(parameter: Known): T? = takeIf { parameter in supported }
 
     val extra = buildMap<String, JsonElement> {

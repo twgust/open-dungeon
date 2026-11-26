@@ -32,7 +32,8 @@ public abstract class SinglePhrasePolicy(
 
     private val offered: List<String> get() = vocabulary[list]
 
-    override fun body(draft: StoryDraft): StepBody = StepBody.Words(wordOptions(offered, listOfNotNull(draft.phrase())), maxPicks = 1)
+    override fun body(draft: StoryDraft): StepBody =
+        StepBody.Words(wordOptions(offered, listOfNotNull(draft.phrase())), maxPicks = 1)
 
     override fun canAdvance(draft: StoryDraft): Boolean = draft.phrase() != null
 
@@ -65,6 +66,7 @@ public abstract class SinglePhrasePolicy(
 public class TwistPolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
     SinglePhrasePolicy(CreationStep.Twist, VocabularyList.Twists, vocabulary, rollChoice) {
     override fun StoryDraft.phrase(): Phrase? = twist
+
     override fun StoryDraft.withPhrase(phrase: Phrase): StoryDraft = copy(twist = phrase)
 }
 
@@ -73,6 +75,7 @@ public class TwistPolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
 public class TonePolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
     SinglePhrasePolicy(CreationStep.Tone, VocabularyList.Tones, vocabulary, rollChoice) {
     override fun StoryDraft.phrase(): Phrase? = tone
+
     override fun StoryDraft.withPhrase(phrase: Phrase): StoryDraft = copy(tone = phrase)
 }
 
@@ -81,5 +84,6 @@ public class TonePolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
 public class SettingPolicy(vocabulary: WizardVocabulary, rollChoice: RollChoice) :
     SinglePhrasePolicy(CreationStep.Setting, VocabularyList.Settings, vocabulary, rollChoice) {
     override fun StoryDraft.phrase(): Phrase? = setting
+
     override fun StoryDraft.withPhrase(phrase: Phrase): StoryDraft = copy(setting = phrase)
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connect_title">Connect OpenRouter</string>
+    <string name="connect_explainer">Your key stays on this device, encrypted.</string>
+    <string name="connect_key_label">API key</string>
+    <string name="connect_submit">Connect</string>
+    <string name="connect_validating">Checking</string>
+    <string name="connect_connected">Connected</string>
+    <string name="connect_key_remaining">%1$s · $%2$.2f left</string>
+    <string name="connect_refresh">Refresh</string>
+    <string name="connect_disconnect">Disconnect</string>
+    <string name="connect_new_story">New story</string>
+    <plurals name="connect_model_count">
+        <item quantity="one">%d model</item>
+        <item quantity="other">%d models</item>
+    </plurals>
+
+    <string name="error_malformed_key">Not an OpenRouter key</string>
+    <string name="error_missing_key">No key connected</string>
+    <string name="error_network">No connection</string>
+    <string name="error_unexpected_response">Unreadable response</string>
+    <string name="error_key_storage">Couldn\'t store the key</string>
+    <string name="error_unauthorized">Key rejected</string>
+    <string name="error_insufficient_credits">Out of credits</string>
+    <string name="error_rate_limited">Rate limited</string>
+    <string name="error_remote">OpenRouter error %1$d</string>
+</resources>

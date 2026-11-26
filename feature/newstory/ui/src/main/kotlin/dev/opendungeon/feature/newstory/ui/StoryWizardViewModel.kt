@@ -22,17 +22,18 @@ import kotlinx.coroutines.flow.onEach
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) : MviViewModel<WizardUiState, WizardIntent, WizardEffect>(WizardUiState.Loading) {
+class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) :
+    MviViewModel<WizardUiState, WizardIntent, WizardEffect>(WizardUiState.Loading) {
 
     private val wizard = wizardFactory.create(viewModelScope)
 
     init {
         wizard.state.filterNotNull().onEach { state -> reduce { WizardUiState.Ready(state) } }.launchIn(viewModelScope)
         wizard.outcomes.onEach { sendEffect(it.toEffect()) }.launchIn(viewModelScope)
-        wizard.start()
     }
 
     override fun onIntent(intent: WizardIntent) = when (intent) {
+        WizardIntent.Open -> wizard.start()
         is WizardIntent.Pick -> wizard.select(intent.choice)
         is WizardIntent.Own -> wizard.submitOwn(intent.text)
         is WizardIntent.Edit -> wizard.edit(intent.edit)
@@ -44,5 +45,6 @@ class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) : MviViewModel<Wi
 
     private fun WizardOutcome.toEffect(): WizardEffect = when (this) {
         WizardOutcome.Left -> WizardEffect.Leave
+        is WizardOutcome.Failed -> WizardEffect.ShowFailure(failure)
     }
 }

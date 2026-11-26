@@ -38,9 +38,13 @@ public data class Character(
         CharacterLine.GoodAt -> goodAt
     }
 
-    /** Returns a copy with [line] set to [text]; blank text clears it. */
+    /**
+     * Returns a copy with [line] set to [text], kept exactly as typed so a field being edited reads back
+     * what it holds; blank text clears the line. [CharacterLine.Personality] is the exception: it is a
+     * list, split at commas, so it reads back normalised.
+     */
     public fun with(line: CharacterLine, text: String?): Character {
-        val value = text?.trim()?.takeIf(String::isNotEmpty)
+        val value = text?.takeIf(String::isNotBlank)
         return when (line) {
             CharacterLine.Role -> copy(role = value)
             CharacterLine.Name -> copy(name = value)
@@ -62,7 +66,18 @@ public data class Character(
 
 /** The editable text lines of a [Character]. The secret is deliberately not one of them. */
 public enum class CharacterLine {
-    Role, Name, Age, Gender, Appearance, Personality, Speech, VoiceLine, Wants, Flaw, Habit, GoodAt,
+    Role,
+    Name,
+    Age,
+    Gender,
+    Appearance,
+    Personality,
+    Speech,
+    VoiceLine,
+    Wants,
+    Flaw,
+    Habit,
+    GoodAt,
 }
 
 /** What a character hides. A [Sealed] secret is never shown to the player; only story prompts read it. */

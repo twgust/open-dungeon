@@ -18,11 +18,7 @@ import dev.opendungeon.core.designsystem.Paper
  * "A gothic noir story," over "twisted by". The lead shrinks as it grows.
  */
 @Composable
-public fun SentenceLead(
-    lead: AnnotatedString,
-    prompt: String,
-    modifier: Modifier = Modifier,
-) {
+public fun SentenceLead(lead: AnnotatedString, prompt: String, modifier: Modifier = Modifier) {
     val colors = Paper.colors
     Column(
         modifier = modifier,

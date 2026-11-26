@@ -7,71 +7,50 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import dev.opendungeon.core.model.ApiKey
-import dev.opendungeon.core.network.AppAttribution
+import dev.opendungeon.core.network.OpenRouter
+import dev.opendungeon.core.network.OpenRouterJson
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.header
-import kotlinx.serialization.json.Json
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
-internal const val OPENROUTER_ORIGIN: String = "https://openrouter.ai"
 private const val CLIENT_NAME = "OpenRouter"
 
-private val CONNECT_TIMEOUT = 15.seconds
-
-/** Long enough for a slow model to finish a long opening; the stream itself is cancelled by its collector. */
-private val REQUEST_TIMEOUT = 10.minutes
-
-/** A gap this long between two stream chunks means the provider has stalled. */
-private val SOCKET_TIMEOUT = 2.minutes
-
 /**
- * Lenient like the rest of the app's OpenRouter parsing: OpenRouter adds response fields without notice
- * (https://openrouter.ai/docs/api_reference/versioning).
- */
-internal val OpenRouterKoogJson: Json = Json {
-    ignoreUnknownKeys = true
-    explicitNulls = false
-    coerceInputValues = true
-}
-
-/**
- * Builds Koog's executor for OpenRouter on top of a Ktor [engine].
+ * Koog's executor for OpenRouter, built on the app's one OpenRouter client ([baseClient]), so generation
+ * shares its engine, attribution and address with every other call.
  *
  * The key is read per request through [apiKey] rather than baked into the client, so connecting a new
  * key or disconnecting takes effect on the next request without rebuilding anything.
+ *
+ * @param baseUrl the API root every Koog path is resolved against; tests point it at a local server.
  */
 internal fun openRouterPromptExecutor(
-    engine: HttpClientEngine,
-    attribution: AppAttribution,
+    baseClient: HttpClient,
     apiKey: suspend () -> ApiKey?,
-    origin: String = OPENROUTER_ORIGIN,
+    baseUrl: String = OpenRouter.BASE_URL,
 ): PromptExecutor {
-    val authenticated = HttpClient(engine) {
-        expectSuccess = false
-        install(openRouterRequestHeaders(attribution, apiKey))
-    }
+    val authenticated = baseClient.config { install(bearerFromStore(apiKey)) }
     val httpClient = KtorKoogHttpClient.Factory(baseClient = authenticated).create(
         clientName = CLIENT_NAME,
-        baseUrl = origin,
+        baseUrl = baseUrl,
         headers = emptyMap(),
         queryParameters = emptyMap(),
-        requestTimeoutMillis = REQUEST_TIMEOUT.inWholeMilliseconds,
-        connectTimeoutMillis = CONNECT_TIMEOUT.inWholeMilliseconds,
-        socketTimeoutMillis = SOCKET_TIMEOUT.inWholeMilliseconds,
-        json = OpenRouterKoogJson,
+        requestTimeoutMillis = OpenRouter.GenerationTimeout.inWholeMilliseconds,
+        connectTimeoutMillis = OpenRouter.ConnectTimeout.inWholeMilliseconds,
+        socketTimeoutMillis = OpenRouter.StreamStallTimeout.inWholeMilliseconds,
+        json = OpenRouterJson,
     )
-    val client = OpenRouterLLMClient(settings = OpenRouterClientSettings(baseUrl = origin), httpClient = httpClient)
+    // Koog's default paths carry the "api/v1/" prefix; ours are relative to the shared base URL instead.
+    val settings = OpenRouterClientSettings(
+        baseUrl = baseUrl,
+        chatCompletionsPath = "chat/completions",
+        modelsPath = "models",
+        embeddingsPath = "embeddings",
+    )
+    val client = OpenRouterLLMClient(settings = settings, httpClient = httpClient)
     return MultiLLMPromptExecutor(mapOf(LLMProvider.OpenRouter to client))
 }
 
-private fun openRouterRequestHeaders(attribution: AppAttribution, apiKey: suspend () -> ApiKey?) =
-    createClientPlugin("OpenRouterRequestHeaders") {
-        onRequest { request, _ ->
-            attribution.headers().forEach { (name, value) -> request.header(name, value) }
-            apiKey()?.let { request.bearerAuth(it.value) }
-        }
-    }
+private fun bearerFromStore(apiKey: suspend () -> ApiKey?) = createClientPlugin("OpenRouterBearer") {
+    onRequest { request, _ -> apiKey()?.let { request.bearerAuth(it.value) } }
+}

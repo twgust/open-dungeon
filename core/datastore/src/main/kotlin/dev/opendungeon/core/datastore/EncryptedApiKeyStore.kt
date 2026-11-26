@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dev.opendungeon.core.credentials.ApiKeyStore
@@ -15,10 +16,13 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.security.GeneralSecurityException
 
 /**
  * Keeps the OpenRouter key in a dedicated Preferences DataStore, encrypted with a Keystore key.
@@ -36,13 +40,22 @@ public class EncryptedApiKeyStore(context: Context) : ApiKeyStore {
     }
     private val cipher = KeystoreCipher(KEYSTORE_ALIAS)
 
+    /** A file that cannot be read reads as no key, as DataStore advises: the player can connect again. */
     override val apiKey: Flow<ApiKey?> = dataStore.data
+        .catch { cause -> if (cause is IOException) emit(emptyPreferences()) else throw cause }
         .map { prefs -> prefs[ENCRYPTED_KEY]?.let(cipher::decryptOrNull)?.let(ApiKey::parse) }
         .distinctUntilChanged()
         .flowOn(Dispatchers.IO)
 
     override suspend fun write(apiKey: ApiKey) {
-        val encrypted = withContext(Dispatchers.IO) { cipher.encrypt(apiKey.value) }
+        val encrypted = withContext(Dispatchers.IO) {
+            try {
+                cipher.encrypt(apiKey.value)
+            } catch (e: GeneralSecurityException) {
+                // The Keystore refused: the key cannot be stored safely, so it is not stored at all.
+                throw IOException("Could not encrypt the key", e)
+            }
+        }
         dataStore.edit { it[ENCRYPTED_KEY] = encrypted }
     }
 

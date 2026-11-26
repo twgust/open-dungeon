@@ -8,8 +8,11 @@ live in Firebase. See the project roadmap for what comes next.
 Requires JDK 21 and an Android SDK with platform `android-37.2`.
 
 ```sh
-./gradlew test lint assembleDebug
+./gradlew ktlintCheck detekt test lint assembleDebug
 ```
+
+CI runs the same. `./gradlew ktlintFormat` fixes most style findings; detekt's departures from its
+defaults are listed, with reasons, in `config/detekt/detekt.yml`.
 
 ## Stack
 
@@ -22,14 +25,15 @@ Requires JDK 21 and an Android SDK with platform `android-37.2`.
 | Networking | Ktor client (OkHttp engine) + kotlinx.serialization |
 | Generation | [Koog](https://github.com/JetBrains/koog) `OpenRouterLLMClient` behind `TextGenerator` / `StructuredGenerator` |
 | Storage | Room for drafts (schemas exported to `core/database/schemas`); DataStore for the API key, AES-GCM encrypted with an Android Keystore key |
-| Build | Gradle 9, version catalog, convention plugins in `build-logic` |
+| Build | Gradle 9, version catalog, convention plugins in `build-logic`; ktlint (with compose-rules) and detekt on every module |
 | Tests | JUnit 5, kotlinx-coroutines-test, Turbine, Ktor `MockEngine`, OkHttp `MockWebServer`; Robolectric only for Room |
 
 ## Modules
 
 ```
 app                      Application, Metro AppGraph, MainActivity; binds every data implementation
-feature/connect          Connect an OpenRouter key and list the models it unlocks
+feature/connect/ui       Connect screen and its thin ViewModel
+feature/connect/domain   ConnectInteractor: key validation, catalog refresh, disconnect  (JVM)
 feature/newstory/ui      Story creation screens and their thin ViewModel
 feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, vocabulary    (JVM)
 data/openrouter          Model catalog and account repositories over the REST client   (JVM)
@@ -69,5 +73,8 @@ The network layer follows the current official API, not earlier projects:
 - Prices are decimal strings; `"-1"` marks dynamic routers and `"0"` free variants. Both are modelled
   explicitly in `ModelPricing`.
 - Key validation uses `GET /key`. Errors use the envelope `{"error": {"code", "message", "metadata"}}`.
+- REST and Koog share one base `HttpClient` (`core/network`): the OkHttp engine, attribution headers,
+  connect timeout, base URL and JSON settings. Each specialises it with `config {}` for its own timeouts.
+- A model whose price cannot be read is kept, as `ModelPricing.Unknown`, rather than dropped.
 
 Source of truth: <https://openrouter.ai/openapi.json> and <https://openrouter.ai/docs/llms.txt>.

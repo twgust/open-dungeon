@@ -15,7 +15,10 @@ class RollChoiceTest {
     @Test
     fun `a roll never repeats what is avoided while there is something else`() {
         repeat(50) {
-            assertEquals(listOf("a drowned city"), roll(VocabularyList.Settings, avoiding = listOf("a salt-war border town")))
+            assertEquals(
+                listOf("a drowned city"),
+                roll(VocabularyList.Settings, avoiding = listOf("a salt-war border town")),
+            )
         }
     }
 

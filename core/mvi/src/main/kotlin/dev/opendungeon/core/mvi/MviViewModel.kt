@@ -18,11 +18,10 @@ import kotlinx.coroutines.flow.update
  *   such as navigation or a snackbar. Effects are delivered exactly once to one collector.
  *
  * State changes go through [reduce], which applies a pure `State -> State` function atomically,
- * so concurrent work cannot lose updates.
+ * so concurrent work cannot lose updates. There is deliberately no way to read the current state from
+ * a subclass: deciding what is allowed from it is business logic, and that belongs in an interactor.
  */
-public abstract class MviViewModel<State : Any, Intent : Any, Effect : Any>(
-    initialState: State,
-) : ViewModel() {
+public abstract class MviViewModel<State : Any, Intent : Any, Effect : Any>(initialState: State) : ViewModel() {
 
     private val mutableState = MutableStateFlow(initialState)
     public val state: StateFlow<State> = mutableState.asStateFlow()
@@ -32,9 +31,6 @@ public abstract class MviViewModel<State : Any, Intent : Any, Effect : Any>(
 
     /** Entry point for the UI. Implementations decide which intents launch work in `viewModelScope`. */
     public abstract fun onIntent(intent: Intent)
-
-    protected val currentState: State
-        get() = mutableState.value
 
     protected fun reduce(reducer: State.() -> State) {
         mutableState.update(reducer)

@@ -12,6 +12,21 @@ indent_size = 4
 max_line_length = 120
 ktlint_code_style = ktlint_official
 ktlint_function_naming_ignore_when_annotated_with = Composable
+# `fun test() = runTest {` and `= when (x) {` stay on the signature's line instead of moving to the next.
+ktlint_function_signature_body_expression_wrapping = default
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_function-expression-body = disabled
+# Signatures wrap when they are too long, not because they have two parameters.
+ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = unset
+ktlint_class_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = unset
+# A blank line may open a class body; `when` branches sit together and only brace where they need to.
+ktlint_standard_no-empty-first-line-in-class-body = disabled
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_when-entry-bracing = disabled
+# Short call chains stay on one line; ktlint's max-line-length still wraps long ones.
+ktlint_standard_chain-method-continuation = disabled
+# Theme locals are the one sanctioned use of CompositionLocals.
+compose_allowed_composition_locals = LocalPaperColors,LocalPaperType
 
 [*.{xml,toml,yml,yaml}]
 indent_size = 2

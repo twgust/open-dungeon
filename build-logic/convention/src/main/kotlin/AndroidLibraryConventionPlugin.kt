@@ -11,6 +11,7 @@ import org.gradle.kotlin.dsl.configure
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply(libs.pluginId("android-library"))
+        pluginManager.apply("opendungeon.quality")
         extensions.configure<LibraryExtension> {
             namespace = derivedNamespace
             configureAndroid(this)

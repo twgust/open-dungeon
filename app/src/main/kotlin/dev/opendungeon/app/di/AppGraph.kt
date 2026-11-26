@@ -14,7 +14,9 @@ import dev.zacsweers.metrox.viewmodel.ViewModelGraph
  * `@ContributesIntoMap` and `@ContributesTo`; nothing is registered here by hand.
  */
 @DependencyGraph(AppScope::class)
-interface AppGraph : ViewModelGraph, MetroAppComponentProviders {
+interface AppGraph :
+    ViewModelGraph,
+    MetroAppComponentProviders {
 
     @Provides
     fun provideContext(application: Application): Context = application
@@ -25,6 +27,8 @@ interface AppGraph : ViewModelGraph, MetroAppComponentProviders {
 
     @DependencyGraph.Factory
     fun interface Factory {
-        fun create(@Provides application: Application): AppGraph
+        fun create(
+            @Provides application: Application,
+        ): AppGraph
     }
 }

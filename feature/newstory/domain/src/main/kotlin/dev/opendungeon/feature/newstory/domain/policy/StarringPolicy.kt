@@ -35,18 +35,16 @@ public class StarringPolicy(
 
     override val step: CreationStep = CreationStep.Starring
 
+    /** Roles only ever come from the offered list, by a tap or the die, so there is no "my own" role to show. */
     override fun body(draft: StoryDraft): StepBody {
         val role = draft.protagonist?.role
-        val offered = vocabulary[VocabularyList.Roles]
-        val own = role?.takeIf { it !in offered }?.let { listOf(Option(Choice.Word(it), it, picked = true, own = true)) }
         return StepBody.Starring(
-            roles = own.orEmpty() + offered.map { Option(Choice.Word(it), it, picked = it == role) },
+            roles = vocabulary[VocabularyList.Roles].map { Option(Choice.Word(it), it, picked = it == role) },
             you = draft.protagonist?.let { YouCard(it.allLines(CARD_LINES.keys)) },
         )
     }
 
-    override fun canAdvance(draft: StoryDraft): Boolean =
-        draft.protagonist?.let { it.role != null || it.name != null } == true
+    override fun canAdvance(draft: StoryDraft): Boolean = draft.protagonist?.role != null
 
     override fun canRoll(draft: StoryDraft): Boolean = true
 
@@ -77,7 +75,10 @@ public class StarringPolicy(
         return draft.copy(protagonist = you.with(line, rollChoice(list, avoiding = listOfNotNull(you[line])).single()))
     }
 
-    private fun dealCard(): Character = CARD_LINES.entries.fold(Character(id = CharacterId(ids.next()))) { card, (line, list) ->
+    private fun dealCard(): Character = CARD_LINES.entries.fold(Character(id = CharacterId(ids.next()))) {
+        card,
+        (line, list),
+        ->
         card.with(line, rollChoice(list).single())
     }
 

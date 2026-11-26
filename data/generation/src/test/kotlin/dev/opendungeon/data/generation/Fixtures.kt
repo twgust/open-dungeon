@@ -9,6 +9,7 @@ import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.core.model.ModelParameter
 import dev.opendungeon.core.model.ModelPricing
 import dev.opendungeon.core.network.AppAttribution
+import dev.opendungeon.core.network.openRouterBaseClient
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.json.Json
@@ -26,8 +27,14 @@ internal val ATTRIBUTION = AppAttribution(title = "Open Dungeon", siteUrl = "htt
 
 internal class FakeApiKeyStore(initial: ApiKey? = VALID_KEY) : ApiKeyStore {
     override val apiKey = MutableStateFlow(initial)
-    override suspend fun write(apiKey: ApiKey) { this.apiKey.value = apiKey }
-    override suspend fun clear() { apiKey.value = null }
+
+    override suspend fun write(apiKey: ApiKey) {
+        this.apiKey.value = apiKey
+    }
+
+    override suspend fun clear() {
+        apiKey.value = null
+    }
 }
 
 internal fun aiModel(
@@ -61,20 +68,23 @@ internal class ScriptedOpenRouter(vararg answers: MockResponse) : AutoCloseable 
     val requestCount: Int
         get() = server.requestCount
 
+    /** Built the way the app builds it, on the shared base client, pointed at this server's API root. */
     fun executor(keys: FakeApiKeyStore): PromptExecutor = openRouterPromptExecutor(
-        engine = OkHttp.create(),
-        attribution = ATTRIBUTION,
+        baseClient = openRouterBaseClient(OkHttp.create(), ATTRIBUTION),
         apiKey = { keys.apiKey.value },
-        origin = server.url("/").toString(),
+        baseUrl = server.url("/api/v1/").toString(),
     )
 
     fun request(index: Int): RecordedRequest {
-        while (recorded.size <= index) recorded += requireNotNull(server.takeRequest(5, TimeUnit.SECONDS)) { "no request #$index" }
+        while (recorded.size <=
+            index
+        ) {
+            recorded += requireNotNull(server.takeRequest(5, TimeUnit.SECONDS)) { "no request #$index" }
+        }
         return recorded[index]
     }
 
-    fun body(index: Int): JsonObject =
-        Json.parseToJsonElement(requireNotNull(request(index).body).utf8()).jsonObject
+    fun body(index: Int): JsonObject = Json.parseToJsonElement(requireNotNull(request(index).body).utf8()).jsonObject
 
     override fun close() = server.close()
 }

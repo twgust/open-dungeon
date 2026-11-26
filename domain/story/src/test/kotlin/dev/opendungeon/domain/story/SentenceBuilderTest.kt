@@ -56,7 +56,12 @@ class SentenceBuilderTest {
         fun member(name: String?, inStory: Boolean) =
             CastMember(Character(id = CharacterId(name ?: "anon"), name = name), CastMember.Origin.Offered, inStory)
         val draft = full.copy(
-            cast = listOf(member("Maren Kask", true), member("Ilse Brandt", false), member("Sister Ottilie", true), member(null, true)),
+            cast = listOf(
+                member("Maren Kask", true),
+                member("Ilse Brandt", false),
+                member("Sister Ottilie", true),
+                member(null, true),
+            ),
         )
         assertEquals(
             "Among them, Maren Kask, Sister Ottilie and someone of your own.",

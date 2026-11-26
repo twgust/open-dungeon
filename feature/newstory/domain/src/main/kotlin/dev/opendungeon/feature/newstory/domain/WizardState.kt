@@ -3,6 +3,7 @@ package dev.opendungeon.feature.newstory.domain
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Sentence
+import dev.opendungeon.domain.story.StorageError
 
 /** Everything the wizard shows for the current step, already decided. Screens only render it. */
 public data class WizardState(
@@ -30,6 +31,18 @@ public data class StepControls(
 
 /** Something the wizard decided that is not part of its state. */
 public sealed interface WizardOutcome {
-    /** Back from the first step: creation is left, and the draft is kept to resume. */
+    /** Back from the first step, or before a draft could be opened: creation is left, the draft kept. */
     public data object Left : WizardOutcome
+
+    /** Something the player did could not be kept. The state already shows the draft as it was before. */
+    public data class Failed(val failure: WizardFailure) : WizardOutcome
+}
+
+/** Why a verb could not be kept. */
+public sealed interface WizardFailure {
+    /** The draft could not be read or written. Typed text stays on screen and is saved with the next change. */
+    public data class Storage(val error: StorageError) : WizardFailure
+
+    /** A rule failed in a way no rule should. The verb changed nothing; [cause] is kept for diagnosis. */
+    public data class Unexpected(val cause: Exception) : WizardFailure
 }

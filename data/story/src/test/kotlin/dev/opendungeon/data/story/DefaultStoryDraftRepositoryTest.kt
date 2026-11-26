@@ -3,9 +3,9 @@ package dev.opendungeon.data.story
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import app.cash.turbine.test
 import dev.opendungeon.core.database.OpenDungeonDatabase
 import dev.opendungeon.core.model.ModelId
+import dev.opendungeon.core.model.Outcome
 import dev.opendungeon.domain.story.CastMember
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
@@ -14,6 +14,7 @@ import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.Secret
+import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.domain.story.Take
 import dev.opendungeon.domain.story.TakeId
@@ -23,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
@@ -42,7 +44,7 @@ class DefaultStoryDraftRepositoryTest {
     fun `a full draft reads back exactly as written`() = runTest {
         repository.save(fullDraft)
 
-        assertEquals(fullDraft, repository.openDraft())
+        assertEquals(fullDraft, repository.openDraft().value())
     }
 
     @Test
@@ -57,7 +59,7 @@ class DefaultStoryDraftRepositoryTest {
 
         repository.save(trimmed)
 
-        assertEquals(trimmed, repository.openDraft())
+        assertEquals(trimmed, repository.openDraft().value())
     }
 
     @Test
@@ -67,8 +69,8 @@ class DefaultStoryDraftRepositoryTest {
 
         repository.save(next)
 
-        assertEquals(next, repository.openDraft())
-        repository.observe(fullDraft.id).test { assertNull(awaitItem()) }
+        assertEquals(next, repository.openDraft().value())
+        assertNull(repository.draft(fullDraft.id).value())
     }
 
     @Test
@@ -77,20 +79,30 @@ class DefaultStoryDraftRepositoryTest {
 
         repository.discard(fullDraft.id)
 
-        assertNull(repository.openDraft())
+        assertNull(repository.openDraft().value())
         assertEquals(0, database.query("SELECT * FROM draft_character", null).use { it.count })
         assertEquals(0, database.query("SELECT * FROM draft_take", null).use { it.count })
     }
 
     @Test
-    fun `observers see each save`() = runTest {
-        repository.observe(fullDraft.id).test {
-            assertNull(awaitItem())
-            repository.save(fullDraft)
-            assertEquals(fullDraft, awaitItem())
-            repository.save(fullDraft.copy(firstLine = "I lie."))
-            assertEquals("I lie.", awaitItem()?.firstLine)
-        }
+    fun `a draft reads back by its id`() = runTest {
+        repository.save(fullDraft)
+
+        assertEquals(fullDraft, repository.draft(fullDraft.id).value())
+        assertNull(repository.draft(DraftId("elsewhere")).value())
+    }
+
+    @Test
+    fun `a write the database refuses is a storage failure, and the stored draft is untouched`() = runTest {
+        repository.save(fullDraft)
+        val take = fullDraft.takes.first()
+        // Two takes with one id break the primary key, so SQLite fails the transaction part-way.
+        val broken = fullDraft.copy(firstLine = "Never stored.", takes = listOf(take, take))
+
+        val result = repository.save(broken)
+
+        assertIs<StorageError.Failed>(assertIs<Outcome.Failure<StorageError>>(result).error)
+        assertEquals(fullDraft, repository.openDraft().value(), "the transaction rolled back whole")
     }
 
     @Test
@@ -98,7 +110,7 @@ class DefaultStoryDraftRepositoryTest {
         val writing = Take(TakeId("take-3"), ModelId("z-ai/glm-4.6"), "The bell", Take.State.Writing)
         repository.save(fullDraft.copy(takes = listOf(writing)))
 
-        assertEquals(Take.State.Interrupted, repository.openDraft()?.takes?.single()?.state)
+        assertEquals(Take.State.Interrupted, repository.openDraft().value()?.takes?.single()?.state)
     }
 
     private companion object {
@@ -131,7 +143,11 @@ class DefaultStoryDraftRepositoryTest {
                     inStory = true,
                 ),
                 CastMember(
-                    character = Character(id = CharacterId("c2"), name = "Father Oszkar", voiceLine = "Kneel, or swim."),
+                    character = Character(
+                        id = CharacterId("c2"),
+                        name = "Father Oszkar",
+                        voiceLine = "Kneel, or swim.",
+                    ),
                     origin = CastMember.Origin.Own,
                     inStory = false,
                 ),
@@ -144,4 +160,6 @@ class DefaultStoryDraftRepositoryTest {
             chosenTake = TakeId("take-1"),
         )
     }
+
+    private fun <T> Outcome<T, StorageError>.value(): T = assertIs<Outcome.Success<T>>(this).value
 }

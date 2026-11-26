@@ -1,0 +1,38 @@
+# Builds on detekt's defaults (buildUponDefaultConfig); only deliberate departures are listed here.
+
+naming:
+  FunctionNaming:
+    # Composables are named like types.
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+
+style:
+  MaxLineLength:
+    # ktlint owns line length, read from .editorconfig.
+    active: false
+  MagicNumber:
+    # Layout values in Compose are design tokens written in place; previews and tests hold fixtures.
+    ignoreAnnotated: ['Composable', 'Preview']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    # Validation ranges such as 0.0..2.0 are the documented bounds themselves.
+    ignoreRanges: true
+  UnusedPrivateFunction:
+    ignoreAnnotated: ['Preview']
+  ReturnCount:
+    # Early-out guards read better than nesting; they do not count, and a short walk may end three ways.
+    max: 3
+    excludeGuardClauses: true
+  ThrowsCount:
+    excludeGuardClauses: true
+
+complexity:
+  LongParameterList:
+    # Composables take their state and callbacks as parameters by design.
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    # A class's private helpers are its own business; the public surface is what stays small.
+    ignorePrivate: true

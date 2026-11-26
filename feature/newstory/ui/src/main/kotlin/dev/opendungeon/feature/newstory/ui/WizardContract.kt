@@ -3,6 +3,7 @@ package dev.opendungeon.feature.newstory.ui
 import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.DraftEdit
+import dev.opendungeon.feature.newstory.domain.WizardFailure
 import dev.opendungeon.feature.newstory.domain.WizardState
 
 /**
@@ -17,6 +18,9 @@ sealed interface WizardUiState {
 
 /** Everything the player does on the wizard, said as it happened. */
 sealed interface WizardIntent {
+    /** The screen is showing. Opens the draft the first time; later times change nothing. */
+    data object Open : WizardIntent
+
     data class Pick(val choice: Choice) : WizardIntent
 
     data class Own(val text: String) : WizardIntent
@@ -35,4 +39,7 @@ sealed interface WizardIntent {
 sealed interface WizardEffect {
     /** Creation was left from its first step; the draft is kept to resume. */
     data object Leave : WizardEffect
+
+    /** Something the player did could not be kept; the screen already shows it taken back. */
+    data class ShowFailure(val failure: WizardFailure) : WizardEffect
 }

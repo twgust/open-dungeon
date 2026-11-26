@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 public interface StoryDraftDao {
@@ -16,7 +15,7 @@ public interface StoryDraftDao {
 
     @Transaction
     @Query("SELECT * FROM story_draft WHERE id = :id")
-    public fun observe(id: String): Flow<StoredDraft?>
+    public suspend fun get(id: String): StoredDraft?
 
     /**
      * Writes [stored] whole and removes every other draft, in one transaction, so readers never see a

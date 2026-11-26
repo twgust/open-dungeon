@@ -18,12 +18,16 @@ import io.ktor.http.path
 @Inject
 @ContributesBinding(AppScope::class)
 public class KtorOpenRouterApi(
-    @OpenRouterHttpClient private val client: HttpClient,
+    @OpenRouterHttpClient baseClient: HttpClient,
 ) : OpenRouterApi {
+
+    private val client = baseClient.forRest()
 
     override suspend fun listModelsForKey(apiKey: ApiKey, offset: Int, limit: Int): NetworkResult<ModelsPageDto> {
         require(offset >= 0) { "offset must be >= 0, was $offset" }
-        require(limit in 1..OpenRouterApi.MAX_PAGE_SIZE) { "limit must be in 1..${OpenRouterApi.MAX_PAGE_SIZE}, was $limit" }
+        require(limit in 1..OpenRouterApi.MAX_PAGE_SIZE) {
+            "limit must be in 1..${OpenRouterApi.MAX_PAGE_SIZE}, was $limit"
+        }
         return client.safeRequest {
             method = HttpMethod.Get
             url { path("models", "user") }

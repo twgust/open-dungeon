@@ -39,10 +39,17 @@ internal fun StoryDraft.toStored(): StoredDraft = StoredDraft(
         firstLine = firstLine,
         chosenTakeId = chosenTake?.value,
     ),
-    characters = listOfNotNull(protagonist?.toEntity(id, Slot.Protagonist, position = 0, origin = null, inStory = true)) +
-        cast.mapIndexed { index, member ->
-            member.character.toEntity(id, Slot.Cast, position = index, origin = member.origin, inStory = member.inStory)
-        },
+    characters =
+        listOfNotNull(protagonist?.toEntity(id, Slot.PROTAGONIST, position = 0, origin = null, inStory = true)) +
+            cast.mapIndexed { index, member ->
+                member.character.toEntity(
+                    id,
+                    Slot.CAST,
+                    position = index,
+                    origin = member.origin,
+                    inStory = member.inStory,
+                )
+            },
     takes = takes.mapIndexed { index, take -> take.toEntity(id, index) },
 )
 
@@ -53,7 +60,7 @@ internal fun StoredDraft.toDomain(): StoryDraft {
         step = CreationStep.entries.firstOrNull { it.storageName == draft.step } ?: CreationStep.Genre,
         genres = draft.genres.map { it.toPhrase() },
         twist = draft.twist?.toPhrase(),
-        protagonist = bySlot[Slot.Protagonist]?.firstOrNull()?.toCharacter(),
+        protagonist = bySlot[Slot.PROTAGONIST]?.firstOrNull()?.toCharacter(),
         tone = draft.tone?.toPhrase(),
         setting = draft.setting?.toPhrase(),
         limits = ContentLimits(
@@ -64,7 +71,7 @@ internal fun StoredDraft.toDomain(): StoryDraft {
             note = draft.limitNote,
         ),
         premise = draft.premise?.toPhrase(),
-        cast = bySlot[Slot.Cast].orEmpty().map { entity ->
+        cast = bySlot[Slot.CAST].orEmpty().map { entity ->
             CastMember(
                 character = entity.toCharacter(),
                 origin = CastMember.Origin.entries.firstOrNull { it.storageName == entity.origin }
@@ -79,15 +86,14 @@ internal fun StoredDraft.toDomain(): StoryDraft {
 }
 
 private object Slot {
-    const val Protagonist = "protagonist"
-    const val Cast = "cast"
+    const val PROTAGONIST = "protagonist"
+    const val CAST = "cast"
 }
 
 private fun Phrase.toColumns() = PhraseColumns(text = text, own = this is Phrase.Own)
 
 /** Blank own words cannot be built, so a blank stored phrase is read back as an offered one. */
-private fun PhraseColumns.toPhrase(): Phrase =
-    if (own && text.isNotBlank()) Phrase.Own(text) else Phrase.Offered(text)
+private fun PhraseColumns.toPhrase(): Phrase = if (own && text.isNotBlank()) Phrase.Own(text) else Phrase.Offered(text)
 
 private fun Character.toEntity(
     draftId: DraftId,

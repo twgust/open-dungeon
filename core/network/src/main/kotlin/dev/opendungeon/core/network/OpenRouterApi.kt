@@ -22,7 +22,6 @@ public interface OpenRouterApi {
     public suspend fun getCurrentKey(apiKey: ApiKey): NetworkResult<CurrentKeyDto>
 
     public companion object {
-        public const val BASE_URL: String = "https://openrouter.ai/api/v1/"
         public const val MAX_PAGE_SIZE: Int = 1000
     }
 }

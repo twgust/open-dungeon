@@ -45,7 +45,11 @@ public fun ChoicePill(
 ) {
     val colors = Paper.colors
     val ink by animateColorAsState(if (picked) colors.onInk else colors.inkSoft, tween(INK_MILLIS), label = "pill text")
-    val fill by animateColorAsState(if (picked) colors.ink else colors.paper.copy(alpha = 0f), tween(INK_MILLIS), label = "pill fill")
+    val fill by animateColorAsState(
+        if (picked) colors.ink else colors.paper.copy(alpha = 0f),
+        tween(INK_MILLIS),
+        label = "pill fill",
+    )
     val edge by animateColorAsState(if (picked) colors.ink else colors.hairline, tween(INK_MILLIS), label = "pill edge")
     PillFrame(
         modifier = modifier
@@ -62,10 +66,10 @@ public fun ChoicePill(
 /** Shape, touch target, press scale and toggle semantics shared by every pill. */
 @Composable
 internal fun PillFrame(
-    modifier: Modifier,
     onToggle: () -> Unit,
     picked: Boolean?,
     enabled: Boolean,
+    modifier: Modifier = Modifier,
     padding: PaddingValues = PaddingValues(start = 16.dp, top = 9.dp, end = 16.dp, bottom = 10.dp),
     content: @Composable () -> Unit,
 ) {
@@ -86,8 +90,10 @@ internal fun PillFrame(
     }
     Box(
         modifier = modifier
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(CircleShape)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }.clip(CircleShape)
             .then(action)
             .heightIn(min = 48.dp)
             .padding(padding),
