@@ -9,7 +9,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
-import dev.opendungeon.core.data.ApiKeyStore
+import dev.opendungeon.core.credentials.ApiKeyStore
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.Outcome
 import dev.opendungeon.data.generation.di.OpenRouterExecutor

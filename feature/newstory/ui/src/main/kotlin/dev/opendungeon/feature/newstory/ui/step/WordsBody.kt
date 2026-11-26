@@ -12,11 +12,11 @@ import androidx.compose.ui.unit.dp
 import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.component.ChoicePill
 import dev.opendungeon.feature.newstory.domain.Option
-import dev.opendungeon.feature.newstory.ui.StepBodyUi
+import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
 @Composable
-internal fun WordsBody(body: StepBodyUi.Words, onIntent: (WizardIntent) -> Unit) {
+internal fun WordsBody(body: StepBody.Words, onIntent: (WizardIntent) -> Unit) {
     PillRow(body.options, onIntent)
 }
 

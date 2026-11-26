@@ -1,12 +1,12 @@
 package dev.opendungeon.feature.connect
 
 import app.cash.turbine.test
-import dev.opendungeon.core.data.ModelCatalogRepository
-import dev.opendungeon.core.data.OpenRouterAccountRepository
 import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.KeyInfo
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.domain.openrouter.ModelCatalogRepository
+import dev.opendungeon.domain.openrouter.OpenRouterAccountRepository
 import dev.opendungeon.feature.connect.ConnectState.Phase
 import dev.opendungeon.feature.connect.ConnectState.Remote
 import kotlinx.coroutines.Dispatchers

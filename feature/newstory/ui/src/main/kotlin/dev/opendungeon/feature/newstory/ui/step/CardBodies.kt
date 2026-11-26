@@ -33,19 +33,20 @@ import dev.opendungeon.core.designsystem.component.CharacterCard
 import dev.opendungeon.core.designsystem.component.ChoicePill
 import dev.opendungeon.core.designsystem.component.SealedSecret
 import dev.opendungeon.domain.story.CharacterLine
+import dev.opendungeon.domain.story.Take
+import dev.opendungeon.feature.newstory.domain.Audition
 import dev.opendungeon.feature.newstory.domain.Choice
-import dev.opendungeon.feature.newstory.ui.PersonCardUi
+import dev.opendungeon.feature.newstory.domain.PersonCard
+import dev.opendungeon.feature.newstory.domain.ShownSecret
+import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
-import dev.opendungeon.feature.newstory.ui.SecretUi
-import dev.opendungeon.feature.newstory.ui.StepBodyUi
-import dev.opendungeon.feature.newstory.ui.TakeCardUi
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
 /** Swipeable people, each taken into the story or left out. */
 @Composable
-internal fun CastBody(body: StepBodyUi.Cast, onIntent: (WizardIntent) -> Unit) {
+internal fun CastBody(body: StepBody.Cast, onIntent: (WizardIntent) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Deck(cardWidth = 286.dp, items = body.people, key = { it.id.value }) { person -> PersonCard(person, onIntent) }
+        Deck(cardWidth = 286.dp, items = body.people, key = { it.id.value }) { person -> CastCard(person, onIntent) }
         if (body.people.isNotEmpty()) {
             Text(
                 pluralStringResource(R.plurals.wizard_cast_count, body.people.size, body.people.count { it.inStory }, body.people.size),
@@ -57,7 +58,7 @@ internal fun CastBody(body: StepBodyUi.Cast, onIntent: (WizardIntent) -> Unit) {
 }
 
 @Composable
-private fun PersonCard(person: PersonCardUi, onIntent: (WizardIntent) -> Unit) {
+private fun CastCard(person: PersonCard, onIntent: (WizardIntent) -> Unit) {
     val colors = Paper.colors
     CharacterCard(label = (person.role ?: stringResource(R.string.wizard_someone)).uppercase()) {
         Column(Modifier.padding(end = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -71,11 +72,11 @@ private fun PersonCard(person: PersonCardUi, onIntent: (WizardIntent) -> Unit) {
                 }
             }
             when (val secret = person.secret) {
-                SecretUi.None -> Unit
-                SecretUi.Sealed -> CardLine(stringResource(R.string.wizard_line_secret), labelWidth = 50.dp) {
+                ShownSecret.None -> Unit
+                ShownSecret.Sealed -> CardLine(stringResource(R.string.wizard_line_secret), labelWidth = 50.dp) {
                     SealedSecret(stringResource(R.string.wizard_secret_sealed))
                 }
-                is SecretUi.Known -> CardLine(stringResource(R.string.wizard_line_secret), labelWidth = 50.dp) {
+                is ShownSecret.Known -> CardLine(stringResource(R.string.wizard_line_secret), labelWidth = 50.dp) {
                     Text(secret.text, style = Paper.type.cardText, color = colors.ink)
                 }
             }
@@ -92,36 +93,37 @@ private fun PersonCard(person: PersonCardUi, onIntent: (WizardIntent) -> Unit) {
 
 /** The auditioned openings, side by side; one can be chosen once it is written. */
 @Composable
-internal fun AuditionsBody(body: StepBodyUi.Auditions, onIntent: (WizardIntent) -> Unit) {
-    Deck(cardWidth = 300.dp, items = body.takes, key = { it.id.value }) { take -> TakeCard(take, onIntent) }
+internal fun AuditionsBody(body: StepBody.Auditions, onIntent: (WizardIntent) -> Unit) {
+    Deck(cardWidth = 300.dp, items = body.auditions, key = { it.id.value }) { audition -> AuditionCard(audition, onIntent) }
 }
 
 @Composable
-private fun TakeCard(take: TakeCardUi, onIntent: (WizardIntent) -> Unit) {
+private fun AuditionCard(audition: Audition, onIntent: (WizardIntent) -> Unit) {
     val colors = Paper.colors
     val shape = RoundedCornerShape(22.dp)
     Column(
         modifier = Modifier
             .height(270.dp)
-            .border(1.dp, if (take.chosen) colors.ink else colors.hairline, shape)
+            .border(1.dp, if (audition.chosen) colors.ink else colors.hairline, shape)
             .background(colors.card, shape)
             .padding(start = 18.dp, top = 16.dp, end = 18.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val meta = when {
-            take.writing -> stringResource(R.string.wizard_take_writing, take.model)
-            take.interrupted -> stringResource(R.string.wizard_take_interrupted, take.model.uppercase())
-            else -> take.model.uppercase()
+        val model = audition.model.value
+        val meta = when (audition.state) {
+            Take.State.Writing -> stringResource(R.string.wizard_take_writing, model)
+            Take.State.Interrupted -> stringResource(R.string.wizard_take_interrupted, model.uppercase())
+            Take.State.Written -> model.uppercase()
         }
         Text(meta, style = Paper.type.label, color = colors.muted)
         Box(Modifier.weight(1f)) {
-            Text(take.text, style = Paper.type.body.copy(fontSize = 18.sp), color = colors.ink)
+            Text(audition.text, style = Paper.type.body.copy(fontSize = 18.sp), color = colors.ink)
         }
-        if (!take.writing && !take.interrupted) {
+        if (audition.canBeChosen) {
             ChoicePill(
-                text = stringResource(if (take.chosen) R.string.wizard_take_chosen else R.string.wizard_take_choose),
-                picked = take.chosen,
-                onClick = { onIntent(WizardIntent.Pick(Choice.Take(take.id))) },
+                text = stringResource(if (audition.chosen) R.string.wizard_take_chosen else R.string.wizard_take_choose),
+                picked = audition.chosen,
+                onClick = { onIntent(WizardIntent.Pick(Choice.Take(audition.id))) },
                 style = Paper.type.pill.copy(fontSize = 17.sp),
             )
         }

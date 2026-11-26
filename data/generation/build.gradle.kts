@@ -7,7 +7,7 @@ plugins {
 // Koog stays an implementation detail: features and interactors only see :domain:generation.
 dependencies {
     api(projects.domain.generation)
-    implementation(projects.core.data)
+    implementation(projects.core.credentials)
     implementation(projects.core.network)
     implementation(libs.koog.prompt.executor.model)
     implementation(libs.koog.prompt.executor.openrouter.client)

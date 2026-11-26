@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,6 +36,8 @@ import dev.opendungeon.core.designsystem.component.SentenceLead
 import dev.opendungeon.core.designsystem.component.StepTransition
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.domain.story.CreationStep
+import dev.opendungeon.feature.newstory.domain.StepBody
+import dev.opendungeon.feature.newstory.domain.WizardState
 import dev.opendungeon.feature.newstory.ui.step.AuditionsBody
 import dev.opendungeon.feature.newstory.ui.step.CastBody
 import dev.opendungeon.feature.newstory.ui.step.FirstLineBody
@@ -70,20 +73,20 @@ fun NewStoryScreen(state: WizardUiState, onIntent: (WizardIntent) -> Unit, modif
     ) {
         when (state) {
             WizardUiState.Loading -> ProgressLine(progress = 0f)
-            is WizardUiState.Step -> StepPage(state, onIntent)
+            is WizardUiState.Ready -> StepPage(state.wizard, onIntent)
         }
     }
 }
 
 @Composable
-private fun ColumnScope.StepPage(state: WizardUiState.Step, onIntent: (WizardIntent) -> Unit) {
+private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) -> Unit) {
     ProgressLine(progress = state.progress)
     Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         if (state.controls.canGoBack) {
             GhostIconButton(PaperIcons.Back, stringResource(R.string.wizard_back), onClick = { onIntent(WizardIntent.Back) })
         }
     }
-    StepTransition(state = state, stepOf = WizardUiState.Step::step, modifier = Modifier.weight(1f)) { shown ->
+    StepTransition(state = state, stepOf = WizardState::step, modifier = Modifier.weight(1f)) { shown ->
         Column(Modifier.fillMaxSize()) {
             Stage(shown, onIntent, Modifier.weight(1f))
             if (shown.controls.takesOwnWords) {
@@ -95,7 +98,7 @@ private fun ColumnScope.StepPage(state: WizardUiState.Step, onIntent: (WizardInt
 }
 
 @Composable
-private fun Stage(state: WizardUiState.Step, onIntent: (WizardIntent) -> Unit, modifier: Modifier = Modifier) {
+private fun Stage(state: WizardState, onIntent: (WizardIntent) -> Unit, modifier: Modifier = Modifier) {
     val copy = stepCopy(state.step)
     Column(
         modifier = modifier
@@ -105,24 +108,25 @@ private fun Stage(state: WizardUiState.Step, onIntent: (WizardIntent) -> Unit, m
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        val lead = if (state.lead.isEmpty() && copy.lead != null) AnnotatedString(stringResource(copy.lead)) else state.lead
+        val sentence = remember(state.lead) { state.lead.toAnnotatedString() }
+        val lead = if (sentence.isEmpty() && copy.lead != null) AnnotatedString(stringResource(copy.lead)) else sentence
         SentenceLead(lead = lead, prompt = stringResource(copy.prompt))
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             when (val body = state.body) {
-                is StepBodyUi.Words -> WordsBody(body, onIntent)
-                is StepBodyUi.Starring -> StarringBody(body, onIntent)
-                is StepBodyUi.Limits -> LimitsBody(body, onIntent)
-                is StepBodyUi.Premise -> PremiseBody(body, onIntent)
-                is StepBodyUi.Cast -> CastBody(body, onIntent)
-                is StepBodyUi.FirstLine -> FirstLineBody(body, onIntent)
-                is StepBodyUi.Auditions -> AuditionsBody(body, onIntent)
+                is StepBody.Words -> WordsBody(body, onIntent)
+                is StepBody.Starring -> StarringBody(body, onIntent)
+                is StepBody.Limits -> LimitsBody(body, onIntent)
+                is StepBody.Premise -> PremiseBody(body, onIntent)
+                is StepBody.Cast -> CastBody(body, onIntent)
+                is StepBody.FirstLine -> FirstLineBody(body, onIntent)
+                is StepBody.Auditions -> AuditionsBody(body, onIntent)
             }
         }
     }
 }
 
 @Composable
-private fun BottomBar(state: WizardUiState.Step, onIntent: (WizardIntent) -> Unit) {
+private fun BottomBar(state: WizardState, onIntent: (WizardIntent) -> Unit) {
     val controls = state.controls
     Box(Modifier.fillMaxWidth().heightIn(min = 88.dp).padding(horizontal = 20.dp)) {
         if (controls.canRoll) {

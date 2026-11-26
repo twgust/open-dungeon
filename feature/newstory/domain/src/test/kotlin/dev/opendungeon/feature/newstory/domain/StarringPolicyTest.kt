@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -61,6 +62,24 @@ class StarringPolicyTest {
         assertEquals("Keeps every grudge", you.flaw)
         assertEquals(dealt.protagonist!!.copy(flaw = "Keeps every grudge"), you)
         assertNull(policy.rollLine(dealt, CharacterLine.Name), "only the card's lines have dice")
+    }
+
+    @Test
+    fun `the card shows its three lines in order, a cleared one left blank to refill`() {
+        val dealt = policy.select(emptyDraft, Choice.Word("a forger"))!!.draft
+        val cleared = policy.edit(dealt, DraftEdit.YouLine(CharacterLine.Flaw, " "))!!
+
+        val body = assertIs<StepBody.Starring>(policy.body(cleared))
+
+        assertEquals(
+            listOf(
+                ShownLine(CharacterLine.Wants, "To be forgiven"),
+                ShownLine(CharacterLine.Flaw, ""),
+                ShownLine(CharacterLine.GoodAt, "Picking locks"),
+            ),
+            body.you!!.lines,
+        )
+        assertNull(assertIs<StepBody.Starring>(policy.body(emptyDraft)).you, "no card before a role is picked")
     }
 
     @Test

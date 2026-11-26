@@ -22,13 +22,13 @@ import dev.opendungeon.core.designsystem.component.CharacterCard
 import dev.opendungeon.core.designsystem.component.LineDieButton
 import dev.opendungeon.core.designsystem.component.PaperField
 import dev.opendungeon.feature.newstory.domain.DraftEdit
-import dev.opendungeon.feature.newstory.ui.CardLineUi
+import dev.opendungeon.feature.newstory.domain.ShownLine
+import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
-import dev.opendungeon.feature.newstory.ui.StepBodyUi
 import dev.opendungeon.feature.newstory.ui.WizardIntent
 
 @Composable
-internal fun StarringBody(body: StepBodyUi.Starring, onIntent: (WizardIntent) -> Unit) {
+internal fun StarringBody(body: StepBody.Starring, onIntent: (WizardIntent) -> Unit) {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
         PillRow(body.roles, onIntent, style = Paper.type.pill.copy(fontSize = 20.sp))
         AnimatedVisibility(visible = body.you != null, enter = fadeIn()) {
@@ -38,7 +38,7 @@ internal fun StarringBody(body: StepBodyUi.Starring, onIntent: (WizardIntent) ->
 }
 
 @Composable
-private fun YouCard(lines: List<CardLineUi>, onIntent: (WizardIntent) -> Unit) {
+private fun YouCard(lines: List<ShownLine>, onIntent: (WizardIntent) -> Unit) {
     var editing by rememberSaveable { mutableStateOf(false) }
     CharacterCard(
         label = stringResource(R.string.wizard_you),

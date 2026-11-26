@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.core.data)
+    implementation(projects.domain.openrouter)
     implementation(libs.metrox.viewmodel.compose)
 }
 
