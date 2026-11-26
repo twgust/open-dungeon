@@ -34,11 +34,13 @@ public class LimitsPolicy : StepPolicy {
     }
 
     override fun submitOwn(draft: StoryDraft, text: String): Selection =
-        Selection(draft.withNote(text), advance = false)
+        Selection(draft.withNote(text.trim()), advance = false)
 
+    /** Kept as typed, so the field being edited reads back exactly what it holds. */
     override fun edit(draft: StoryDraft, edit: DraftEdit): StoryDraft? =
         (edit as? DraftEdit.LimitsNote)?.let { draft.withNote(it.text) }
 
+    /** Blank clears the note. */
     private fun StoryDraft.withNote(text: String) =
-        copy(limits = limits.copy(note = text.trim().takeIf(String::isNotEmpty)))
+        copy(limits = limits.copy(note = text.takeIf(String::isNotBlank)))
 }

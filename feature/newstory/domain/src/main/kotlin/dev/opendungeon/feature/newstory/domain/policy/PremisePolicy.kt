@@ -29,12 +29,13 @@ public class PremisePolicy : StepPolicy {
     override fun takesOwnWords(draft: StoryDraft): Boolean = true
 
     override fun submitOwn(draft: StoryDraft, text: String): Selection =
-        Selection(draft.withPremise(text), advance = false)
+        Selection(draft.withPremise(text.trim()), advance = false)
 
+    /** Kept as typed, so the field being edited reads back exactly what it holds. */
     override fun edit(draft: StoryDraft, edit: DraftEdit): StoryDraft? =
         (edit as? DraftEdit.Premise)?.let { draft.withPremise(it.text) }
 
-    /** Any edit makes the premise the player's own words, even one that started as a generated one. */
+    /** Any edit makes the premise the player's own words, even one that started as a generated one. Blank clears it. */
     private fun StoryDraft.withPremise(text: String) =
-        copy(premise = text.trim().takeIf(String::isNotEmpty)?.let(Phrase::Own))
+        copy(premise = text.takeIf(String::isNotBlank)?.let(Phrase::Own))
 }

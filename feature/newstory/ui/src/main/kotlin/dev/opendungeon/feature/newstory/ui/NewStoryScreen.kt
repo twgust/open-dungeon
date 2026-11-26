@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,12 +33,15 @@ import dev.opendungeon.core.designsystem.PaperIcons
 import dev.opendungeon.core.designsystem.component.DieButton
 import dev.opendungeon.core.designsystem.component.GhostIconButton
 import dev.opendungeon.core.designsystem.component.NextArrow
+import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.designsystem.component.ProgressLine
 import dev.opendungeon.core.designsystem.component.SentenceLead
 import dev.opendungeon.core.designsystem.component.StepTransition
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.domain.story.CreationStep
+import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.feature.newstory.domain.StepBody
+import dev.opendungeon.feature.newstory.domain.WizardFailure
 import dev.opendungeon.feature.newstory.domain.WizardState
 import dev.opendungeon.feature.newstory.ui.step.AuditionsBody
 import dev.opendungeon.feature.newstory.ui.step.CastBody
@@ -51,32 +56,65 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 @Composable
 fun NewStoryRoute(onLeave: () -> Unit, viewModel: StoryWizardViewModel = metroViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val notices = remember { SnackbarHostState() }
+    val failures = failureMessages()
+    LaunchedEffect(viewModel) { viewModel.onIntent(WizardIntent.Open) }
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             WizardEffect.Leave -> onLeave()
+            is WizardEffect.ShowFailure -> {
+                notices.currentSnackbarData?.dismiss()
+                notices.showSnackbar(failures.of(effect.failure))
+            }
         }
     }
-    NewStoryScreen(state = state, onIntent = viewModel::onIntent)
+    NewStoryScreen(state = state, notices = notices, onIntent = viewModel::onIntent)
 }
 
 /** Stateless: one paper page that rewrites itself for each step. */
 @Composable
-fun NewStoryScreen(state: WizardUiState, onIntent: (WizardIntent) -> Unit, modifier: Modifier = Modifier) {
+fun NewStoryScreen(
+    state: WizardUiState,
+    notices: SnackbarHostState,
+    onIntent: (WizardIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = Paper.colors
     BackHandler { onIntent(WizardIntent.Back) }
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(colors.paper)
             .safeDrawingPadding()
             .imePadding(),
     ) {
-        when (state) {
-            WizardUiState.Loading -> ProgressLine(progress = 0f)
-            is WizardUiState.Ready -> StepPage(state.wizard, onIntent)
+        Column(Modifier.fillMaxSize()) {
+            when (state) {
+                WizardUiState.Loading -> ProgressLine(progress = 0f)
+                is WizardUiState.Ready -> StepPage(state.wizard, onIntent)
+            }
         }
+        PaperNotices(notices, Modifier.align(Alignment.BottomCenter))
     }
 }
+
+/** The words for each failure, read while composing so effects can show them later. */
+private class FailureMessages(private val storageFull: String, private val storage: String, private val unexpected: String) {
+    fun of(failure: WizardFailure): String = when (failure) {
+        is WizardFailure.Storage -> when (failure.error) {
+            StorageError.Full -> storageFull
+            is StorageError.Failed -> storage
+        }
+        is WizardFailure.Unexpected -> unexpected
+    }
+}
+
+@Composable
+private fun failureMessages() = FailureMessages(
+    storageFull = stringResource(R.string.wizard_failure_storage_full),
+    storage = stringResource(R.string.wizard_failure_storage),
+    unexpected = stringResource(R.string.wizard_failure_unexpected),
+)
 
 @Composable
 private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) -> Unit) {

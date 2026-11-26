@@ -40,15 +40,16 @@ class OtherPoliciesTest {
     }
 
     @Test
-    fun `the premise needs words, and edited words are the player's own`() {
+    fun `the premise needs words, and edited words are the player's own, kept as typed`() {
         val premise = PremisePolicy()
         assertFalse(premise.canAdvance(emptyDraft))
 
         val written = premise.edit(emptyDraft.copy(premise = Phrase.Offered("A bell rings.")), DraftEdit.Premise("A bell rings twice. "))!!
 
-        assertEquals(Phrase.Own("A bell rings twice."), written.premise)
+        assertEquals(Phrase.Own("A bell rings twice. "), written.premise, "a field mid-sentence keeps its space")
         assertTrue(premise.canAdvance(written))
-        assertNull(premise.edit(written, DraftEdit.Premise("")).let { it!!.premise })
+        assertNull(premise.edit(written, DraftEdit.Premise("  ")).let { it!!.premise }, "blank clears it")
+        assertEquals(Phrase.Own("A bell."), premise.submitOwn(emptyDraft, "  A bell.  ").draft.premise, "submitted words are tidied")
     }
 
     @Test

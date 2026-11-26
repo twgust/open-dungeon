@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
  * changes, and whether the step is done. Verbs that mean nothing on the current step are ignored.
  *
  * Verbs run one at a time in the order they were called, each against the draft the previous one left.
+ * A verb shows its result at once; if it cannot be kept, the state goes back and [outcomes] says why.
  */
 public interface StoryWizard {
 
@@ -19,7 +20,7 @@ public interface StoryWizard {
 
     public val outcomes: Flow<WizardOutcome>
 
-    /** Opens [draft], or else the open draft, or else a new one. */
+    /** Opens [draft], or else the open draft, or else a new one. Does nothing once a draft is open. */
     public fun start(draft: DraftId? = null)
 
     public fun select(choice: Choice)

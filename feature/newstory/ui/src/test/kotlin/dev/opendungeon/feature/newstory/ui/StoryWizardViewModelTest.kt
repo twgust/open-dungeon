@@ -5,11 +5,13 @@ import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Sentence
+import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.DraftEdit
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.domain.StepControls
 import dev.opendungeon.feature.newstory.domain.StoryWizard
+import dev.opendungeon.feature.newstory.domain.WizardFailure
 import dev.opendungeon.feature.newstory.domain.WizardOutcome
 import dev.opendungeon.feature.newstory.domain.WizardState
 import kotlinx.coroutines.CoroutineScope
@@ -58,9 +60,11 @@ class StoryWizardViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun `the wizard is started once, and each intent reaches its verb unchanged`() {
+    fun `each intent reaches its verb unchanged`() {
         val viewModel = StoryWizardViewModel(factory)
+        assertEquals(emptyList(), wizard.calls, "nothing starts until the screen opens")
 
+        viewModel.onIntent(WizardIntent.Open)
         viewModel.onIntent(WizardIntent.Pick(Choice.Word("Gothic")))
         viewModel.onIntent(WizardIntent.Own("salt-punk"))
         viewModel.onIntent(WizardIntent.Edit(DraftEdit.FirstLine("I come in.")))
@@ -109,6 +113,17 @@ class StoryWizardViewModelTest {
         viewModel.effects.test {
             wizard.outcomeChannel.send(WizardOutcome.Left)
             assertEquals(WizardEffect.Leave, awaitItem())
+        }
+    }
+
+    @Test
+    fun `a failure becomes an effect carrying it`() = runTest {
+        val viewModel = StoryWizardViewModel(factory)
+        val failure = WizardFailure.Storage(StorageError.Full)
+
+        viewModel.effects.test {
+            wizard.outcomeChannel.send(WizardOutcome.Failed(failure))
+            assertEquals(WizardEffect.ShowFailure(failure), awaitItem())
         }
     }
 }

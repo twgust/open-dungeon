@@ -81,4 +81,8 @@
     <string name="wizard_take_interrupted">%1$s · STOPPED EARLY</string>
     <string name="wizard_take_choose">this one</string>
     <string name="wizard_take_chosen">chosen</string>
+
+    <string name="wizard_failure_storage_full">Storage full</string>
+    <string name="wizard_failure_storage">Storage error</string>
+    <string name="wizard_failure_unexpected">Something went wrong</string>
 </resources>
