@@ -19,12 +19,12 @@ defaults are listed, with reasons, in `config/detekt/detekt.yml`.
 | Concern | Choice |
 | --- | --- |
 | Language | Kotlin 2.4, warnings are errors, explicit API mode in JVM modules |
-| UI | Jetpack Compose, Material 3 |
+| UI | Jetpack Compose, Material 3, Navigation 3 with a saved back stack and a ViewModel store per entry |
 | Architecture | MVI (`core:mvi`): immutable state, intents in, one-off effects out |
 | DI | [Metro](https://github.com/ZacSweers/metro) with contribution-based graphs (`@ContributesBinding`, `@ContributesIntoMap`) and `metrox` for ViewModels and constructor-injected Activities |
 | Networking | Ktor client (OkHttp engine) + kotlinx.serialization |
-| Generation | [Koog](https://github.com/JetBrains/koog) `OpenRouterLLMClient` behind `TextGenerator` / `StructuredGenerator` |
-| Storage | Room for drafts (schemas exported to `core/database/schemas`); DataStore for the API key, AES-GCM encrypted with an Android Keystore key |
+| Generation | [Koog](https://github.com/JetBrains/koog), with our own `OpenRouterChatClient` on Koog's OpenAI-compatible base, behind `TextGenerator` / `StructuredGenerator` |
+| Storage | Room for drafts, the model catalog, the chosen model and tunings (schemas exported to `core/database/schemas`); DataStore for the API key, AES-GCM encrypted with an Android Keystore key |
 | Build | Gradle 9, version catalog, convention plugins in `build-logic`; ktlint (with compose-rules) and detekt on every module |
 | Tests | JUnit 5, kotlinx-coroutines-test, Turbine, Ktor `MockEngine`, OkHttp `MockWebServer`; Robolectric only for Room |
 
@@ -33,23 +33,26 @@ defaults are listed, with reasons, in `config/detekt/detekt.yml`.
 ```
 app                      Application, Metro AppGraph, MainActivity; binds every data implementation
 feature/connect/ui       Connect screen and its thin ViewModel
-feature/connect/domain   ConnectInteractor: key validation, catalog refresh, disconnect  (JVM)
+feature/connect/domain   ConnectInteractor: key validation, chosen model, disconnect     (JVM)
+feature/models/ui        Model picker, parameter editor and try screens, thin ViewModels
+feature/models/domain    ModelPicker, ModelTuner, TryRun interactors; ParameterSheet     (JVM)
 feature/newstory/ui      Story creation screens and their thin ViewModel
 feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, vocabulary    (JVM)
-data/openrouter          Model catalog and account repositories over the REST client   (JVM)
+data/openrouter          Remote catalog and account repository over the REST client    (JVM)
+data/models              Catalog cache, chosen model and tunings over Room (Android)
 data/story               StoryDraftRepository over Room (Android)
-data/generation          Text and structured generation on Koog's OpenRouter client    (JVM)
-domain/openrouter        ModelCatalogRepository, OpenRouterAccountRepository           (JVM)
+data/generation          Text and structured generation on Koog, OpenRouterChatClient   (JVM)
+domain/openrouter        Catalog, setup and account repositories; test fixtures        (JVM)
 domain/story             Drafts, characters, takes, the sentence builder, StoryDraftRepository (JVM)
-domain/generation        TextGenerator, StructuredGenerator, sampling, typed errors    (JVM)
+domain/generation        TextGenerator, StructuredGenerator, usage, typed errors        (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
-core/ui                  Compose helpers
+core/ui                  Compose helpers, error messages
 core/database            Room database, entities, DAOs (Android)
 core/datastore           Encrypted on-device key storage (Android)
 core/credentials         ApiKeyStore, the contract core/datastore implements           (JVM)
 core/network             OpenRouter REST client and DTOs                                   (JVM)
 core/mvi                 MviViewModel base                                                 (JVM)
-core/model               Domain types: ApiKey, AiModel, ModelParameter, Outcome, DataError (JVM)
+core/model               Domain types: ApiKey, AiModel, ModelParameter, Tuning, Outcome, DataError (JVM)
 ```
 
 Dependencies point downwards only. A repository's interface lives in a `domain` module and its
@@ -76,5 +79,15 @@ The network layer follows the current official API, not earlier projects:
 - REST and Koog share one base `HttpClient` (`core/network`): the OkHttp engine, attribution headers,
   connect timeout, base URL and JSON settings. Each specialises it with `config {}` for its own timeouts.
 - A model whose price cannot be read is kept, as `ModelPricing.Unknown`, rather than dropped.
+- Only chat-capable models are offered: a model whose `endpoints` lack `/api/v1/chat/completions` (the
+  batch-only `:batch` variants) cannot stream a reply.
+- Rankings come from `sort` on `/models/user`; provider detail from `GET /models/{author}/{slug}/endpoints`.
+- A tuned value is sent only when the model lists its parameter, and then with
+  `provider.require_parameters`. `max_completion_tokens` replaces the deprecated `max_tokens` where listed;
+  reasoning goes as the `reasoning` object, else `reasoning_effort`.
+- Streaming reads `usage.cost` and reasoning tokens from the final chunk, and a mid-stream `error` object
+  as a failure, which Koog's own OpenRouter client drops.
+
+The design of models, parameters and streaming is in [docs/m1-models-and-streaming.md](docs/m1-models-and-streaming.md).
 
 Source of truth: <https://openrouter.ai/openapi.json> and <https://openrouter.ai/docs/llms.txt>.

@@ -10,9 +10,12 @@ public data class AiModel(
     val pricing: ModelPricing,
     val inputModalities: Set<String>,
     val outputModalities: Set<String>,
+    /** In the catalog's order, which the parameter list keeps. */
     val supportedParameters: Set<ModelParameter>,
     val defaultParameters: DefaultParameters,
     val reasoning: ReasoningSupport?,
+    /** Whether the top provider moderates content; `null` when OpenRouter does not say. */
+    val isModerated: Boolean?,
 )
 
 /** OpenRouter model slug, e.g. `anthropic/claude-opus-4.5` or a variant such as `…:free`. */
@@ -29,9 +32,15 @@ public data class DefaultParameters(
     val repetitionPenalty: Double? = null,
 )
 
+/** How a reasoning model's thinking can be steered. See https://openrouter.ai/docs/guides/best-practices/reasoning-tokens.md. */
 public data class ReasoningSupport(
+    /** Reasoning cannot be turned off. */
     val mandatory: Boolean,
     val enabledByDefault: Boolean,
-    val supportedEfforts: List<String>,
-    val defaultEffort: String?,
+    /** Highest effort first. Empty when the model offers no choice of effort, only on and off. */
+    val supportedEfforts: List<ReasoningEffort>,
+    /** Pre-selected when reasoning is turned on. Never [ReasoningEffort.None]: that means off by default. */
+    val defaultEffort: ReasoningEffort?,
+    /** The model takes a token budget for reasoning (`reasoning.max_tokens`). */
+    val supportsBudget: Boolean,
 )

@@ -1,21 +1,27 @@
 package dev.opendungeon.feature.connect.domain
 
 import app.cash.turbine.test
-import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.KeyInfo
+import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.core.model.Outcome
-import dev.opendungeon.domain.openrouter.ModelCatalogRepository
+import dev.opendungeon.domain.openrouter.Catalog
 import dev.opendungeon.domain.openrouter.OpenRouterAccountRepository
+import dev.opendungeon.domain.openrouter.testing.FETCHED_AT
+import dev.opendungeon.domain.openrouter.testing.FakeModelCatalog
+import dev.opendungeon.domain.openrouter.testing.FakeModelSetup
+import dev.opendungeon.domain.openrouter.testing.aiModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultConnectInteractorTest {
@@ -44,22 +50,15 @@ class DefaultConnectInteractorTest {
             disconnectResult.also { if (it is Outcome.Success) isConnected.value = false }
     }
 
-    /** Answers each fetch with the next deferred, so a test decides when and in which order loads finish. */
-    private class HeldCatalog : ModelCatalogRepository {
-        val answers = ArrayDeque<CompletableDeferred<Outcome<List<AiModel>, DataError>>>()
-        var autoAnswer: Outcome<List<AiModel>, DataError>? = Outcome.Success(emptyList())
+    private val model = aiModel("nous/hermes-4-405b")
+    private val storedCatalog = Catalog(listOf(model), FETCHED_AT)
+    private val loaded = Connection.Connected(Remote.Loaded(keyInfo), ModelChoice.None)
 
-        fun hold(): CompletableDeferred<Outcome<List<AiModel>, DataError>> =
-            CompletableDeferred<Outcome<List<AiModel>, DataError>>().also(answers::addLast)
-
-        override suspend fun fetchModels(): Outcome<List<AiModel>, DataError> =
-            answers.removeFirstOrNull()?.await() ?: requireNotNull(autoAnswer)
-    }
-
-    private val loaded = Connection.Connected(Remote.Loaded(keyInfo), Remote.Loaded(emptyList()))
-
-    private fun TestScope.interactor(account: FakeAccount, catalog: ModelCatalogRepository = HeldCatalog()) =
-        DefaultConnectInteractor(backgroundScope, account, catalog)
+    private fun TestScope.interactor(
+        account: FakeAccount,
+        catalog: FakeModelCatalog = FakeModelCatalog(),
+        setup: FakeModelSetup = FakeModelSetup(),
+    ) = DefaultConnectInteractor(backgroundScope, account, catalog, setup)
 
     @Test
     fun `a rejected key returns to key entry with the reason`() = runTest(UnconfinedTestDispatcher()) {
@@ -96,34 +95,82 @@ class DefaultConnectInteractorTest {
         }
 
     @Test
-    fun `a catalog that fails leaves the key details in place`() = runTest(UnconfinedTestDispatcher()) {
-        val catalog = HeldCatalog().apply { autoAnswer = Outcome.Failure(DataError.Network) }
-        val interactor = interactor(FakeAccount(connected = true), catalog)
+    fun `without a stored catalog one is fetched, and a failure leaves the key details in place`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val catalog = FakeModelCatalog().apply { refreshResult = Outcome.Failure(DataError.Network) }
+            val interactor = interactor(FakeAccount(connected = true), catalog)
 
-        assertEquals(
-            Connection.Connected(Remote.Loaded(keyInfo), Remote.Failed(DataError.Network)),
-            interactor.state.value,
-        )
+            assertEquals(
+                Connection.Connected(Remote.Loaded(keyInfo), ModelChoice.Unavailable(DataError.Network)),
+                interactor.state.value,
+            )
+            assertEquals(1, catalog.refreshes)
+        }
+
+    @Test
+    fun `a stored catalog is not fetched again on opening`() = runTest(UnconfinedTestDispatcher()) {
+        val catalog = FakeModelCatalog(storedCatalog)
+
+        interactor(FakeAccount(connected = true), catalog)
+
+        assertEquals(0, catalog.refreshes)
     }
 
     @Test
-    fun `a refresh replaces a slower load still on its way`() = runTest(UnconfinedTestDispatcher()) {
-        val catalog = HeldCatalog()
-        val first = catalog.hold()
-        val second = catalog.hold()
-        val interactor = interactor(FakeAccount(connected = true), catalog)
+    fun `the chosen model shows, and follows a choice made elsewhere`() = runTest(UnconfinedTestDispatcher()) {
+        val setup = FakeModelSetup()
+        val interactor = interactor(FakeAccount(connected = true), FakeModelCatalog(storedCatalog), setup)
+        assertEquals(loaded, interactor.state.value)
 
-        interactor.refresh()
-        assertEquals(
-            Connection.Connected(Remote.Loading, Remote.Loading),
-            interactor.state.value,
-            "a refresh shows at once",
-        )
-        second.complete(Outcome.Success(emptyList()))
-        first.complete(Outcome.Failure(DataError.Network))
+        setup.choose(model.id)
 
-        assertEquals(loaded, interactor.state.value, "the older answer never lands")
+        assertEquals(Connection.Connected(Remote.Loaded(keyInfo), ModelChoice.Chosen(model)), interactor.state.value)
     }
+
+    @Test
+    fun `a chosen model the catalog no longer offers reads as no choice`() = runTest(UnconfinedTestDispatcher()) {
+        val interactor = interactor(
+            FakeAccount(connected = true),
+            FakeModelCatalog(storedCatalog),
+            FakeModelSetup(chosen = ModelId("gone/model")),
+        )
+
+        assertEquals(loaded, interactor.state.value)
+    }
+
+    @Test
+    fun `a refresh fetches the catalog and replaces a slower load still on its way`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val catalog = FakeModelCatalog()
+            val first = catalog.hold()
+            val second = catalog.hold()
+            val interactor = interactor(FakeAccount(connected = true), catalog)
+
+            interactor.refresh()
+            assertEquals(
+                Connection.Connected(Remote.Loaded(keyInfo), ModelChoice.Loading),
+                interactor.state.value,
+                "a refresh shows at once",
+            )
+            second.complete(Outcome.Success(listOf(model)))
+            first.complete(Outcome.Failure(DataError.Network))
+
+            assertEquals(loaded, interactor.state.value, "the older answer never lands")
+        }
+
+    @Test
+    fun `a failed refresh over a stored catalog is reported and the catalog stays`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val catalog = FakeModelCatalog(storedCatalog).apply { refreshResult = Outcome.Failure(DataError.Network) }
+            val interactor = interactor(FakeAccount(connected = true), catalog)
+
+            interactor.failures.test {
+                interactor.refresh()
+
+                assertEquals(DataError.Network, awaitItem())
+            }
+            assertEquals(loaded, interactor.state.value)
+        }
 
     @Test
     fun `refresh means nothing without a key`() = runTest(UnconfinedTestDispatcher()) {
@@ -135,11 +182,27 @@ class DefaultConnectInteractorTest {
     }
 
     @Test
-    fun `disconnecting shows at once`() = runTest(UnconfinedTestDispatcher()) {
-        val interactor = interactor(FakeAccount(connected = true))
+    fun `disconnecting shows at once and forgets the key's catalog`() = runTest(UnconfinedTestDispatcher()) {
+        val catalog = FakeModelCatalog(storedCatalog)
+        val interactor = interactor(FakeAccount(connected = true), catalog)
 
         interactor.disconnect()
 
+        assertEquals(Connection.Disconnected(), interactor.state.value)
+        assertEquals(1, catalog.clears)
+        assertNull(catalog.catalog.first())
+    }
+
+    @Test
+    fun `a catalog the device cannot forget is reported`() = runTest(UnconfinedTestDispatcher()) {
+        val catalog = FakeModelCatalog(storedCatalog).apply { clearResult = Outcome.Failure(DataError.Storage) }
+        val interactor = interactor(FakeAccount(connected = true), catalog)
+
+        interactor.failures.test {
+            interactor.disconnect()
+
+            assertEquals(DataError.Storage, awaitItem())
+        }
         assertEquals(Connection.Disconnected(), interactor.state.value)
     }
 
@@ -149,7 +212,8 @@ class DefaultConnectInteractorTest {
             val account = FakeAccount(connected = true).apply {
                 disconnectResult = Outcome.Failure(DataError.KeyStorage)
             }
-            val interactor = interactor(account)
+            val catalog = FakeModelCatalog(storedCatalog)
+            val interactor = interactor(account, catalog)
 
             interactor.failures.test {
                 interactor.disconnect()
@@ -157,6 +221,7 @@ class DefaultConnectInteractorTest {
                 assertEquals(DataError.KeyStorage, awaitItem())
             }
             assertEquals(loaded, interactor.state.value)
+            assertEquals(0, catalog.clears)
         }
 
     @Test

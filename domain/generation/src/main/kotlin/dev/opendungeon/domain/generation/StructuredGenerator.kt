@@ -2,6 +2,7 @@ package dev.opendungeon.domain.generation
 
 import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.core.model.Tuning
 import kotlinx.serialization.KSerializer
 
 /**
@@ -25,7 +26,7 @@ public data class StructuredRequest<T>(
     val descriptions: Map<String, String> = emptyMap(),
     /** Valid values shown to models that only get the schema as instructions. */
     val examples: List<T> = emptyList(),
-    val sampling: Sampling = Sampling.ProviderDefaults,
+    val tuning: Tuning = Tuning.Untouched,
     val sessionId: String? = null,
 ) {
     init {

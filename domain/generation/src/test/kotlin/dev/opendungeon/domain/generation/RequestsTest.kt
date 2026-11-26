@@ -1,16 +1,31 @@
 package dev.opendungeon.domain.generation
 
+import dev.opendungeon.core.model.AiModel
+import dev.opendungeon.core.model.DefaultParameters
+import dev.opendungeon.core.model.ModelId
+import dev.opendungeon.core.model.ModelPricing
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
 class RequestsTest {
 
+    private val model = AiModel(
+        id = ModelId("a/b"),
+        name = "B",
+        description = null,
+        contextLength = null,
+        maxCompletionTokens = null,
+        pricing = ModelPricing.Free,
+        inputModalities = setOf("text"),
+        outputModalities = setOf("text"),
+        supportedParameters = emptySet(),
+        defaultParameters = DefaultParameters(),
+        reasoning = null,
+        isModerated = null,
+    )
+
     @Test
-    fun `sampling rejects values no provider accepts`() {
-        assertFailsWith<IllegalArgumentException> { Sampling(temperature = 2.5) }
-        assertFailsWith<IllegalArgumentException> { Sampling(topP = 1.2) }
-        assertFailsWith<IllegalArgumentException> { Sampling(topK = 0) }
-        assertFailsWith<IllegalArgumentException> { Sampling(maxTokens = 0) }
-        assertFailsWith<IllegalArgumentException> { Sampling(repetitionPenalty = -0.1) }
+    fun `a request without messages is a bug`() {
+        assertFailsWith<IllegalArgumentException> { TextRequest(model = model, messages = emptyList()) }
     }
 }

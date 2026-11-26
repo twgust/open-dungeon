@@ -6,17 +6,25 @@ import dev.opendungeon.core.model.ApiKey
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.DefaultParameters
 import dev.opendungeon.core.model.KeyInfo
+import dev.opendungeon.core.model.ModelEndpoint
 import dev.opendungeon.core.model.ModelId
 import dev.opendungeon.core.model.ModelParameter
 import dev.opendungeon.core.model.ModelPricing
 import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.core.model.ReasoningEffort
 import dev.opendungeon.core.model.ReasoningSupport
 import dev.opendungeon.core.network.NetworkError
 import dev.opendungeon.core.network.NetworkResult
 import dev.opendungeon.core.network.dto.CurrentKeyDto
+import dev.opendungeon.core.network.dto.EndpointDto
 import dev.opendungeon.core.network.dto.ModelDto
 import dev.opendungeon.core.network.dto.PricingDto
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import java.math.BigDecimal
 
 internal suspend fun <T> ApiKeyStore.withApiKey(
@@ -42,7 +50,15 @@ internal fun CurrentKeyDto.toKeyInfo() = KeyInfo(
     limitRemaining = limitRemaining,
 )
 
-/** Every listed model is kept: one whose prices cannot be read is still selectable, priced [ModelPricing.Unknown]. */
+private const val CHAT_COMPLETIONS_PATH = "/api/v1/chat/completions"
+
+/**
+ * Whether the model can answer a chat request at all. Batch-only variants list `/api/v1/batches` alone;
+ * a model that does not list its paths is given the benefit of the doubt, since the field is optional.
+ */
+internal val ModelDto.servesChat: Boolean get() = endpoints?.contains(CHAT_COMPLETIONS_PATH) ?: true
+
+/** One whose prices cannot be read is still selectable, priced [ModelPricing.Unknown]. */
 internal fun ModelDto.toAiModel(): AiModel = AiModel(
     id = ModelId(id),
     name = name,
@@ -52,7 +68,7 @@ internal fun ModelDto.toAiModel(): AiModel = AiModel(
     pricing = pricing.toModelPricing(),
     inputModalities = architecture?.inputModalities.orEmpty().toSet(),
     outputModalities = architecture?.outputModalities.orEmpty().toSet(),
-    supportedParameters = supportedParameters.mapTo(linkedSetOf(), ModelParameter::fromWireName),
+    supportedParameters = supportedParameters.toParameters(),
     defaultParameters = defaultParameters?.let {
         DefaultParameters(
             temperature = it.temperature,
@@ -67,11 +83,35 @@ internal fun ModelDto.toAiModel(): AiModel = AiModel(
         ReasoningSupport(
             mandatory = it.mandatory,
             enabledByDefault = it.defaultEnabled,
-            supportedEfforts = it.supportedEfforts,
-            defaultEffort = it.defaultEffort,
+            supportedEfforts = it.supportedEfforts.toEfforts(),
+            defaultEffort = it.defaultEffort?.let(::ReasoningEffort)?.takeUnless { e -> e == ReasoningEffort.None },
+            supportsBudget = it.supportsMaxTokens,
         )
     },
+    isModerated = topProvider?.isModerated,
 )
+
+internal fun EndpointDto.toModelEndpoint(): ModelEndpoint = ModelEndpoint(
+    providerName = providerName,
+    tag = tag,
+    contextLength = contextLength,
+    maxCompletionTokens = maxCompletionTokens,
+    pricing = pricing.toModelPricing(),
+    quantization = quantization,
+    supportedParameters = supportedParameters.toParameters(),
+    uptimeLastDay = uptimeLastDay,
+)
+
+/** JSON `null` accepts every effort; absent offers none; `"none"` is how reasoning is turned off, not an effort. */
+private fun JsonElement?.toEfforts(): List<ReasoningEffort> = when (this) {
+    null -> emptyList()
+    JsonNull -> ReasoningEffort.All
+    is JsonArray -> mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.let(::ReasoningEffort) }
+        .filterNot { it == ReasoningEffort.None }
+    else -> emptyList()
+}
+
+private fun List<String>.toParameters(): Set<ModelParameter> = mapTo(linkedSetOf(), ModelParameter::fromWireName)
 
 private val DYNAMIC_PRICE = BigDecimal("-1")
 

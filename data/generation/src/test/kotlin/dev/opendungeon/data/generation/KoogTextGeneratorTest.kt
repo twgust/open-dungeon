@@ -1,18 +1,19 @@
 package dev.opendungeon.data.generation
 
 import dev.opendungeon.core.model.DataError
+import dev.opendungeon.core.model.Tuning
 import dev.opendungeon.domain.generation.ChatMessage
 import dev.opendungeon.domain.generation.GenerationError
-import dev.opendungeon.domain.generation.Sampling
 import dev.opendungeon.domain.generation.TextEvent
 import dev.opendungeon.domain.generation.TextRequest
-import dev.opendungeon.domain.generation.TokenUsage
+import dev.opendungeon.domain.generation.Usage
 import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -23,18 +24,23 @@ class KoogTextGeneratorTest {
     private val request = TextRequest(
         model = aiModel(parameters = setOf("temperature", "max_tokens", "seed")),
         messages = listOf(ChatMessage.System("You narrate."), ChatMessage.User("Begin.")),
-        sampling = Sampling(temperature = 0.8, topK = 40, maxTokens = 600, seed = 7),
+        tuning = Tuning(temperature = 0.8, topK = 40, maxTokens = 600, seed = 7),
         sessionId = "draft-1",
     )
 
     @Test
-    fun `streams deltas and ends with usage`() = runTest {
+    fun `streams reasoning and text, and ends with what it cost`() = runTest {
         val openRouter = ScriptedOpenRouter(
             eventStream(
+                chunk(reasoning = "Set the scene."),
                 chunk(content = "Rain falls "),
                 chunk(content = "on the salt flats."),
                 chunk(finishReason = "stop"),
-                chunk(usage = """{"prompt_tokens":40,"completion_tokens":9,"total_tokens":49}"""),
+                chunk(
+                    finishReason = "stop",
+                    usage = """{"prompt_tokens":40,"completion_tokens":9,"total_tokens":49,"cost":0.0000981,""" +
+                        """"completion_tokens_details":{"reasoning_tokens":3}}""",
+                ),
             ),
         )
         val keys = FakeApiKeyStore()
@@ -43,9 +49,18 @@ class KoogTextGeneratorTest {
 
         assertEquals(
             listOf(
+                TextEvent.Reasoning("Set the scene."),
                 TextEvent.Delta("Rain falls "),
                 TextEvent.Delta("on the salt flats."),
-                TextEvent.Completed(usage = TokenUsage(promptTokens = 40, completionTokens = 9), cutOff = false),
+                TextEvent.Completed(
+                    usage = Usage(
+                        promptTokens = 40,
+                        completionTokens = 9,
+                        reasoningTokens = 3,
+                        cost = BigDecimal("0.0000981"),
+                    ),
+                    cutOff = false,
+                ),
             ),
             events,
         )
@@ -72,7 +87,8 @@ class KoogTextGeneratorTest {
         assertEquals(7, body.getValue("seed").jsonPrimitive.content.toInt())
         assertEquals("draft-1", body.getValue("session_id").jsonPrimitive.content)
         assertFalse("top_k" in body, "top_k is not in the model's supported_parameters and must not be sent")
-        assertFalse("provider" in body)
+        val provider = body.getValue("provider").jsonObject
+        assertEquals("true", provider.getValue("require_parameters").jsonPrimitive.content)
         val roles = body.getValue("messages").jsonArray.map { it.jsonObject.getValue("role").jsonPrimitive.content }
         assertEquals(listOf("system", "user"), roles)
     }
@@ -90,6 +106,38 @@ class KoogTextGeneratorTest {
             listOf(TextEvent.Failed(GenerationError.Access(DataError.InsufficientCredits("Insufficient credits")))),
             events,
         )
+    }
+
+    @Test
+    fun `an error after the stream began ends it as interrupted, keeping the text so far`() = runTest {
+        val openRouter = ScriptedOpenRouter(
+            eventStream(
+                chunk(content = "The door"),
+                """{"id":"gen-1","object":"chat.completion.chunk","created":1764100000,""" +
+                    """"model":"nous/hermes-4-405b","error":{"code":502,"message":"Provider disconnected"},""" +
+                    """"choices":[{"index":0,"delta":{"content":""},"finish_reason":"error"}]}""",
+            ),
+        )
+        val keys = FakeApiKeyStore()
+
+        val events = KoogTextGenerator(openRouter.executor(keys), keys).stream(request).toList()
+
+        assertEquals(listOf(TextEvent.Delta("The door"), TextEvent.Failed(GenerationError.Interrupted)), events)
+    }
+
+    @Test
+    fun `no provider for the tuned parameters is its own failure`() = runTest {
+        val openRouter = ScriptedOpenRouter(
+            json(
+                """{"error":{"code":404,"message":"No endpoints found that can handle the requested parameters."}}""",
+                status = 404,
+            ),
+        )
+        val keys = FakeApiKeyStore()
+
+        val events = KoogTextGenerator(openRouter.executor(keys), keys).stream(request).toList()
+
+        assertEquals(listOf(TextEvent.Failed(GenerationError.NoProvider)), events)
     }
 
     @Test

@@ -57,7 +57,7 @@ public class KoogStructuredGenerator(
         val config = StructuredRequestConfig(
             default = if (native) KoogStructuredRequest.Native(structure) else KoogStructuredRequest.Manual(structure),
         )
-        val params = request.sampling.toOpenRouterParams(request.model, request.sessionId, requireParameters = native)
+        val params = request.tuning.toOpenRouterParams(request.model, request.sessionId, requireParameters = native)
 
         val result = try {
             executor.executeStructured(

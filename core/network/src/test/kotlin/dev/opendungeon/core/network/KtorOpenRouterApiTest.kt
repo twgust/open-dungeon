@@ -3,6 +3,7 @@ package dev.opendungeon.core.network
 import dev.opendungeon.core.model.ApiKey
 import dev.opendungeon.core.model.Outcome
 import dev.opendungeon.core.network.dto.CurrentKeyDto
+import dev.opendungeon.core.network.dto.ModelEndpointsDto
 import dev.opendungeon.core.network.dto.ModelsPageDto
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -45,7 +46,7 @@ class KtorOpenRouterApiTest {
             json(
                 fixture("models_user_page.json"),
             )
-        }.listModelsForKey(apiKey, offset = 1000, limit = 1000)
+        }.listModelsForKey(apiKey, offset = 1000, limit = 1000, sort = null)
 
         val page = assertIs<Outcome.Success<ModelsPageDto>>(result).value
         assertEquals(
@@ -66,6 +67,34 @@ class KtorOpenRouterApiTest {
         assertEquals("Bearer ${apiKey.value}", request.headers[HttpHeaders.Authorization])
         assertEquals("Open Dungeon", request.headers[TITLE_HEADER])
         assertEquals("https://example.org", request.headers[REFERER_HEADER])
+    }
+
+    @Test
+    fun `asks OpenRouter to rank the list when a sort is given`() = runTest {
+        api { json("""{"data":[],"total_count":0,"links":{"next":null}}""") }
+            .listModelsForKey(apiKey, offset = 0, limit = 1000, sort = "top-weekly")
+
+        assertEquals(
+            "https://openrouter.ai/api/v1/models/user?offset=0&limit=1000&sort=top-weekly",
+            requests.single().url.toString(),
+        )
+    }
+
+    @Test
+    fun `lists a model's providers, keeping a variant's suffix in its own segment`() = runTest {
+        val result = api {
+            json(fixture("model_endpoints.json"))
+        }.listEndpoints(apiKey, "deepseek/deepseek-chat-v3.1:free")
+
+        val endpoints = assertIs<Outcome.Success<ModelEndpointsDto>>(result).value.endpoints
+        assertEquals(2, endpoints.size)
+        assertEquals("DeepInfra", endpoints.first().providerName)
+        assertEquals("deepinfra/fp4", endpoints.first().tag)
+        assertEquals(100.0, endpoints.first().uptimeLastDay)
+        assertEquals(
+            "https://openrouter.ai/api/v1/models/deepseek/deepseek-chat-v3.1:free/endpoints",
+            requests.single().url.toString(),
+        )
     }
 
     @Test

@@ -23,6 +23,7 @@ androidx-activity = "1.13.0"
 androidx-core = "1.19.1"
 androidx-datastore = "1.3.0"
 androidx-lifecycle = "2.11.1"
+androidx-navigation3 = "1.2.2"
 androidx-room = "2.8.5"
 compose-bom = "2026.11.01"
 
@@ -34,6 +35,8 @@ kotlinx-serialization = "1.13.0"
 # Networking
 ktor = "3.6.2"
 koog = "1.3.0"
+# Koog's logger API; the custom chat client hands Koog its own logger.
+kotlinLogging = "8.0.01"
 
 # Testing
 junit = "6.1.3"
@@ -51,6 +54,9 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "androidx-navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
@@ -68,6 +74,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 koog-http-client-ktor = { module = "ai.koog:http-client-ktor", version.ref = "koog" }
 koog-prompt-executor-model = { module = "ai.koog:prompt-executor-model", version.ref = "koog" }
 koog-prompt-executor-openrouter-client = { module = "ai.koog:prompt-executor-openrouter-client", version.ref = "koog" }
+koog-prompt-executor-openai-client-base = { module = "ai.koog:prompt-executor-openai-client-base", version.ref = "koog" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogging" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }

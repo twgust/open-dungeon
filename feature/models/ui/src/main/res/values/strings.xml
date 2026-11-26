@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="models_back">Back</string>
+
+    <!-- Picker -->
+    <string name="picker_title">Models</string>
+    <string name="picker_search">Search</string>
+    <string name="picker_refresh">Refresh</string>
+    <string name="picker_retry">Retry</string>
+    <string name="picker_empty">No models match</string>
+    <plurals name="picker_count">
+        <item quantity="one">%d model</item>
+        <item quantity="other">%d models</item>
+    </plurals>
+    <string name="picker_count_of">%1$d of %2$d</string>
+    <string name="picker_chosen">Chosen</string>
+    <string name="filter_free">Free</string>
+    <string name="filter_tools">Tools</string>
+    <string name="filter_context">%1$s+</string>
+    <string name="modality_image">Images</string>
+    <string name="modality_audio">Audio</string>
+    <string name="modality_file">Files</string>
+    <string name="modality_video">Video</string>
+    <string name="sort_default">Default</string>
+    <string name="sort_popular">Popular</string>
+    <string name="sort_trending">Trending</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_intelligence">Smartest</string>
+    <string name="sort_cheapest">Cheapest</string>
+    <string name="sort_priciest">Priciest</string>
+    <string name="sort_context">Longest context</string>
+    <string name="sort_throughput">Fastest</string>
+    <string name="sort_latency">Lowest latency</string>
+    <string name="sort_multilingual">Multilingual</string>
+    <string name="price_free">Free</string>
+    <string name="price_dynamic">Varies</string>
+    <string name="price_unknown">Price unknown</string>
+    <string name="price_metered">%1$s in · %2$s out</string>
+    <string name="context_tokens">%1$s context</string>
+
+    <!-- Tuner -->
+    <string name="tuner_try">Try</string>
+    <string name="tuner_reset">Reset</string>
+    <string name="tuner_reset_all">Reset all</string>
+    <string name="tuner_default">Default</string>
+    <string name="tuner_no_model">Choose a model first</string>
+    <string name="tuner_parameters">Parameters</string>
+    <string name="tuner_no_parameters">No parameters to set</string>
+    <string name="tuner_capabilities">Also accepts</string>
+    <string name="tuner_providers">Providers</string>
+    <string name="tuner_retry">Retry</string>
+    <string name="tuner_off">Off</string>
+    <string name="tuner_on">On</string>
+    <string name="tuner_budget">Budget</string>
+    <string name="tuner_budget_tokens">Tokens</string>
+    <string name="tuner_add_stop">Add</string>
+    <string name="tuner_new_stop">New stop</string>
+    <string name="tuner_remove_stop">Remove %1$s</string>
+    <string name="tuner_range">%1$s to %2$s</string>
+    <string name="tuner_at_least">%1$s or more</string>
+    <string name="tuner_any_number">Any whole number</string>
+    <string name="tuner_top_k_off">0 is off</string>
+    <string name="tuner_default_value">Default %1$s</string>
+    <string name="tuner_uptime">%1$s%% up</string>
+    <string name="setting_temperature">Temperature</string>
+    <string name="setting_top_p">Top P</string>
+    <string name="setting_top_k">Top K</string>
+    <string name="setting_min_p">Min P</string>
+    <string name="setting_top_a">Top A</string>
+    <string name="setting_frequency_penalty">Frequency penalty</string>
+    <string name="setting_presence_penalty">Presence penalty</string>
+    <string name="setting_repetition_penalty">Repetition penalty</string>
+    <string name="setting_max_tokens">Max tokens</string>
+    <string name="setting_seed">Seed</string>
+    <string name="setting_stop">Stop sequences</string>
+    <string name="setting_verbosity">Verbosity</string>
+    <string name="setting_reasoning">Reasoning</string>
+    <string name="effort_max">Max</string>
+    <string name="effort_xhigh">Extra high</string>
+    <string name="effort_high">High</string>
+    <string name="effort_medium">Medium</string>
+    <string name="effort_low">Low</string>
+    <string name="effort_minimal">Minimal</string>
+    <string name="verbosity_low">Low</string>
+    <string name="verbosity_medium">Medium</string>
+    <string name="verbosity_high">High</string>
+    <string name="verbosity_xhigh">Extra high</string>
+    <string name="verbosity_max">Max</string>
+
+    <!-- Try -->
+    <string name="try_title">Try</string>
+    <string name="try_prompt">Prompt</string>
+    <string name="try_prompt_placeholder">Write a prompt</string>
+    <string name="try_send">Send</string>
+    <string name="try_stop">Stop</string>
+    <string name="try_no_model">Choose a model first</string>
+    <string name="try_reasoning">Reasoning</string>
+    <string name="try_stopped">Stopped</string>
+    <string name="try_cut_off">Stopped at the token limit</string>
+    <string name="try_usage">%1$d in · %2$d out</string>
+    <string name="try_usage_reasoning">%1$d in · %2$d out · %3$d reasoning</string>
+    <string name="try_leave_title">Stop the reply?</string>
+    <string name="try_leave">Leave</string>
+    <string name="try_stay">Stay</string>
+    <string name="generation_no_provider">No provider takes these settings</string>
+    <string name="generation_refused">The provider declined</string>
+    <string name="generation_interrupted">The reply broke off</string>
+    <string name="generation_schema_mismatch">The answer didn\'t fit</string>
+</resources>
