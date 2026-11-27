@@ -51,7 +51,7 @@ public data class StepControls(
     val advancesOnPick: Boolean,
     /** The step has a die, and rolling it would change something. */
     val canRoll: Boolean,
-    /** The step takes the player's own words in its "my own" pill. */
+    /** The step takes the player's own words in its "Custom" pill. */
     val takesOwnWords: Boolean,
 )
 

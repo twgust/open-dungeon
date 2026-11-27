@@ -1,41 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The genre step has no story yet, so the screen supplies its lead. -->
-    <string name="wizard_lead_genre">A story has</string>
-
-    <string name="wizard_prompt_genre">a genre</string>
-    <string name="wizard_prompt_twist">twisted by</string>
-    <string name="wizard_prompt_starring">starring</string>
-    <string name="wizard_prompt_tone">told</string>
-    <string name="wizard_prompt_setting">set in</string>
+    <string name="wizard_prompt_genre">Genre</string>
+    <string name="wizard_prompt_twist">Twist</string>
+    <string name="wizard_prompt_starring">Your character</string>
+    <string name="wizard_prompt_tone">Tone</string>
+    <string name="wizard_prompt_setting">Setting</string>
     <string name="wizard_prompt_limits">Maturity</string>
-    <string name="wizard_prompt_premise">It begins</string>
-    <string name="wizard_prompt_cast">Among them</string>
-    <string name="wizard_prompt_opening">The opening</string>
+    <string name="wizard_prompt_premise">Premise</string>
+    <string name="wizard_prompt_cast">Characters</string>
+    <string name="wizard_prompt_opening">Opening</string>
 
-    <string name="wizard_own">my own</string>
-    <string name="wizard_own_limits">my own limits</string>
-    <string name="wizard_own_premise">write my own</string>
-    <string name="wizard_own_cast">someone of my own</string>
-    <string name="wizard_own_use">use</string>
+    <string name="wizard_own">Custom</string>
+    <string name="wizard_own_limits">Custom limit</string>
+    <string name="wizard_own_premise">Custom premise</string>
+    <string name="wizard_own_cast">Custom character</string>
+    <string name="wizard_own_use">Use</string>
     <string name="wizard_own_cancel">Cancel</string>
 
-    <string name="wizard_own_hint_genre">a genre of your own</string>
-    <string name="wizard_own_hint_twist">a twist of your own</string>
-    <string name="wizard_own_hint_tone">like a lullaby</string>
-    <string name="wizard_own_hint_setting">a place of your own</string>
-    <string name="wizard_own_hint_limits">no harm to animals</string>
-    <string name="wizard_own_hint_premise">how it begins</string>
+    <string name="wizard_own_hint_genre">Your genre</string>
+    <string name="wizard_own_hint_twist">Your twist</string>
+    <string name="wizard_own_hint_tone">e.g. like a lullaby</string>
+    <string name="wizard_own_hint_setting">Your setting</string>
+    <string name="wizard_own_hint_limits">e.g. no harm to animals</string>
+    <string name="wizard_own_hint_premise">Your premise</string>
 
-    <string name="wizard_die">Surprise me</string>
+    <string name="wizard_die">Random</string>
     <string name="wizard_die_premise">Reroll</string>
-    <string name="wizard_die_cast">Other people</string>
+    <string name="wizard_die_cast">New characters</string>
     <string name="wizard_back">Back</string>
     <string name="wizard_next">Next</string>
 
     <string name="wizard_you">YOU</string>
     <string name="wizard_edit">Edit</string>
-    <string name="wizard_done">done</string>
+    <string name="wizard_done">Done</string>
     <string name="wizard_reroll_line">Reroll %1$s</string>
 
     <string name="wizard_line_role">ROLE</string>
@@ -49,33 +46,33 @@
     <string name="wizard_line_flaw">FLAW</string>
     <string name="wizard_line_good_at">GOOD AT</string>
     <string name="wizard_line_habit">HABIT</string>
-    <string name="wizard_line_voice">VOICE</string>
+    <string name="wizard_line_voice">QUOTE</string>
     <string name="wizard_line_secret">SECRET</string>
     <string name="wizard_secret_sealed">Sealed secret</string>
-    <string name="wizard_someone">Someone</string>
-    <string name="wizard_cast_take">take them</string>
-    <string name="wizard_cast_taken">in the story</string>
+    <string name="wizard_someone">Character</string>
+    <string name="wizard_cast_take">Add</string>
+    <string name="wizard_cast_taken">Added</string>
     <plurals name="wizard_cast_count">
-        <item quantity="one">%1$d of %2$d in the story</item>
-        <item quantity="other">%1$d of %2$d in the story</item>
+        <item quantity="one">%1$d of %2$d added</item>
+        <item quantity="other">%1$d of %2$d added</item>
     </plurals>
 
     <string name="wizard_dial_desire">DESIRE</string>
     <string name="wizard_dial_violence">VIOLENCE</string>
-    <string name="wizard_desire_unspoken">unspoken</string>
-    <string name="wizard_desire_close">close</string>
-    <string name="wizard_desire_all_the_way">all the way</string>
+    <string name="wizard_desire_unspoken">Implied</string>
+    <string name="wizard_desire_close">Fade to black</string>
+    <string name="wizard_desire_all_the_way">Explicit</string>
     <string name="wizard_violence_offstage">offstage</string>
-    <string name="wizard_violence_felt">felt</string>
-    <string name="wizard_violence_shown">shown</string>
-    <string name="wizard_limits_note">and %1$s</string>
+    <string name="wizard_violence_felt">On page</string>
+    <string name="wizard_violence_shown">Graphic</string>
+    <string name="wizard_limits_note">Also: %1$s</string>
 
     <string name="wizard_premise_label">Premise</string>
-    <string name="wizard_premise_hint">in your own words…</string>
-    <string name="wizard_opening_label">The opening</string>
+    <string name="wizard_premise_hint">Write a premise</string>
+    <string name="wizard_opening_label">Opening</string>
     <string name="wizard_opening_hint">Write how the story begins</string>
-    <string name="wizard_opening_write">Write it for me</string>
-    <string name="wizard_opening_continue">Continue my text</string>
+    <string name="wizard_opening_write">Generate</string>
+    <string name="wizard_opening_continue">Continue text</string>
     <string name="wizard_opening_writing">Writing…</string>
     <!-- What tapping the text does while a model writes it, read out by screen readers. -->
     <string name="wizard_opening_stop_and_edit">Stop and edit</string>
@@ -90,13 +87,13 @@
     <string name="wizard_failure_storage">Storage error</string>
     <string name="wizard_failure_unexpected">Something went wrong</string>
     <string name="wizard_failure_no_model">Choose a model first</string>
-    <string name="wizard_failure_unusable">Nothing usable came back</string>
-    <string name="wizard_failure_no_provider">No provider takes these settings</string>
-    <string name="wizard_failure_refused">The provider declined</string>
-    <string name="wizard_failure_interrupted">Writing broke off</string>
-    <string name="wizard_failure_schema_mismatch">The answer didn\'t fit</string>
+    <string name="wizard_failure_unusable">Unusable reply</string>
+    <string name="wizard_failure_no_provider">No provider supports these settings</string>
+    <string name="wizard_failure_refused">Provider refused the request</string>
+    <string name="wizard_failure_interrupted">Reply cut off</string>
+    <string name="wizard_failure_schema_mismatch">Reply in the wrong format</string>
 
-    <string name="wizard_model_idle">with %1$s</string>
+    <string name="wizard_model_idle">Model: %1$s</string>
     <string name="wizard_model_writing">%1$s is writing…</string>
     <string name="wizard_model_none">Choose a model</string>
     <string name="wizard_stop">Stop</string>
@@ -113,7 +110,7 @@
     <string name="choice_custom_resume">Resume your draft</string>
 
     <string name="seeded_hint">Tap an underlined part to change it</string>
-    <string name="seeded_die">Another seed</string>
+    <string name="seeded_die">New seed</string>
     <string name="seeded_people_prompt">Characters</string>
     <string name="seeded_optional">Optional</string>
     <string name="seeded_leave_note">Going back discards the opening. Your choices are kept.</string>

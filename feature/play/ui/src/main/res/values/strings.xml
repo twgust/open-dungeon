@@ -3,7 +3,7 @@
     <string name="play_back">Back</string>
 
     <string name="play_you">YOU</string>
-    <string name="play_you_hint">Write what you do, or leave it empty</string>
+    <string name="play_you_hint">Your action (optional)</string>
     <string name="play_edit_beat">Edit this beat</string>
     <string name="play_editing">EDITING THIS BEAT</string>
     <string name="play_editing_hint">Empty. Tap Delete beat to remove it.</string>
@@ -15,7 +15,7 @@
     <string name="play_guide_label">GUIDE FOR THE NEXT BEAT</string>
     <string name="play_guide_help">Not shown in the story. Used once, for the next beat the AI writes, then cleared.</string>
     <string name="play_guide_hint">e.g. She lies about the coins</string>
-    <string name="play_reason_label">WHAT WAS WRONG WITH THE LAST BEAT</string>
+    <string name="play_reason_label">REASON FOR RETRY</string>
     <string name="play_reason_help">The AI writes the last beat again with this in mind. Not shown in the story.</string>
     <string name="play_reason_hint">e.g. She gives in too easily</string>
     <string name="play_guide">GUIDE</string>
@@ -54,8 +54,8 @@
     <string name="play_stay">Keep generating</string>
     <string name="play_leave">Stop and leave</string>
 
-    <string name="play_missing_title">This story is gone.</string>
-    <string name="play_missing_note">It may have been removed. Nothing else changed.</string>
+    <string name="play_missing_title">Story not found</string>
+    <string name="play_missing_note">It may have been deleted.</string>
     <string name="play_unreadable_title">Couldn’t open this story.</string>
     <string name="play_open_again">Try again</string>
 
@@ -64,11 +64,11 @@
     <string name="play_failure_unexpected">Something went wrong. Nothing changed.</string>
 
     <string name="play_cause_no_model">Choose a model first.</string>
-    <string name="play_cause_unusable">Nothing usable came back.</string>
-    <string name="play_cause_no_provider">No provider takes these settings.</string>
-    <string name="play_cause_refused">The provider declined.</string>
-    <string name="play_cause_interrupted">Writing broke off.</string>
-    <string name="play_cause_schema_mismatch">The answer didn’t fit.</string>
+    <string name="play_cause_unusable">Unusable reply.</string>
+    <string name="play_cause_no_provider">No provider supports these settings.</string>
+    <string name="play_cause_refused">Provider refused the request.</string>
+    <string name="play_cause_interrupted">Reply cut off.</string>
+    <string name="play_cause_schema_mismatch">Reply in the wrong format.</string>
     <string name="play_cause_storage_full">Storage is full.</string>
     <string name="play_cause_storage">The story couldn’t be read.</string>
 </resources>
