@@ -12,6 +12,7 @@ dependencies {
     api(projects.domain.openrouter)
 
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.turbine)
     testImplementation(testFixtures(projects.domain.story))
     testImplementation(testFixtures(projects.domain.openrouter))

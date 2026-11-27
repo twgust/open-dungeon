@@ -94,7 +94,7 @@ public data class SeededControls(
     val canRoll: Boolean,
     /** A model is writing something that stopping would cut short. */
     val canStop: Boolean,
-    /** The step takes the player's own words in its "my own" pill. */
+    /** The step takes the player's own words in its "Custom" pill. */
     val takesOwnWords: Boolean,
 )
 

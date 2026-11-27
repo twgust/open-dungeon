@@ -21,7 +21,7 @@ public interface SentenceBuilder {
      */
     public fun whole(choices: StoryChoices): Sentence
 
-    public enum class Ending(public val text: String) { Comma(","), Period("."), None("") }
+    public enum class Ending(public val text: String) { Period("."), None("") }
 }
 
 @Inject
