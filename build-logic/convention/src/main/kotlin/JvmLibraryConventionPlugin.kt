@@ -6,6 +6,7 @@ import dev.opendungeon.buildlogic.useJUnitPlatform
 import dev.opendungeon.buildlogic.version
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.BasePluginExtension
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
@@ -21,6 +22,11 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
             val javaVersion = org.gradle.api.JavaVersion.toVersion(libs.version("jvmTarget"))
             sourceCompatibility = javaVersion
             targetCompatibility = javaVersion
+        }
+        // Jars are named after the module's path, not its last segment: :domain:generation and
+        // :data:generation would otherwise both be generation.jar, which breaks any distribution of an app module.
+        extensions.configure<BasePluginExtension> {
+            archivesName.set(path.removePrefix(":").replace(':', '-'))
         }
         extensions.configure<KotlinJvmProjectExtension> {
             explicitApi()
