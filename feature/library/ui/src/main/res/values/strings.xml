@@ -13,5 +13,6 @@
 
     <string name="library_rename_failed">Couldn’t save the title.</string>
     <string name="library_delete_failed">Couldn’t delete the story. It’s back in the list.</string>
+    <string name="library_undo_failed">Couldn’t bring the story back.</string>
     <string name="library_storage_full">Storage is full.</string>
 </resources>

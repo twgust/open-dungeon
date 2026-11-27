@@ -1,7 +1,7 @@
 package dev.opendungeon.feature.library.domain
 
 import dev.opendungeon.core.model.Outcome
-import dev.opendungeon.domain.drafting.NameStory
+import dev.opendungeon.domain.drafting.NameUntitledStories
 import dev.opendungeon.domain.story.Story
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StoryRepository
@@ -11,7 +11,6 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -26,13 +25,17 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * The stored stories, with what the player changed on top until storage catches up: a title being kept
- * shows at once, and a deleted story is hidden while the delete can be taken back and until it is gone.
+ * shows at once, a deleted story leaves at once and an undone one comes back at once.
+ *
+ * Deleting is storage's trash, not a timer here: a story is trashed at once and restored on undo, so
+ * what the player sees survives the app dying at any moment. The undo window only decides how long
+ * Undo is offered. The trash is emptied as a library opens, so nothing deleted in an earlier session
+ * can still be brought back.
  *
  * Every verb is called from the screen's thread and changes [local] before it returns, so the checks
  * below see each verb's effect before the next verb arrives.
@@ -40,32 +43,34 @@ import kotlin.time.Duration.Companion.seconds
 internal class DefaultLibrary(
     private val scope: CoroutineScope,
     private val stories: StoryRepository,
-    private val nameStory: NameStory,
+    nameUntitled: NameUntitledStories,
     private val undoWindow: Duration = UNDO_WINDOW,
 ) : Library {
 
     /** What the player changed that storage does not show yet. */
     private data class Local(
         val editing: Edit? = null,
-        /** Titles being kept, by story, until the stored title is the same. */
+        /** Titles being kept, by story, until storage holds them. */
         val renamed: Map<StoryId, String> = emptyMap(),
-        /** Stories deleted: while they can be taken back, and after, until they leave storage. */
-        val hidden: Set<StoryId> = emptySet(),
+        /** Stories deleted, until storage no longer lists them. */
+        val deleted: Set<StoryId> = emptySet(),
+        /** Stories undone, as they were listed, until storage lists them again. */
+        val restored: Map<StoryId, StorySummary> = emptyMap(),
         val undo: StoryId? = null,
     )
 
     private data class Edit(val story: StoryId, val text: String)
 
-    /** A delete that is waiting out its undo window. */
-    private class Removal(val story: StoryId, var undone: Boolean = false) {
-        lateinit var job: Job
-    }
-
     private val local = MutableStateFlow(Local())
 
     /** The stories as stored, once read. */
     private val stored = MutableStateFlow<List<StorySummary>?>(null)
-    private var removal: Removal? = null
+
+    /** Each story as last listed, so an undone story comes back as the player saw it. */
+    private val lastSeen = HashMap<StoryId, StorySummary>()
+
+    /** Ends the offer of [Local.undo]. */
+    private var undoOffer: Job? = null
 
     override val state: StateFlow<LibraryState> = combine(stored.filterNotNull(), local, ::render)
         .stateIn(scope, SharingStarted.Eagerly, LibraryState())
@@ -73,27 +78,22 @@ internal class DefaultLibrary(
     private val failureChannel = Channel<LibraryFailure>(Channel.BUFFERED)
     override val failures: Flow<LibraryFailure> = failureChannel.receiveAsFlow()
 
-    /** Stories to name, in the order they were found untitled. */
-    private val toName = Channel<StoryId>(Channel.UNLIMITED)
-    private val asked = HashSet<StoryId>()
-
     init {
+        // Before anything can be deleted here, so only earlier sessions' deletes are emptied. A failure
+        // only leaves them in the trash, unseen, until the next library.
+        scope.launch { stories.emptyTrash() }
         stories.stories
-            .onEach { list ->
-                stored.value = list
-                settle(list)
-                list.filter { it.title == null && asked.add(it.id) }.forEach { toName.trySend(it.id) }
+            .onEach { listed ->
+                stored.value = listed
+                settle(listed)
             }
             .launchIn(scope)
-        scope.launch {
-            // A failure leaves the story untitled; the next library asks again.
-            for (story in toName) nameStory(story)
-        }
+        scope.launch { nameUntitled() }
     }
 
     override fun edit(story: StoryId) {
-        val shown = visible(story) ?: return
         if (local.value.editing != null) return
+        val shown = visible(story) ?: return
         local.update { it.copy(editing = Edit(story, shown.title.orEmpty())) }
     }
 
@@ -125,53 +125,70 @@ internal class DefaultLibrary(
         local.update { it.copy(editing = null) }
     }
 
-    override fun delete() {
-        val edit = local.value.editing ?: return
-        if (visible(edit.story) == null) return cancelEdit()
-        // The delete waiting before this one can no longer be taken back: its window ends now.
-        removal?.job?.cancel()
-        local.update { it.copy(editing = null, hidden = it.hidden + edit.story, undo = edit.story) }
-        val next = Removal(edit.story)
-        removal = next
-        next.job = scope.launch {
-            try {
-                delay(undoWindow)
-            } finally {
-                // Also when the library closes inside the window: what the player deleted stays deleted.
-                if (!next.undone) withContext(NonCancellable) { removeForGood(next.story) }
+    override fun delete(story: StoryId) {
+        val shown = visible(story) ?: return
+        local.update { now ->
+            now.copy(
+                editing = now.editing?.takeUnless { it.story == story },
+                deleted = now.deleted + story,
+                restored = now.restored - story,
+                undo = story,
+            )
+        }
+        offerUndo(story)
+        scope.launch {
+            val result = stories.trash(story)
+            if (result is Outcome.Failure) {
+                local.update { now ->
+                    now.copy(
+                        deleted = now.deleted - story,
+                        // Listed again as it was, whether or not storage has caught up with the delete.
+                        restored = now.restored + (story to shown),
+                        undo = now.undo?.takeUnless { it == story },
+                    )
+                }
+                failureChannel.send(LibraryFailure.Delete(result.error))
             }
         }
     }
 
     override fun undoDelete() {
-        val pending = removal ?: return
-        if (local.value.undo != pending.story) return
-        pending.undone = true
-        pending.job.cancel()
-        removal = null
-        local.update { it.copy(hidden = it.hidden - pending.story, undo = null) }
+        val story = local.value.undo ?: return
+        val shown = lastSeen[story] ?: return
+        undoOffer?.cancel()
+        local.update { now ->
+            now.copy(deleted = now.deleted - story, restored = now.restored + (story to shown), undo = null)
+        }
+        scope.launch {
+            val result = stories.restore(story)
+            if (result is Outcome.Failure) {
+                local.update { now -> now.copy(deleted = now.deleted + story, restored = now.restored - story) }
+                failureChannel.send(LibraryFailure.Undo(result.error))
+            }
+        }
     }
 
-    private suspend fun removeForGood(story: StoryId) {
-        local.update { if (it.undo == story) it.copy(undo = null) else it }
-        if (removal?.story == story) removal = null
-        val result = stories.remove(story)
-        if (result is Outcome.Failure) {
-            local.update { it.copy(hidden = it.hidden - story) }
-            failureChannel.send(LibraryFailure.Delete(result.error))
+    /** Offers [story] back for the undo window; a later delete's offer replaces it. */
+    private fun offerUndo(story: StoryId) {
+        undoOffer?.cancel()
+        undoOffer = scope.launch {
+            delay(undoWindow)
+            local.update { if (it.undo == story) it.copy(undo = null) else it }
         }
     }
 
     /**
-     * Forgets what storage now shows by itself: a title it holds, a story it no longer has. A story whose
-     * delete can still be taken back stays hidden.
+     * Forgets what storage now shows by itself: a title it holds, a delete it no longer lists, an undo it
+     * lists again.
      */
-    private fun settle(list: List<StorySummary>) {
-        val byId = list.associateBy(StorySummary::id)
+    private fun settle(listed: List<StorySummary>) {
+        val byId = listed.associateBy(StorySummary::id)
+        lastSeen.putAll(byId)
         local.update { now ->
             now.copy(
-                renamed = now.renamed.filterNot { (id, title) -> byId[id].let { it == null || it.title == title } },
-                hidden = now.hidden.filterTo(HashSet()) { it in byId || it == removal?.story },
+                renamed = now.renamed.filterNot { (id, title) -> byId[id]?.title == title },
+                deleted = now.deleted.filterTo(HashSet()) { it in byId },
+                restored = now.restored.filterKeys { it !in byId },
             )
         }
     }
@@ -186,8 +203,11 @@ internal class DefaultLibrary(
     private fun canSave(title: String, story: StorySummary): Boolean = title.isNotEmpty() && title != story.title
 
     private fun render(stored: List<StorySummary>, local: Local): LibraryState {
-        val shown = stored
-            .filterNot { it.id in local.hidden }
+        val listed =
+            stored.filterNot { it.id in local.deleted } + local.restored.values.filter { it.id !in local.deleted }
+        val shown = listed
+            .distinctBy(StorySummary::id)
+            .sortedWith(PLAYED_LAST_FIRST)
             .map { story -> local.renamed[story.id]?.let { story.copy(title = it) } ?: story }
         val editing = local.editing?.let { edit ->
             shown.firstOrNull { it.id == edit.story }?.let { story ->
@@ -205,12 +225,17 @@ internal class DefaultLibrary(
     private companion object {
         /** Long enough to read the line and reach Undo, short enough not to linger. */
         val UNDO_WINDOW = 6.seconds
+
+        /** Storage's own order, kept for stories shown before storage lists them again. */
+        val PLAYED_LAST_FIRST = compareByDescending(StorySummary::playedAt).thenBy { it.id.value }
     }
 }
 
 @Inject
 @ContributesBinding(AppScope::class)
-public class DefaultLibraryFactory(private val stories: StoryRepository, private val nameStory: NameStory) :
-    Library.Factory {
-    override fun create(scope: CoroutineScope): Library = DefaultLibrary(scope, stories, nameStory)
+public class DefaultLibraryFactory(
+    private val stories: StoryRepository,
+    private val nameUntitled: NameUntitledStories,
+) : Library.Factory {
+    override fun create(scope: CoroutineScope): Library = DefaultLibrary(scope, stories, nameUntitled)
 }

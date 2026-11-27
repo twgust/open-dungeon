@@ -32,6 +32,8 @@ public data class StoryEntity(
     @ColumnInfo(name = "composer_beat_id") val composerBeatId: String?,
     /** When the story was last saved, in epoch milliseconds: the library lists the latest first. */
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    /** When the story was put in the trash, in epoch milliseconds; `null` while it is not. */
+    @ColumnInfo(name = "deleted_at") val deletedAt: Long? = null,
 )
 
 /**

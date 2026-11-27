@@ -70,7 +70,7 @@ class DefaultConnectInteractorTest {
     ) = DefaultConnectInteractor(backgroundScope, account, catalog, setup, stories)
 
     @Test
-    fun `home is the library once a story exists, and not after the last is removed`() =
+    fun `home is the library once a story exists, and not after the last is deleted`() =
         runTest(UnconfinedTestDispatcher()) {
             val stories = InMemoryStories()
             val interactor =
@@ -80,7 +80,7 @@ class DefaultConnectInteractorTest {
             stories.begin(Story(StoryId("salt"), StorySetup(), listOf(opening)), from = DraftId("draft"))
             assertEquals(loaded.copy(showsLibrary = true), interactor.state.value)
 
-            stories.remove(StoryId("salt"))
+            stories.trash(StoryId("salt"))
             assertEquals(loaded, interactor.state.value)
         }
 

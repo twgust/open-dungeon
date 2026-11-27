@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
  * are ignored, so a double tap or a tap that lands late changes nothing.
  *
  * Every verb shows its effect at once. If a change cannot be kept, the state goes back to how it was and
- * [failures] says why. Untitled stories are named by the drafting model in the background, one at a time,
- * once per library; a story it cannot name stays untitled until the next.
+ * [failures] says why. While the library is open, untitled stories are named in the background.
+ * Deleting puts a story in the trash, which is emptied the next time a library opens.
  */
 public interface Library {
 
@@ -36,12 +36,12 @@ public interface Library {
     public fun cancelEdit()
 
     /**
-     * Deletes the story being edited. It leaves the list at once and can be taken back with [undoDelete]
-     * for a few seconds; only then is it removed for good. A second delete removes the first for good.
+     * Deletes [story]: it leaves the list at once, and closes its title if open. [LibraryState.undo]
+     * offers it back for a few seconds, or until the next delete.
      */
-    public fun delete()
+    public fun delete(story: StoryId)
 
-    /** Takes back the last delete, while [LibraryState.undo] offers it. */
+    /** Brings back the story [LibraryState.undo] offers. */
     public fun undoDelete()
 
     /** Makes a library whose work lives as long as [scope], typically a screen's. */
@@ -57,7 +57,7 @@ public data class LibraryState(
     /** The one played last first, as they now stand: a rename shows at once, a deleted story is gone. */
     val stories: List<StorySummary> = emptyList(),
     val editing: TitleEdit? = null,
-    /** The story just deleted, while the delete can be taken back. */
+    /** The story just deleted, while it is offered back. */
     val undo: StoryId? = null,
 )
 
@@ -78,4 +78,7 @@ public sealed interface LibraryFailure {
 
     /** The story is back in the list, as it was. */
     public data class Delete(override val error: StorageError) : LibraryFailure
+
+    /** The story stays deleted. */
+    public data class Undo(override val error: StorageError) : LibraryFailure
 }

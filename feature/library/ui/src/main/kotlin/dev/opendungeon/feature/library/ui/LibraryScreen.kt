@@ -62,13 +62,16 @@ import dev.opendungeon.core.designsystem.component.GhostTextButton
 import dev.opendungeon.core.designsystem.component.InkButton
 import dev.opendungeon.core.designsystem.component.PaperField
 import dev.opendungeon.core.designsystem.component.PaperNotices
+import dev.opendungeon.core.designsystem.component.SheetButton
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.core.ui.rememberEditedText
+import dev.opendungeon.core.ui.rememberNow
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StorySummary
 import dev.opendungeon.feature.library.domain.LibraryState
 import dev.opendungeon.feature.library.domain.TitleEdit
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlin.time.Instant
 
 @Composable
 fun LibraryRoute(
@@ -104,13 +107,14 @@ internal fun LibraryScreen(
     onIntent: (LibraryIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val now = rememberNow()
     Box(modifier.fillMaxSize()) {
         // Reading the list takes a moment; an empty page is calmer than a flash of a spinner.
         if (!library.loading) {
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = BAR_ROOM)) {
                 items(library.stories, key = { it.id.value }) { story ->
                     Column(Modifier.animateItem()) {
-                        StoryRow(story, onIntent)
+                        StoryRow(story, now, onIntent)
                         HorizontalDivider(color = Paper.colors.divider)
                     }
                 }
@@ -123,7 +127,7 @@ internal fun LibraryScreen(
 }
 
 @Composable
-private fun StoryRow(story: StorySummary, onIntent: (LibraryIntent) -> Unit) {
+private fun StoryRow(story: StorySummary, now: Instant, onIntent: (LibraryIntent) -> Unit) {
     val colors = Paper.colors
     Row(
         Modifier
@@ -147,7 +151,7 @@ private fun StoryRow(story: StorySummary, onIntent: (LibraryIntent) -> Unit) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.animateContentSize(),
             )
-            Text(story.meta(), style = Paper.type.caption, color = colors.muted, maxLines = 1)
+            Text(story.meta(now), style = Paper.type.caption, color = colors.muted, maxLines = 1)
         }
         GhostIconButton(
             PaperIcons.Pen,
@@ -160,10 +164,10 @@ private fun StoryRow(story: StorySummary, onIntent: (LibraryIntent) -> Unit) {
 
 /** "Gothic, salt-punk · 2 hours ago", or the time alone for a story with no genre. */
 @Composable
-private fun StorySummary.meta(): String {
+private fun StorySummary.meta(now: Instant): String {
     val played = DateUtils.getRelativeTimeSpanString(
         playedAt.toEpochMilliseconds(),
-        System.currentTimeMillis(),
+        now.toEpochMilliseconds(),
         DateUtils.MINUTE_IN_MILLIS,
     ).toString()
     val genres = genres.joinToString(", ") { it.text }
@@ -245,7 +249,7 @@ private fun TitleSheet(edit: TitleEdit, onIntent: (LibraryIntent) -> Unit) {
             ) {
                 GhostTextButton(
                     stringResource(R.string.library_delete_story),
-                    onClick = { onIntent(LibraryIntent.Delete) },
+                    onClick = { onIntent(LibraryIntent.Delete(edit.story)) },
                 )
                 Spacer(Modifier.weight(1f))
                 SheetButton(stringResource(R.string.library_cancel), onClick = { onIntent(LibraryIntent.CancelEdit) })
@@ -271,29 +275,8 @@ private fun LaunchedFocus(focus: FocusRequester) {
     }
 }
 
-/** A sans pill for the sheet's answers; [ink] marks the one that acts. Faded while it cannot act. */
-@Composable
-private fun SheetButton(text: String, onClick: () -> Unit, ink: Boolean = false, enabled: Boolean = true) {
-    val colors = Paper.colors
-    Box(
-        Modifier
-            .heightIn(min = 48.dp)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA)
-            .clip(CircleShape)
-            .border(1.dp, if (ink) colors.ink else colors.hairline, CircleShape)
-            .background(if (ink) colors.ink else colors.card, CircleShape)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 18.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text, style = Paper.type.button, color = if (ink) colors.onInk else colors.ink)
-    }
-}
-
 @Composable
 private fun titleStyle(): TextStyle = Paper.type.cardName.copy(fontSize = 25.sp, lineHeight = 1.15.em)
 
 /** Room under the list for the bottom bar, so the last story is never hidden behind New story. */
 private val BAR_ROOM = 84.dp
-
-private const val DISABLED_ALPHA = 0.3f

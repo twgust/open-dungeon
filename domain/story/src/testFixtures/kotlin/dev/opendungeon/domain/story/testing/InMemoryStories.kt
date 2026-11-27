@@ -30,17 +30,22 @@ public class InMemoryStories(vararg stories: Story) : StoryRepository {
     /** Every write, in order, as "rename salt: The Salt Key" and the like. */
     public val writes: MutableList<String> = mutableListOf()
 
+    /** The story as stored, in the trash or not. */
     public fun stored(id: StoryId): Story? = stored.value[id]?.story
+
+    public fun isTrashed(id: StoryId): Boolean = stored.value[id]?.trashed == true
 
     override val stories: Flow<List<StorySummary>> = stored.map { entries ->
         entries.values
+            .filterNot(Entry::trashed)
             .sortedWith(compareByDescending<Entry> { it.playedAt }.thenBy { it.story.id.value })
-            .map { (story, playedAt) ->
+            .map { (story, playedAt, _) ->
                 StorySummary(story.id, story.title, story.setup.genres, Instant.fromEpochMilliseconds(playedAt))
             }
     }
 
-    override suspend fun story(id: StoryId): Outcome<Story?, StorageError> = Outcome.Success(stored(id))
+    override suspend fun story(id: StoryId): Outcome<Story?, StorageError> =
+        Outcome.Success(stored.value[id]?.takeUnless(Entry::trashed)?.story)
 
     override suspend fun begin(story: Story, from: DraftId): Outcome<Unit, StorageError> =
         write("begin ${story.id.value}") {
@@ -60,8 +65,16 @@ public class InMemoryStories(vararg stories: Story) : StoryRepository {
     override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
         write("name ${id.value}: $title") { retitle(id) { it ?: title } }
 
-    override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = write("remove ${id.value}") {
-        stored.value -= id
+    override suspend fun trash(id: StoryId): Outcome<Unit, StorageError> = write("trash ${id.value}") {
+        stored.value[id]?.let { stored.value += id to it.copy(trashed = true) }
+    }
+
+    override suspend fun restore(id: StoryId): Outcome<Unit, StorageError> = write("restore ${id.value}") {
+        stored.value[id]?.let { stored.value += id to it.copy(trashed = false) }
+    }
+
+    override suspend fun emptyTrash(): Outcome<Unit, StorageError> = write("empty trash") {
+        stored.value = stored.value.filterValues { !it.trashed }
     }
 
     private fun retitle(id: StoryId, title: (String?) -> String) {
@@ -80,5 +93,5 @@ public class InMemoryStories(vararg stories: Story) : StoryRepository {
         return Outcome.Success(Unit)
     }
 
-    private data class Entry(val story: Story, val playedAt: Long)
+    private data class Entry(val story: Story, val playedAt: Long, val trashed: Boolean = false)
 }

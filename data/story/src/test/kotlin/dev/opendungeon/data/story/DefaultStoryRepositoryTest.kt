@@ -150,20 +150,38 @@ class DefaultStoryRepositoryTest {
     }
 
     @Test
-    fun `a removed story is gone with its people and beats, and a late save does not bring it back`() = runTest {
+    fun `a trashed story is hidden until restored, and comes back exactly as it was`() = runTest {
         repository.begin(salt, from = DraftId("none"))
+        repository.rename(salt.id, "The Salt Key")
 
-        assertEquals(Outcome.Success(Unit), repository.remove(salt.id))
-        assertEquals(Outcome.Success(Unit), repository.remove(salt.id), "removing what is gone succeeds")
-
+        assertEquals(Outcome.Success(Unit), repository.trash(salt.id))
         assertNull(repository.story(salt.id).value())
         assertEquals(emptyList(), repository.stories.first())
-        assertIs<Outcome.Failure<StorageError>>(repository.save(salt))
+
+        // A new repository, as after the app restarts inside the undo window.
+        val restarted = DefaultStoryRepository(database.storyDao(), clock)
+        assertEquals(Outcome.Success(Unit), restarted.restore(salt.id))
+        assertEquals(salt.copy(title = "The Salt Key"), restarted.story(salt.id).value())
+        assertEquals(listOf(salt.id), restarted.stories.first().map(StorySummary::id))
+    }
+
+    @Test
+    fun `emptying the trash removes trashed stories with their people and beats, and nothing else`() = runTest {
+        repository.begin(salt, from = DraftId("none"))
+        val kept = salt.copy(id = StoryId("kept"), beats = listOf(Beat(BeatId("k1"), Beat.Kind.Opening, "Snow.")))
+        repository.begin(kept, from = DraftId("none"))
+        repository.trash(salt.id)
+
+        assertEquals(Outcome.Success(Unit), repository.emptyTrash())
+
+        assertEquals(Outcome.Success(Unit), repository.restore(salt.id), "restoring what is gone changes nothing")
         assertNull(repository.story(salt.id).value())
-        for (table in listOf("story", "story_character", "story_beat")) {
+        assertEquals(kept, repository.story(kept.id).value())
+        assertIs<Outcome.Failure<StorageError>>(repository.save(salt), "a late save does not bring it back")
+        for ((table, count) in listOf("story" to 1, "story_character" to 3, "story_beat" to 1)) {
             database.openHelper.readableDatabase.query("SELECT COUNT(*) FROM $table").use { rows ->
                 rows.moveToFirst()
-                assertEquals(0, rows.getInt(0), "$table is empty")
+                assertEquals(count, rows.getInt(0), "$table holds only the kept story")
             }
         }
     }

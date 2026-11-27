@@ -40,7 +40,7 @@ class LibraryViewModelTest {
 
         override fun cancelEdit() = record("cancelEdit")
 
-        override fun delete() = record("delete")
+        override fun delete(story: StoryId) = record("delete(${story.value})")
 
         override fun undoDelete() = record("undoDelete")
 
@@ -68,12 +68,12 @@ class LibraryViewModelTest {
             LibraryIntent.TypeTitle("Brine"),
             LibraryIntent.SaveTitle,
             LibraryIntent.CancelEdit,
-            LibraryIntent.Delete,
+            LibraryIntent.Delete(StoryId("snow")),
             LibraryIntent.Undo,
         ).forEach(viewModel::onIntent)
 
         assertEquals(
-            listOf("edit(salt)", "typeTitle(Brine)", "saveTitle", "cancelEdit", "delete", "undoDelete"),
+            listOf("edit(salt)", "typeTitle(Brine)", "saveTitle", "cancelEdit", "delete(snow)", "undoDelete"),
             library.calls,
         )
     }
