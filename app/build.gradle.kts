@@ -40,6 +40,8 @@ dependencies {
     implementation(projects.feature.connect.ui)
     implementation(projects.feature.models.domain)
     implementation(projects.feature.models.ui)
+    implementation(projects.feature.play.domain)
+    implementation(projects.feature.play.ui)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

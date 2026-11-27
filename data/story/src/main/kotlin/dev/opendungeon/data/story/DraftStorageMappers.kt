@@ -1,7 +1,6 @@
 package dev.opendungeon.data.story
 
 import dev.opendungeon.core.database.story.DraftCharacterEntity
-import dev.opendungeon.core.database.story.PhraseColumns
 import dev.opendungeon.core.database.story.StoredDraft
 import dev.opendungeon.core.database.story.StoryDraftEntity
 import dev.opendungeon.domain.story.CastMember
@@ -10,14 +9,11 @@ import dev.opendungeon.domain.story.CharacterId
 import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
-import dev.opendungeon.domain.story.Phrase
-import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
 
 /*
- * Enum values are written as fixed storage names rather than `name`, so renaming a Kotlin constant
- * never changes what is on disk. An unknown name falls back to the safest reading instead of failing
- * the whole draft.
+ * Enum values are written as fixed storage names (see StorageNames.kt), and an unknown name falls back
+ * to the safest reading instead of failing the whole draft.
  */
 
 internal fun StoryDraft.toStored(): StoredDraft = StoredDraft(
@@ -58,10 +54,8 @@ internal fun StoredDraft.toDomain(): StoryDraft {
         tone = draft.tone?.toPhrase(),
         setting = draft.setting?.toPhrase(),
         limits = ContentLimits(
-            desire = ContentLimits.Desire.entries.firstOrNull { it.storageName == draft.limitDesire }
-                ?: ContentLimits.Desire.Unspoken,
-            violence = ContentLimits.Violence.entries.firstOrNull { it.storageName == draft.limitViolence }
-                ?: ContentLimits.Violence.Offstage,
+            desire = desireOf(draft.limitDesire),
+            violence = violenceOf(draft.limitViolence),
             note = draft.limitNote,
         ),
         premise = draft.premise?.toPhrase(),
@@ -81,11 +75,6 @@ private object Slot {
     const val PROTAGONIST = "protagonist"
     const val CAST = "cast"
 }
-
-private fun Phrase.toColumns() = PhraseColumns(text = text, own = this is Phrase.Own)
-
-/** Blank own words cannot be built, so a blank stored phrase is read back as an offered one. */
-private fun PhraseColumns.toPhrase(): Phrase = if (own && text.isNotBlank()) Phrase.Own(text) else Phrase.Offered(text)
 
 private fun Character.toEntity(
     draftId: DraftId,
@@ -113,11 +102,7 @@ private fun Character.toEntity(
     habit = habit,
     goodAt = goodAt,
     secretKind = secret.storageName,
-    secretText = when (val hidden = secret) {
-        Secret.None -> null
-        is Secret.Known -> hidden.text
-        is Secret.Sealed -> hidden.text
-    },
+    secretText = secret.storedText,
 )
 
 private fun DraftCharacterEntity.toCharacter() = Character(
@@ -134,13 +119,8 @@ private fun DraftCharacterEntity.toCharacter() = Character(
     flaw = flaw,
     habit = habit,
     goodAt = goodAt,
-    secret = secretText?.let { text ->
-        // Anything but a known secret stays hidden: a secret must never leak through a misread.
-        if (secretKind == KNOWN_SECRET) Secret.Known(text) else Secret.Sealed(text)
-    } ?: Secret.None,
+    secret = secretOf(secretKind, secretText),
 )
-
-private const val KNOWN_SECRET = "known"
 
 private val CreationStep.storageName: String
     get() = when (this) {
@@ -155,29 +135,8 @@ private val CreationStep.storageName: String
         CreationStep.Opening -> "opening"
     }
 
-private val ContentLimits.Desire.storageName: String
-    get() = when (this) {
-        ContentLimits.Desire.Unspoken -> "unspoken"
-        ContentLimits.Desire.Close -> "close"
-        ContentLimits.Desire.AllTheWay -> "all_the_way"
-    }
-
-private val ContentLimits.Violence.storageName: String
-    get() = when (this) {
-        ContentLimits.Violence.Offstage -> "offstage"
-        ContentLimits.Violence.Felt -> "felt"
-        ContentLimits.Violence.Shown -> "shown"
-    }
-
 private val CastMember.Origin.storageName: String
     get() = when (this) {
         CastMember.Origin.Offered -> "offered"
         CastMember.Origin.Own -> "own"
-    }
-
-private val Secret.storageName: String
-    get() = when (this) {
-        Secret.None -> "none"
-        is Secret.Known -> KNOWN_SECRET
-        is Secret.Sealed -> "sealed"
     }

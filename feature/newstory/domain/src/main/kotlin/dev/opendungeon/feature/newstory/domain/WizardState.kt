@@ -5,6 +5,7 @@ import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Sentence
 import dev.opendungeon.domain.story.StorageError
+import dev.opendungeon.domain.story.StoryId
 
 /** Everything the wizard shows for the current step, already decided. Screens only render it. */
 public data class WizardState(
@@ -59,8 +60,8 @@ public sealed interface WizardOutcome {
     /** Back from the first step, or before a draft could be opened: creation is left, the draft kept. */
     public data object Left : WizardOutcome
 
-    /** The player began the story. [draft] is saved, opening and all, for play to start from. */
-    public data class Begun(val draft: DraftId) : WizardOutcome
+    /** The player began the story: the draft is now [story], its opening the first beat, for play to start from. */
+    public data class Begun(val story: StoryId) : WizardOutcome
 
     /** Something the player did could not be kept. The state already shows the draft as it was before. */
     public data class Failed(val failure: WizardFailure) : WizardOutcome

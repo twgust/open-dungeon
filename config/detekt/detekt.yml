@@ -33,6 +33,9 @@ complexity:
     ignoreAnnotated: ['Composable']
   LongMethod:
     ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    # A `when` that hands each intent to its verb is a table, not branching logic.
+    ignoreSimpleWhenEntries: true
   TooManyFunctions:
     # A class's private helpers are its own business; the public surface is what stays small.
     ignorePrivate: true

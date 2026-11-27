@@ -10,6 +10,7 @@
     <string name="connect_refresh">Refresh</string>
     <string name="connect_disconnect">Disconnect</string>
     <string name="connect_new_story">New story</string>
+    <string name="connect_continue_story">Continue story</string>
     <string name="connect_model">Model</string>
     <string name="connect_choose_model">Choose a model</string>
     <string name="connect_change_model">Change model</string>

@@ -8,11 +8,13 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.connect.ui.ConnectRoute
 import dev.opendungeon.feature.models.ui.picker.ModelPickerRoute
 import dev.opendungeon.feature.models.ui.trial.TryRoute
 import dev.opendungeon.feature.models.ui.tuner.ModelTunerRoute
 import dev.opendungeon.feature.newstory.ui.NewStoryRoute
+import dev.opendungeon.feature.play.ui.PlayRoute
 import kotlinx.serialization.Serializable
 
 /** The app's places. Keys are serializable, so the back stack survives the process being recreated. */
@@ -30,6 +32,10 @@ private data object Trial : NavKey
 
 @Serializable
 private data object NewStory : NavKey
+
+/** A story being played. Holds the id's text, since that is what survives the process. */
+@Serializable
+private data class Play(val story: String) : NavKey
 
 /**
  * One back stack for the whole app. Each entry gets its own ViewModel store, so a screen's work, a
@@ -51,6 +57,7 @@ internal fun AppScreens() {
                     onModels = { backStack.add(Models) },
                     onTry = { backStack.add(Trial) },
                     onNewStory = { backStack.add(NewStory) },
+                    onContinueStory = { story -> backStack.add(Play(story.value)) },
                 )
             }
             entry<Models> { ModelPickerRoute(onBack = backStack::pop, onOpenTuning = { backStack.add(Tuning) }) }
@@ -60,13 +67,25 @@ internal fun AppScreens() {
                 NewStoryRoute(
                     onLeave = backStack::pop,
                     onModels = { backStack.add(Models) },
-                    // Play is not built yet. The begun draft is saved, opening and all, and stays the open
-                    // draft, so New story resumes it on the opening until play takes over from here.
-                    onBegin = { backStack.pop() },
+                    // The draft is now a story, so back from play goes home, not to a draft that is gone.
+                    onBegin = { story -> backStack.replaceTop(Play(story.value)) },
+                )
+            }
+            entry<Play> { key ->
+                PlayRoute(
+                    story = StoryId(key.story),
+                    onLeave = backStack::pop,
+                    onModels = { backStack.add(Models) },
                 )
             }
         },
     )
+}
+
+/** Puts [key] in place of the top screen, so back skips the screen it replaced. */
+private fun NavBackStack<NavKey>.replaceTop(key: NavKey) {
+    if (size > 1) removeAt(lastIndex)
+    add(key)
 }
 
 /** Leaves the top screen; the first one stays, since leaving it is leaving the app. */

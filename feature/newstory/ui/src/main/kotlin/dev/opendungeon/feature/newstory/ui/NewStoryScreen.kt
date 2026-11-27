@@ -58,8 +58,8 @@ import dev.opendungeon.core.ui.errorMessages
 import dev.opendungeon.domain.drafting.DraftingError
 import dev.opendungeon.domain.generation.GenerationError
 import dev.opendungeon.domain.story.CreationStep
-import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.StorageError
+import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.LeaveAnswer
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.domain.WizardFailure
@@ -79,7 +79,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 fun NewStoryRoute(
     onLeave: () -> Unit,
     onModels: () -> Unit,
-    onBegin: (DraftId) -> Unit,
+    onBegin: (StoryId) -> Unit,
     viewModel: StoryWizardViewModel = metroViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -89,7 +89,7 @@ fun NewStoryRoute(
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             WizardEffect.Leave -> onLeave()
-            is WizardEffect.Begin -> onBegin(effect.draft)
+            is WizardEffect.Begin -> onBegin(effect.story)
             WizardEffect.OpenModels -> onModels()
             is WizardEffect.ShowFailure -> {
                 notices.currentSnackbarData?.dismiss()

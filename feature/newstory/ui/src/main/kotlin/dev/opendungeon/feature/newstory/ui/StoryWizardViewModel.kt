@@ -50,7 +50,7 @@ class StoryWizardViewModel(wizardFactory: StoryWizard.Factory) :
 
     private fun WizardOutcome.toEffect(): WizardEffect = when (this) {
         WizardOutcome.Left -> WizardEffect.Leave
-        is WizardOutcome.Begun -> WizardEffect.Begin(draft)
+        is WizardOutcome.Begun -> WizardEffect.Begin(story)
         is WizardOutcome.Failed -> WizardEffect.ShowFailure(failure)
     }
 }

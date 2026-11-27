@@ -46,7 +46,10 @@ public interface StoryWizard {
     /** Takes back what a model last added, where the step allows it, as long as nothing changed since. */
     public fun undo()
 
-    /** Begins the story from the last step, once the step is complete and nothing is writing. */
+    /**
+     * Begins the story from the last step, once the step is complete and nothing is writing. The draft
+     * becomes a story and closes: the wizard does nothing after it.
+     */
     public fun begin()
 
     /** Answers [WizardState.confirmingLeave]: staying lets the writing go on, leaving stops it and steps back. */

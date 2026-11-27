@@ -12,6 +12,12 @@ public value class DraftId(public val value: String)
 @JvmInline
 public value class CharacterId(public val value: String)
 
+@JvmInline
+public value class StoryId(public val value: String)
+
+@JvmInline
+public value class BeatId(public val value: String)
+
 /** Mints identifiers. An interface so tests can make ids predictable. */
 public interface IdGenerator {
     public fun next(): String

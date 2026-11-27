@@ -1,0 +1,37 @@
+## system
+You narrate an interactive story. The player plays its main character, who is addressed as "you", in the second person and the present tense.
+You write one beat at a time: one or two short paragraphs that move the story on from exactly where it stands. When the story ends on the player's turn, the beat answers that turn.
+Use only what the story gives you and what follows from it. Keep the people as they are written, and bring them in by name.
+Never decide what the player does, says, thinks or feels beyond what their turns state. Stop at a moment the player can answer.
+The player may give a direction for the next beat. Follow it, but never mention it or quote it.
+Answer with the beat alone: plain prose, no title, no headings, no preamble, no list of choices.
+
+## user
+Story: A gothic story, twisted by a heist, set in a salt-war border town.
+
+Premise: You owe the salt-wardens a cargo you sank.
+
+Limits:
+- Desire can go as far as a kiss and a closing door. Anything further happens off the page.
+- Violence can happen on the page, felt through its weight and cost, without lingering on wounds.
+- Everyone involved in desire is an adult.
+
+People in the story:
+- Maren Kask, reliquary keeper
+  - Wants: To buy back the relic her brother sold
+  - Habit: Counts the coins twice when she is lying
+
+The story so far:
+
+[Story]
+Rain falls on the salt flats and does not wash them.
+
+[The player's turn]
+You lay your hand over hers, on the key.
+
+[Story]
+Maren does not pull away.
+
+The player's direction for the next beat, not part of the story: Maren lies about the coins.
+
+Write the next beat.

@@ -4,7 +4,7 @@ import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.SentenceBuilder
-import dev.opendungeon.domain.story.StoryDraft
+import dev.opendungeon.domain.story.StoryChoices
 
 /**
  * The story so far, as every drafting prompt describes it to the model: the sentence, the player's
@@ -13,16 +13,16 @@ import dev.opendungeon.domain.story.StoryDraft
  */
 internal class StoryBrief(private val sentences: SentenceBuilder) {
 
-    fun of(draft: StoryDraft, withPremise: Boolean): String = buildString {
+    fun of(choices: StoryChoices, withPremise: Boolean): String = buildString {
         append("Story: ")
-        append(sentences.story(draft, before = CreationStep.Premise, ending = SentenceBuilder.Ending.Period).text)
-        draft.protagonist?.let { you ->
+        append(sentences.story(choices, before = CreationStep.Premise, ending = SentenceBuilder.Ending.Period).text)
+        choices.protagonist?.let { you ->
             append("\n\nThe player's character, addressed as \"you\":")
             YOU_LINES.forEach { line -> you[line]?.let { append("\n- ${line.label}: $it") } }
         }
-        if (withPremise) draft.premise?.let { append("\n\nPremise: ${it.text}") }
+        if (withPremise) choices.premise?.let { append("\n\nPremise: ${it.text}") }
         append("\n\nLimits:")
-        LimitsInstructions.of(draft.limits).forEach { append("\n- $it") }
+        LimitsInstructions.of(choices.limits).forEach { append("\n- $it") }
     }
 
     private companion object {
@@ -53,3 +53,17 @@ internal val CharacterLine.label: String
 
 /** "Maren Kask, reliquary keeper", or whichever of the two is known. */
 internal fun Character.tag(): String? = listOfNotNull(name, role).joinToString(", ").ifEmpty { null }
+
+/**
+ * Everything the player can see of a person, as story prompts list them. Their secret stays out: the
+ * player reads what the model writes, and a secret in the prompt is one the prose can give away.
+ */
+internal fun Character.sheet(): String = buildString {
+    append(tag() ?: SOMEONE)
+    SHEET_LINES.forEach { line -> this@sheet[line]?.let { append("\n  - ${line.label}: $it") } }
+}
+
+private const val SOMEONE = "Someone"
+
+/** A person's lines after their name and role, which [tag] already gives. */
+private val SHEET_LINES: List<CharacterLine> = CharacterLine.entries - CharacterLine.Name - CharacterLine.Role

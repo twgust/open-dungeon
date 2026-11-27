@@ -4,8 +4,6 @@ import dev.opendungeon.domain.generation.ChatMessage
 import dev.opendungeon.domain.generation.TextEvent
 import dev.opendungeon.domain.generation.TextGenerator
 import dev.opendungeon.domain.generation.TextRequest
-import dev.opendungeon.domain.story.Character
-import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.SentenceBuilder
 import dev.opendungeon.domain.story.StoryDraft
 import dev.zacsweers.metro.AppScope
@@ -118,15 +116,6 @@ internal class OpeningPrompt(private val brief: StoryBrief) {
         ),
     )
 
-    /**
-     * Everything the player can see of a person. Their secret stays out: the player reads the opening,
-     * and a secret in the prompt is one the prose can give away.
-     */
-    private fun Character.sheet(): String = buildString {
-        append(tag() ?: SOMEONE)
-        SHEET_LINES.forEach { line -> this@sheet[line]?.let { append("\n  - ${line.label}: $it") } }
-    }
-
     private companion object {
         val SYSTEM =
             """
@@ -141,10 +130,5 @@ internal class OpeningPrompt(private val brief: StoryBrief) {
         const val CONTINUE =
             "Continue the opening from exactly where it stops, in the same voice, in one or two short " +
                 "paragraphs. Do not repeat or rewrite any of it. If it stops mid-sentence, finish that sentence first."
-
-        const val SOMEONE = "Someone"
-
-        /** A person's lines after their name and role, which [tag] already gives. */
-        val SHEET_LINES: List<CharacterLine> = CharacterLine.entries - CharacterLine.Name - CharacterLine.Role
     }
 }
