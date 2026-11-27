@@ -486,20 +486,14 @@ internal class DefaultStoryWizard(
     }
 
     /**
-     * The words above the step's prompt. On the sentence steps it is the story so far, left open for the
-     * prompt to finish ("A gothic noir story," above "twisted by"); on the limits it is the whole story
-     * clause, and on the opening it is the whole story, cast and all. The other steps lead with their
-     * prompt alone.
+     * The words above the step's heading: the story so far, as a closed sentence the heading does not
+     * continue ("A gothic noir story." above "Twist"). On the limits it is the whole story clause, and
+     * on the opening the whole story, cast and all. The other steps lead with their heading alone.
      */
     private fun leadOf(draft: StoryDraft): Sentence = when (draft.step) {
         CreationStep.Genre, CreationStep.Premise, CreationStep.Cast -> Sentence.Empty
-        CreationStep.Twist, CreationStep.Starring, CreationStep.Tone, CreationStep.Setting ->
-            sentences.story(draft, before = draft.step, ending = SentenceBuilder.Ending.Comma)
-        CreationStep.Limits -> sentences.story(
-            draft,
-            before = CreationStep.Limits,
-            ending = SentenceBuilder.Ending.Period,
-        )
+        CreationStep.Twist, CreationStep.Starring, CreationStep.Tone, CreationStep.Setting, CreationStep.Limits ->
+            sentences.story(draft, before = draft.step, ending = SentenceBuilder.Ending.Period)
         CreationStep.Opening -> sentences.whole(draft)
     }
 

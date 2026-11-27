@@ -46,7 +46,7 @@
     <string name="tuner_no_model">Choose a model first</string>
     <string name="tuner_parameters">Parameters</string>
     <string name="tuner_no_parameters">No parameters to set</string>
-    <string name="tuner_capabilities">Also accepts</string>
+    <string name="tuner_capabilities">Other parameters</string>
     <string name="tuner_providers">Providers</string>
     <string name="tuner_retry">Retry</string>
     <string name="tuner_off">Off</string>
@@ -61,7 +61,7 @@
     <string name="tuner_any_number">Any whole number</string>
     <string name="tuner_top_k_off">0 is off</string>
     <string name="tuner_default_value">Default %1$s</string>
-    <string name="tuner_uptime">%1$s%% up</string>
+    <string name="tuner_uptime">%1$s%% uptime</string>
     <string name="setting_temperature">Temperature</string>
     <string name="setting_top_p">Top P</string>
     <string name="setting_top_k">Top K</string>
@@ -99,11 +99,11 @@
     <string name="try_cut_off">Stopped at the token limit</string>
     <string name="try_usage">%1$d in · %2$d out</string>
     <string name="try_usage_reasoning">%1$d in · %2$d out · %3$d reasoning</string>
-    <string name="try_leave_title">Stop the reply?</string>
-    <string name="try_leave">Leave</string>
-    <string name="try_stay">Stay</string>
-    <string name="generation_no_provider">No provider takes these settings</string>
-    <string name="generation_refused">The provider declined</string>
-    <string name="generation_interrupted">The reply broke off</string>
-    <string name="generation_schema_mismatch">The answer didn\'t fit</string>
+    <string name="try_leave_title">Stop generating and leave?</string>
+    <string name="try_leave">Stop and leave</string>
+    <string name="try_stay">Keep generating</string>
+    <string name="generation_no_provider">No provider supports these settings</string>
+    <string name="generation_refused">Provider refused the request</string>
+    <string name="generation_interrupted">Reply cut off</string>
+    <string name="generation_schema_mismatch">Reply in the wrong format</string>
 </resources>

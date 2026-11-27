@@ -65,7 +65,7 @@ class DefaultStoryWizardTest {
         assertEquals(CreationStep.Genre, state.step)
         assertEquals(DraftId("draft-1"), state.draft)
         assertEquals(setOf(DraftId("draft-1")), repository.drafts.value.keys)
-        assertTrue(state.lead.isEmpty(), "the genre step leads with its prompt alone")
+        assertTrue(state.lead.isEmpty(), "the genre step leads with its heading alone")
     }
 
     @Test
@@ -88,7 +88,7 @@ class DefaultStoryWizardTest {
 
         val state = wizard.current()
         assertEquals(CreationStep.Starring, state.step)
-        assertEquals("A gothic story, twisted by a heist,", state.lead.text)
+        assertEquals("A gothic story, twisted by a heist.", state.lead.text)
         assertEquals(Phrase.Offered("a heist"), repository.stored.twist)
     }
 
@@ -111,7 +111,7 @@ class DefaultStoryWizardTest {
 
         val state = wizard.current()
         assertEquals(CreationStep.Twist, state.step)
-        assertEquals("A gothic noir story,", state.lead.text)
+        assertEquals("A gothic noir story.", state.lead.text)
     }
 
     @Test

@@ -36,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -221,8 +220,7 @@ private fun Stage(state: WizardState, onIntent: (WizardIntent) -> Unit, modifier
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        val sentence = remember(state.lead) { state.lead.toAnnotatedString() }
-        val lead = if (sentence.isEmpty() && copy.lead != null) AnnotatedString(stringResource(copy.lead)) else sentence
+        val lead = remember(state.lead) { state.lead.toAnnotatedString() }
         SentenceLead(lead = lead, prompt = stringResource(copy.prompt))
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
             val writing = state.writer?.writing == true
@@ -312,7 +310,6 @@ private fun BottomBar(state: WizardState, onIntent: (WizardIntent) -> Unit) {
 /** The words each step puts around its body. */
 internal data class StepCopy(
     val prompt: Int,
-    val lead: Int? = null,
     val ownLabel: Int = R.string.wizard_own,
     val ownHint: Int? = null,
     val die: Int = R.string.wizard_die,
@@ -322,11 +319,7 @@ internal data class StepCopy(
 )
 
 internal fun stepCopy(step: CreationStep): StepCopy = when (step) {
-    CreationStep.Genre -> StepCopy(
-        R.string.wizard_prompt_genre,
-        lead = R.string.wizard_lead_genre,
-        ownHint = R.string.wizard_own_hint_genre,
-    )
+    CreationStep.Genre -> StepCopy(R.string.wizard_prompt_genre, ownHint = R.string.wizard_own_hint_genre)
     CreationStep.Twist -> StepCopy(R.string.wizard_prompt_twist, ownHint = R.string.wizard_own_hint_twist)
     CreationStep.Starring -> StepCopy(R.string.wizard_prompt_starring, topPadding = 32.dp)
     CreationStep.Tone -> StepCopy(R.string.wizard_prompt_tone, ownHint = R.string.wizard_own_hint_tone)
