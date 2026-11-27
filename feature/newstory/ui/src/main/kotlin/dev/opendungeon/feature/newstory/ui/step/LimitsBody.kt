@@ -18,28 +18,27 @@ import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.component.ChoicePill
 import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.feature.newstory.domain.Choice
-import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R
-import dev.opendungeon.feature.newstory.ui.WizardIntent
 
+/** The two dials and the player's own note. Both wizards show it, so it speaks in choices, not intents. */
 @Composable
-internal fun LimitsBody(body: StepBody.Limits, onIntent: (WizardIntent) -> Unit) {
+internal fun LimitsBody(limits: ContentLimits, onPick: (Choice) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.dp)) {
         Dial(
             label = stringResource(R.string.wizard_dial_desire),
             levels = ContentLimits.Desire.entries.map { level ->
-                Level(stringResource(level.labelRes()), level == body.limits.desire, Choice.Desire(level))
+                Level(stringResource(level.labelRes()), level == limits.desire, Choice.Desire(level))
             },
-            onIntent = onIntent,
+            onPick = onPick,
         )
         Dial(
             label = stringResource(R.string.wizard_dial_violence),
             levels = ContentLimits.Violence.entries.map { level ->
-                Level(stringResource(level.labelRes()), level == body.limits.violence, Choice.Violence(level))
+                Level(stringResource(level.labelRes()), level == limits.violence, Choice.Violence(level))
             },
-            onIntent = onIntent,
+            onPick = onPick,
         )
-        body.limits.note?.let { note ->
+        limits.note?.let { note ->
             Text(
                 stringResource(R.string.wizard_limits_note, note),
                 style = Paper.type.own,
@@ -52,7 +51,7 @@ internal fun LimitsBody(body: StepBody.Limits, onIntent: (WizardIntent) -> Unit)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Dial(label: String, levels: List<Level>, onIntent: (WizardIntent) -> Unit) {
+private fun Dial(label: String, levels: List<Level>, onPick: (Choice) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             label,
@@ -68,7 +67,7 @@ private fun Dial(label: String, levels: List<Level>, onIntent: (WizardIntent) ->
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             levels.forEach { level ->
-                ChoicePill(level.text, picked = level.picked, onClick = { onIntent(WizardIntent.Pick(level.choice)) })
+                ChoicePill(level.text, picked = level.picked, onClick = { onPick(level.choice) })
             }
         }
     }

@@ -1,0 +1,22 @@
+## system
+You cast the two people an interactive story starts with: the player's character, addressed as "you", and the person the premise names, "them".
+Where the player describes a person, keep everything they said and fill in the rest so it fits. Where they do not, invent someone who fits the premise.
+Give both a name that fits the story's world, something concrete they want, a habit with a trigger ("when …, she …"), and one line they would say.
+Give them a secret that would change the story if it came out; it is never shown to the player. The player's character has no secret: leave it empty.
+Keep every field to a phrase or one short sentence.
+
+## user
+Story: A comedy story, told playfully.
+
+Premise: Caught forging a doctor’s note by your grandmother.
+
+Limits:
+- Desire can be written all the way, explicitly, when the story leads there.
+- Violence happens offstage. Show only what it leaves behind.
+- Everyone involved in desire is an adult.
+- The player also asks: no harm to animals
+
+You, the player's character: the player says "a nurse on her third night shift"
+Them, your grandmother: invent them to fit the premise
+
+Cast you and them.

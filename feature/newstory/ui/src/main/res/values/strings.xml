@@ -104,4 +104,17 @@
     <string name="wizard_leave">Stop and go back</string>
     <string name="wizard_stay">Keep generating</string>
     <string name="wizard_leave_note_opening">Going back discards the generated text. Your own text is kept.</string>
+
+    <string name="choice_title">New story</string>
+    <string name="choice_seeded">Seeded</string>
+    <string name="choice_seeded_note">Fill in a premise and play</string>
+    <string name="choice_custom">Custom</string>
+    <string name="choice_custom_new">Build it step by step</string>
+    <string name="choice_custom_resume">Resume your draft</string>
+
+    <string name="seeded_hint">Tap an underlined part to change it</string>
+    <string name="seeded_die">Another seed</string>
+    <string name="seeded_people_prompt">Who’s who?</string>
+    <string name="seeded_optional">Optional</string>
+    <string name="seeded_leave_note">Going back discards the opening. Your choices are kept.</string>
 </resources>

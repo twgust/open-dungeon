@@ -129,7 +129,7 @@ fun NewStoryScreen(
 }
 
 /** The words for each failure, read while composing so effects can show them later. */
-private class FailureMessages(
+internal class FailureMessages(
     private val storageFull: String,
     private val storage: String,
     private val unexpected: String,
@@ -164,7 +164,7 @@ private class FailureMessages(
 }
 
 @Composable
-private fun failureMessages() = FailureMessages(
+internal fun failureMessages() = FailureMessages(
     storageFull = stringResource(R.string.wizard_failure_storage_full),
     storage = stringResource(R.string.wizard_failure_storage),
     unexpected = stringResource(R.string.wizard_failure_unexpected),
@@ -205,7 +205,9 @@ private fun ColumnScope.StepPage(state: WizardState, onIntent: (WizardIntent) ->
     }
     val body = state.body
     if (body is StepBody.Opening) OpeningBar(state, body, onIntent) else BottomBar(state, onIntent)
-    if (state.confirmingLeave) LeaveSheet(note = stepCopy(state.step).leaveNote, onIntent = onIntent)
+    if (state.confirmingLeave) {
+        LeaveSheet(note = stepCopy(state.step).leaveNote, onAnswer = { onIntent(WizardIntent.AnswerLeave(it)) })
+    }
 }
 
 @Composable
@@ -227,7 +229,7 @@ private fun Stage(state: WizardState, onIntent: (WizardIntent) -> Unit, modifier
             when (val body = state.body) {
                 is StepBody.Words -> WordsBody(body, onIntent)
                 is StepBody.Starring -> StarringBody(body, onIntent)
-                is StepBody.Limits -> LimitsBody(body, onIntent)
+                is StepBody.Limits -> LimitsBody(body.limits, onPick = { onIntent(WizardIntent.Pick(it)) })
                 is StepBody.Premise -> PremiseBody(body, writing, onIntent)
                 is StepBody.Cast -> CastBody(body, writing, onIntent)
                 // The opening lays out its own page, around a text that fills it.
@@ -244,10 +246,10 @@ private fun Stage(state: WizardState, onIntent: (WizardIntent) -> Unit, modifier
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LeaveSheet(note: Int?, onIntent: (WizardIntent) -> Unit) {
+internal fun LeaveSheet(note: Int?, onAnswer: (LeaveAnswer) -> Unit) {
     val colors = Paper.colors
     ModalBottomSheet(
-        onDismissRequest = { onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Stay)) },
+        onDismissRequest = { onAnswer(LeaveAnswer.Stay) },
         containerColor = colors.card,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.hairline) },
@@ -267,12 +269,10 @@ private fun LeaveSheet(note: Int?, onIntent: (WizardIntent) -> Unit) {
                 Modifier.fillMaxWidth().padding(top = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
             ) {
-                SheetButton(stringResource(R.string.wizard_stay), onClick = {
-                    onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Stay))
-                })
+                SheetButton(stringResource(R.string.wizard_stay), onClick = { onAnswer(LeaveAnswer.Stay) })
                 SheetButton(
                     stringResource(R.string.wizard_leave),
-                    onClick = { onIntent(WizardIntent.AnswerLeave(LeaveAnswer.Leave)) },
+                    onClick = { onAnswer(LeaveAnswer.Leave) },
                     ink = true,
                 )
             }
