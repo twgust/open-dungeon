@@ -20,10 +20,10 @@ class SentenceBuilderTest {
 
     @Test
     fun `builds only the clauses before the current step`() {
-        assertEquals("A gothic noir story,", builder.story(full, before = CreationStep.Twist, Ending.Comma).text)
+        assertEquals("A gothic noir story.", builder.story(full, before = CreationStep.Twist, Ending.Period).text)
         assertEquals(
-            "A gothic noir story, twisted by a heist, starring a disgraced smuggler,",
-            builder.story(full, before = CreationStep.Tone, Ending.Comma).text,
+            "A gothic noir story, twisted by a heist, starring a disgraced smuggler.",
+            builder.story(full, before = CreationStep.Tone, Ending.Period).text,
         )
         assertEquals(
             "A gothic noir story, twisted by a heist, starring a disgraced smuggler, told tenderly, " +

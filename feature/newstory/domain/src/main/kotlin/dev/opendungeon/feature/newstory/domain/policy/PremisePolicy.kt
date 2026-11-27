@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * "It begins": the premise, editable in place. A model writes it on arrival and again with the die; the
+ * The premise, editable in place. A model writes it on arrival and again with the die; the
  * player can edit it or write their own instead. The step needs text to be left.
  */
 @Inject

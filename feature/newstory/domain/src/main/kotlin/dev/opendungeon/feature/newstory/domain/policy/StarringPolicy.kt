@@ -35,7 +35,7 @@ public class StarringPolicy(
 
     override val step: CreationStep = CreationStep.Starring
 
-    /** Roles only ever come from the offered list, by a tap or the die, so there is no "my own" role to show. */
+    /** Roles only ever come from the offered list, by a tap or the die, so there is no "Custom" role to show. */
     override fun body(draft: StoryDraft): StepBody {
         val role = draft.protagonist?.role
         return StepBody.Starring(
