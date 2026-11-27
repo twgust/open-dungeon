@@ -12,6 +12,11 @@ public data class Story(
     /** The player's direction for the next beat a model writes. Used once, then cleared. */
     val guide: String? = null,
     val unsent: Unsent = Unsent(),
+    /**
+     * What the story is called, as the player or the drafting model named it; `null` until it is named.
+     * Set apart from play: saving the story never writes it, see [StoryRepository].
+     */
+    val title: String? = null,
 ) {
     init {
         require(beats.isNotEmpty()) { "A story begins with its opening, so it always has a beat" }
@@ -26,6 +31,9 @@ public data class Story(
 
         /** Longest direction, or reason for a retry: pointers, not a script. */
         public const val MAX_NOTE_LENGTH: Int = 1_000
+
+        /** Longest title: one line in the library, with room for a long name. */
+        public const val MAX_TITLE_LENGTH: Int = 60
     }
 }
 

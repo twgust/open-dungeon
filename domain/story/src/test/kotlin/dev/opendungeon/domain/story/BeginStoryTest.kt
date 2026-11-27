@@ -16,7 +16,7 @@ class BeginStoryTest {
 
         override suspend fun story(id: StoryId): Outcome<Story?, StorageError> = Outcome.Success(null)
 
-        override val latest: Flow<StoryId?> = flowOf(null)
+        override val stories: Flow<List<StorySummary>> = flowOf(emptyList())
 
         override suspend fun begin(story: Story, from: DraftId): Outcome<Unit, StorageError> {
             if (fails) return Outcome.Failure(StorageError.Full)
@@ -25,6 +25,13 @@ class BeginStoryTest {
         }
 
         override suspend fun save(story: Story): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+
+        override suspend fun rename(id: StoryId, title: String): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+
+        override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
+            Outcome.Success(Unit)
+
+        override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = Outcome.Success(Unit)
     }
 
     private class CountingIds : IdGenerator {

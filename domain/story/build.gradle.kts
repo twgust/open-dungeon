@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.opendungeon.jvm.library)
     alias(libs.plugins.opendungeon.metro)
+    `java-test-fixtures`
 }
 
 dependencies {

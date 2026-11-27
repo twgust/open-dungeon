@@ -4,18 +4,21 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@Suppress("TooManyFunctions") // One query per thing done to a story; Room needs each as its own function.
 public interface StoryDao {
 
     @Transaction
     @Query("SELECT * FROM story WHERE id = :id")
     public suspend fun get(id: String): StoredStory?
 
-    @Query("SELECT id FROM story ORDER BY updated_at DESC LIMIT 1")
-    public fun latest(): Flow<String?>
+    /** Ties on the time are broken by id, so the order never flickers between two reads. */
+    @Query("SELECT id, title, genres, updated_at FROM story ORDER BY updated_at DESC, id")
+    public fun listings(): Flow<List<StoryListing>>
 
     /**
      * Writes a new story whole and removes the draft it began from, in one transaction, so a reader never
@@ -34,8 +37,8 @@ public interface StoryDao {
      * are: [changed] are upserted and [removed] deleted by id, so a long story is never written whole again.
      */
     @Transaction
-    public suspend fun update(story: StoryEntity, changed: List<BeatEntity>, removed: List<String>) {
-        upsertStory(story)
+    public suspend fun update(story: StoryProgress, changed: List<BeatEntity>, removed: List<String>) {
+        updateProgress(story)
         // One by one rather than `IN (…)`: older SQLite caps a statement at 999 arguments.
         removed.forEach { deleteBeat(it) }
         upsertBeats(changed)
@@ -43,8 +46,8 @@ public interface StoryDao {
 
     /** Writes a story's row and all of its beats, replacing whatever beats it had, in one transaction. */
     @Transaction
-    public suspend fun replace(story: StoryEntity, beats: List<BeatEntity>) {
-        upsertStory(story)
+    public suspend fun replace(story: StoryProgress, beats: List<BeatEntity>) {
+        updateProgress(story)
         deleteBeats(story.id)
         upsertBeats(beats)
     }
@@ -52,6 +55,23 @@ public interface StoryDao {
     /** An upsert rather than a replace: a replace deletes the row first, and the cascade takes its children. */
     @Upsert
     public suspend fun upsertStory(story: StoryEntity)
+
+    /**
+     * Writes what changes in play, and only when the story is still stored: a story removed meanwhile is
+     * not brought back, and its beats then fail their foreign key rather than be written without it.
+     */
+    @Update(entity = StoryEntity::class)
+    public suspend fun updateProgress(progress: StoryProgress)
+
+    @Query("UPDATE story SET title = :title WHERE id = :id")
+    public suspend fun rename(id: String, title: String)
+
+    @Query("UPDATE story SET title = :title WHERE id = :id AND title IS NULL")
+    public suspend fun nameIfUntitled(id: String, title: String)
+
+    /** Its people and beats go with it, by the cascade. */
+    @Query("DELETE FROM story WHERE id = :id")
+    public suspend fun delete(id: String)
 
     @Insert
     public suspend fun insertCharacters(characters: List<StoryCharacterEntity>)

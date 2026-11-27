@@ -7,6 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class StoryMigrationTest {
@@ -33,6 +34,25 @@ class StoryMigrationTest {
                     rows.moveToFirst()
                     assertEquals(0, rows.getInt(0), "$table starts empty")
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `stories arrive untitled, with everything else kept`() {
+        helper.createDatabase(NAME, 4).use { db ->
+            db.execSQL(
+                "INSERT INTO story (id, genres, limit_desire, limit_violence, unsent_turn, updated_at) " +
+                    "VALUES ('s', '[]', 'close', 'felt', 'I wait.', 7)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(NAME, 5, true).use { db ->
+            db.query("SELECT id, title, unsent_turn, updated_at FROM story").use { rows ->
+                rows.moveToFirst()
+                assertEquals("s", rows.getString(0))
+                assertTrue(rows.isNull(1))
+                assertEquals("I wait." to 7L, rows.getString(2) to rows.getLong(3))
             }
         }
     }

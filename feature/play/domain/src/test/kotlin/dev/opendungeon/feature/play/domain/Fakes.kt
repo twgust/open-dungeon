@@ -18,6 +18,7 @@ import dev.opendungeon.domain.story.Story
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StoryRepository
 import dev.opendungeon.domain.story.StorySetup
+import dev.opendungeon.domain.story.StorySummary
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Instant
 
 internal val storyteller = DraftingModel(aiModel("acme/storyteller", name = "Storyteller"), Tuning.Untouched)
 
@@ -48,22 +50,24 @@ internal class CountingIds(private val prefix: String = "id") : IdGenerator {
  * [StorageError.Full], so tests can walk the failure paths without a database.
  */
 internal class InMemoryStories(vararg stories: Story) : StoryRepository {
-    val stories = MutableStateFlow(stories.associateBy(Story::id))
+    val byId = MutableStateFlow(stories.associateBy(Story::id))
     val saved = mutableListOf<Story>()
     var failReads = 0
     var failSaves = 0
 
-    fun stored(id: StoryId = salt.id): Story = stories.value.getValue(id)
+    fun stored(id: StoryId = salt.id): Story = byId.value.getValue(id)
 
     override suspend fun story(id: StoryId): Outcome<Story?, StorageError> {
         if (failReads > 0) {
             failReads--
             return Outcome.Failure(StorageError.Full)
         }
-        return Outcome.Success(stories.value[id])
+        return Outcome.Success(byId.value[id])
     }
 
-    override val latest: Flow<StoryId?> = this.stories.map { it.keys.lastOrNull() }
+    override val stories: Flow<List<StorySummary>> = byId.map { stories ->
+        stories.values.map { StorySummary(it.id, it.title, it.setup.genres, Instant.DISTANT_PAST) }
+    }
 
     override suspend fun begin(story: Story, from: DraftId): Outcome<Unit, StorageError> = save(story)
 
@@ -73,9 +77,16 @@ internal class InMemoryStories(vararg stories: Story) : StoryRepository {
             return Outcome.Failure(StorageError.Full)
         }
         saved += story
-        stories.value += story.id to story
+        byId.value += story.id to story
         return Outcome.Success(Unit)
     }
+
+    override suspend fun rename(id: StoryId, title: String): Outcome<Unit, StorageError> = error("Play never names")
+
+    override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
+        error("Play never names")
+
+    override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = error("Play never removes")
 }
 
 /** The drafting model a test sets. */

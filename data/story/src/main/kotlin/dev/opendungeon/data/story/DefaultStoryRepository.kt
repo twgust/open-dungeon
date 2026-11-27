@@ -10,6 +10,7 @@ import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.Story
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StoryRepository
+import dev.opendungeon.domain.story.StorySummary
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -39,10 +40,9 @@ public class DefaultStoryRepository(private val dao: StoryDao, private val clock
     /** The beats as stored, by story, as far as this repository knows. Guarded by [lock]. */
     private val written = HashMap<StoryId, List<BeatEntity>>()
 
-    /** A database that cannot be read offers no story to continue, rather than fail whoever follows it. */
-    override val latest: Flow<StoryId?> = dao.latest()
-        .map { id -> id?.let(::StoryId) }
-        .catch { cause -> if (cause is SQLiteException) emit(null) else throw cause }
+    override val stories: Flow<List<StorySummary>> = dao.listings()
+        .map { rows -> rows.map { it.toSummary() } }
+        .catch { cause -> if (cause is SQLiteException) emit(emptyList()) else throw cause }
         .distinctUntilChanged()
 
     override suspend fun story(id: StoryId): Outcome<Story?, StorageError> = lock.withLock {
@@ -59,7 +59,7 @@ public class DefaultStoryRepository(private val dao: StoryDao, private val clock
     }
 
     override suspend fun save(story: Story): Outcome<Unit, StorageError> = lock.withLock {
-        val row = story.toEntity(updatedAt = now())
+        val row = story.toProgress(updatedAt = now())
         val beats = story.beatEntities()
         val before = written.remove(story.id)
         val saved = storage {
@@ -77,6 +77,16 @@ public class DefaultStoryRepository(private val dao: StoryDao, private val clock
         // Remembered only once stored: after a failure, the next save writes every beat.
         if (saved is Outcome.Success) written[story.id] = beats
         saved
+    }
+
+    override suspend fun rename(id: StoryId, title: String): Outcome<Unit, StorageError> =
+        storage { dao.rename(id.value, title) }
+
+    override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
+        storage { dao.nameIfUntitled(id.value, title) }
+
+    override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = lock.withLock {
+        storage { dao.delete(id.value) }.also { if (it is Outcome.Success) written.remove(id) }
     }
 
     private fun now(): Long = clock.now().toEpochMilliseconds()

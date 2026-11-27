@@ -4,6 +4,8 @@ import dev.opendungeon.core.database.play.BeatEntity
 import dev.opendungeon.core.database.play.StoredStory
 import dev.opendungeon.core.database.play.StoryCharacterEntity
 import dev.opendungeon.core.database.play.StoryEntity
+import dev.opendungeon.core.database.play.StoryListing
+import dev.opendungeon.core.database.play.StoryProgress
 import dev.opendungeon.domain.story.Beat
 import dev.opendungeon.domain.story.BeatId
 import dev.opendungeon.domain.story.Character
@@ -13,7 +15,9 @@ import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.domain.story.Story
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StorySetup
+import dev.opendungeon.domain.story.StorySummary
 import dev.opendungeon.domain.story.Unsent
+import kotlin.time.Instant
 
 /*
  * As for drafts, enum values are written as fixed storage names, and an unknown name falls back to the
@@ -28,9 +32,10 @@ internal fun Story.toStored(updatedAt: Long): StoredStory = StoredStory(
 )
 
 internal fun Story.toEntity(updatedAt: Long): StoryEntity {
-    val composer = unsent.composer
+    val progress = toProgress(updatedAt)
     return StoryEntity(
         id = id.value,
+        title = title,
         genres = setup.genres.map { it.toColumns() },
         twist = setup.twist?.toColumns(),
         tone = setup.tone?.toColumns(),
@@ -39,6 +44,20 @@ internal fun Story.toEntity(updatedAt: Long): StoryEntity {
         limitDesire = setup.limits.desire.storageName,
         limitViolence = setup.limits.violence.storageName,
         limitNote = setup.limits.note,
+        guide = progress.guide,
+        unsentTurn = progress.unsentTurn,
+        composerKind = progress.composerKind,
+        composerText = progress.composerText,
+        composerBeatId = progress.composerBeatId,
+        updatedAt = updatedAt,
+    )
+}
+
+/** What a save writes of the story's row: see [StoryProgress]. */
+internal fun Story.toProgress(updatedAt: Long): StoryProgress {
+    val composer = unsent.composer
+    return StoryProgress(
+        id = id.value,
         guide = guide,
         unsentTurn = unsent.turn,
         composerKind = composer?.storageName,
@@ -47,6 +66,14 @@ internal fun Story.toEntity(updatedAt: Long): StoryEntity {
         updatedAt = updatedAt,
     )
 }
+
+/** A blank stored title reads as none, so the library never shows an empty line for a name. */
+internal fun StoryListing.toSummary() = StorySummary(
+    id = StoryId(id),
+    title = title?.takeIf(String::isNotBlank),
+    genres = genres.map { it.toPhrase() },
+    playedAt = Instant.fromEpochMilliseconds(updatedAt),
+)
 
 internal fun Story.beatEntities(): List<BeatEntity> = beats.mapIndexed { index, beat ->
     BeatEntity(id = beat.id.value, storyId = id.value, position = index, kind = beat.kind.storageName, text = beat.text)
@@ -62,6 +89,7 @@ internal fun StoredStory.toDomain(): Story? {
     val bySlot = characters.sortedBy(StoryCharacterEntity::position).groupBy(StoryCharacterEntity::slot)
     return Story(
         id = StoryId(story.id),
+        title = story.title?.takeIf(String::isNotBlank),
         setup = StorySetup(
             genres = story.genres.map { it.toPhrase() },
             twist = story.twist?.toPhrase(),

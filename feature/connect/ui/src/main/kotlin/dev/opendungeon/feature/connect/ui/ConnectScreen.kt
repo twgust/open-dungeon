@@ -37,7 +37,6 @@ import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.KeyInfo
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.core.ui.errorMessages
-import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.connect.domain.Connection
 import dev.opendungeon.feature.connect.domain.ModelChoice
 import dev.opendungeon.feature.connect.domain.Remote
@@ -48,7 +47,7 @@ fun ConnectRoute(
     onModels: () -> Unit,
     onTry: () -> Unit,
     onNewStory: () -> Unit,
-    onContinueStory: (StoryId) -> Unit,
+    library: @Composable (Modifier) -> Unit,
     viewModel: ConnectViewModel = metroViewModel(),
 ) {
     val connection by viewModel.state.collectAsStateWithLifecycle()
@@ -69,11 +68,14 @@ fun ConnectRoute(
         onModels = onModels,
         onTry = onTry,
         onNewStory = onNewStory,
-        onContinueStory = onContinueStory,
+        library = library,
     )
 }
 
-/** Stateless: renders [connection] and reports user actions as [ConnectIntent]s. */
+/**
+ * Stateless: renders [connection] and reports user actions as [ConnectIntent]s. Once a story exists,
+ * home is [library] under the key and the model; until then it offers to start one.
+ */
 @Composable
 fun ConnectScreen(
     connection: Connection,
@@ -82,7 +84,7 @@ fun ConnectScreen(
     onModels: () -> Unit,
     onTry: () -> Unit,
     onNewStory: () -> Unit,
-    onContinueStory: (StoryId) -> Unit,
+    library: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(modifier = modifier, snackbarHost = { PaperNotices(notices) }) { padding ->
@@ -95,8 +97,7 @@ fun ConnectScreen(
                     onIntent = onIntent,
                 )
                 Connection.Validating -> KeyEntry(isValidating = true, error = null, onIntent = onIntent)
-                is Connection.Connected ->
-                    Connected(connection, onIntent, onModels, onTry, onNewStory, onContinueStory)
+                is Connection.Connected -> Connected(connection, onIntent, onModels, onTry, onNewStory, library)
             }
         }
     }
@@ -136,7 +137,7 @@ private fun Connected(
     onModels: () -> Unit,
     onTry: () -> Unit,
     onNewStory: () -> Unit,
-    onContinueStory: (StoryId) -> Unit,
+    library: @Composable (Modifier) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -149,19 +150,18 @@ private fun Connected(
         HorizontalDivider()
         ModelRow(connected.model, onModels)
         HorizontalDivider()
-        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(
-                onClick = onTry,
-                enabled = connected.model is ModelChoice.Chosen,
-                modifier = Modifier.weight(1f),
-            ) { Text(stringResource(R.string.connect_try)) }
-            Button(onClick = onNewStory, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.connect_new_story))
-            }
-        }
-        connected.story?.let { story ->
-            Button(onClick = { onContinueStory(story) }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.connect_continue_story))
+        if (connected.showsLibrary) {
+            library(Modifier.weight(1f))
+        } else {
+            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = onTry,
+                    enabled = connected.model is ModelChoice.Chosen,
+                    modifier = Modifier.weight(1f),
+                ) { Text(stringResource(R.string.connect_try)) }
+                Button(onClick = onNewStory, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.connect_new_story))
+                }
             }
         }
     }
@@ -222,7 +222,7 @@ private fun KeyEntryPreview() = PaperTheme {
         onModels = {},
         onTry = {},
         onNewStory = {},
-        onContinueStory = {},
+        library = {},
     )
 }
 
@@ -241,6 +241,6 @@ private fun ConnectedPreview() = PaperTheme {
         onModels = {},
         onTry = {},
         onNewStory = {},
-        onContinueStory = {},
+        library = {},
     )
 }

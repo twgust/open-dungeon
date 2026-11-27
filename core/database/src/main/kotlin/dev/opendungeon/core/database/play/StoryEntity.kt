@@ -14,6 +14,8 @@ import dev.opendungeon.core.database.story.PhraseColumns
 @Entity(tableName = "story", indices = [Index("updated_at")])
 public data class StoryEntity(
     @PrimaryKey val id: String,
+    /** `null` until the story is named. Written only by renaming or naming, never by a save. */
+    val title: String?,
     val genres: List<PhraseColumns>,
     @Embedded(prefix = "twist_") val twist: PhraseColumns?,
     @Embedded(prefix = "tone_") val tone: PhraseColumns?,
@@ -28,6 +30,28 @@ public data class StoryEntity(
     @ColumnInfo(name = "composer_kind") val composerKind: String?,
     @ColumnInfo(name = "composer_text") val composerText: String?,
     @ColumnInfo(name = "composer_beat_id") val composerBeatId: String?,
-    /** When the story was last saved, in epoch milliseconds: the story to continue is the latest. */
+    /** When the story was last saved, in epoch milliseconds: the library lists the latest first. */
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+/**
+ * What a save writes of a story's row: everything that changes in play, and nothing else. Its choices are
+ * fixed once begun and its title is written apart, so a save can never undo a rename made meanwhile.
+ */
+public data class StoryProgress(
+    val id: String,
+    val guide: String?,
+    @ColumnInfo(name = "unsent_turn") val unsentTurn: String,
+    @ColumnInfo(name = "composer_kind") val composerKind: String?,
+    @ColumnInfo(name = "composer_text") val composerText: String?,
+    @ColumnInfo(name = "composer_beat_id") val composerBeatId: String?,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+/** A story as the library lists it, read without its people or beats. */
+public data class StoryListing(
+    val id: String,
+    val title: String?,
+    val genres: List<PhraseColumns>,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
 )

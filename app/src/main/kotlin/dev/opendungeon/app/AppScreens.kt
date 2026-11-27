@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.connect.ui.ConnectRoute
+import dev.opendungeon.feature.library.ui.LibraryRoute
 import dev.opendungeon.feature.models.ui.picker.ModelPickerRoute
 import dev.opendungeon.feature.models.ui.trial.TryRoute
 import dev.opendungeon.feature.models.ui.tuner.ModelTunerRoute
@@ -57,7 +58,13 @@ internal fun AppScreens() {
                     onModels = { backStack.add(Models) },
                     onTry = { backStack.add(Trial) },
                     onNewStory = { backStack.add(NewStory) },
-                    onContinueStory = { story -> backStack.add(Play(story.value)) },
+                    library = { modifier ->
+                        LibraryRoute(
+                            onOpen = { story -> backStack.add(Play(story.value)) },
+                            onNewStory = { backStack.add(NewStory) },
+                            modifier = modifier,
+                        )
+                    },
                 )
             }
             entry<Models> { ModelPickerRoute(onBack = backStack::pop, onOpenTuning = { backStack.add(Tuning) }) }
