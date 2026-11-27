@@ -235,6 +235,430 @@
         { "key": "who", "kind": "person", "fills": ["a great-aunt you never met", "your best friend", "the richest man in town", "your old teacher", "a woman claiming to be your mother", "your rival"] },
         { "key": "thing", "kind": "thing", "fills": ["a key and an address", "a parrot that knows a secret", "a confession", "a chess game half played", "a list of names", "a train ticket for tomorrow"] }
       ]
+    },
+    {
+      "genre": "Romance", "tone": "wryly",
+      "template": "Your one-night stand is {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your new boss", "the judge in your case", "your sister’s fiancé", "a wanted man", "the priest marrying you on Saturday", "your therapist’s husband", "a very old vampire"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "playfully",
+      "template": "Sent {thing} to your {who} by mistake.", "counterpart": "your {who}",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["a very private photo", "your resignation letter", "a breakup text", "a love poem about their spouse", "your search history", "a confession to a murder", "a voice note from the bath"] },
+        { "key": "who", "kind": "person", "fills": ["boss", "mother", "ex", "parish priest", "landlord", "therapist", "mother-in-law"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "darkly funny",
+      "template": "Your landlord accepts {payment} now.", "counterpart": "your landlord",
+      "blanks": [
+        { "key": "payment", "kind": "thing", "fills": ["favours", "kisses, on account", "blood", "secrets about the other tenants", "your firstborn’s name", "one dance a month", "teeth"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "playfully",
+      "template": "Your neighbours heard {thing} last night.", "counterpart": "the neighbour from next door",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["everything", "the safe word", "the gunshot", "you and your ex", "the séance go wrong", "the argument about the body", "a second voice in your flat"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "wryly",
+      "template": "Your date brought {who}.", "counterpart": "your date",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["their wife", "a lawyer", "their mother", "a hostage", "their other date", "a ghost only you can see", "your ex"] }
+      ]
+    },
+    {
+      "genre": "Drama", "tone": "bitterly",
+      "template": "Your ex is marrying {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your sister", "your mother", "your boss", "your therapist", "a duchess three times their age", "a man you buried in 2019", "the person you cheated with"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "coldly",
+      "template": "Paid to seduce {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["a married senator", "a cardinal", "the rival heiress", "your own spouse", "a famous assassin", "the dragon under the mountain", "the detective hunting you"] }
+      ]
+    },
+    {
+      "genre": "Romance", "tone": "wryly",
+      "template": "You’re marrying {who} for {reason}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your best friend’s ex", "a minor duke", "a mob widow", "a stranger from the bus", "your boss", "the woman who ruined your father", "a ghost"] },
+        { "key": "reason", "kind": "thing", "fills": ["the money", "a visa", "an alibi", "revenge", "a bet", "the inheritance", "their kidney"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "coldly",
+      "template": "{who} wants you back.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your ex-wife", "the cult’s prophet", "the mob boss", "your dead husband", "the devil", "the ringmaster", "the handler who erased you"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "darkly funny",
+      "template": "Your boss wants a word about {thing}.", "counterpart": "your boss",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["the photos from the party", "your search history", "the missing cash", "the body in the break room", "what you did in the lift", "your other job", "their spouse"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "playfully",
+      "template": "Your mother found {thing} in your room.", "counterpart": "your mother",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["handcuffs", "a ransom note", "a second passport", "a love letter from her own husband", "a shrine to the vicar", "a severed ear", "someone, under the bed"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "wryly",
+      "template": "The stripper at {event} is {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "event", "kind": "thing", "fills": ["your hen party", "your stag night", "the office Christmas party", "your father’s retirement", "the wake", "your divorce party", "a church fundraiser"] },
+        { "key": "who", "kind": "person", "fills": ["your ex", "your new boss", "your future father-in-law", "the parish priest", "your sister’s husband", "an undercover cop", "your therapist"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "playfully",
+      "template": "Your taxi driver is {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your ex", "a wanted man", "your future self", "the devil", "your boss, moonlighting", "a famous actor in hiding", "the man you testified against"] }
+      ]
+    },
+    {
+      "genre": "Horror", "tone": "darkly funny",
+      "template": "Your séance summoned {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your ex, who isn’t dead", "Casanova", "your grandmother, furious", "a demon with a crush on you", "the wrong Elvis", "your landlord", "the woman buried under your house"] }
+      ]
+    },
+    {
+      "genre": "Drama", "tone": "bitterly",
+      "template": "Your spouse has a second family in {place}.", "counterpart": "your spouse",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["the house next door", "Leeds", "the attic", "Monaco", "the afterlife", "another timeline", "your sister’s flat"] }
+      ]
+    },
+    {
+      "genre": "Romance", "tone": "playfully",
+      "template": "You accidentally won a date with {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your boss", "a vampire", "a disgraced senator", "your ex’s mother", "the town’s grumpy vet", "a famous widow", "the hitman at table six"] }
+      ]
+    },
+    {
+      "genre": "Mystery", "tone": "slowly",
+      "template": "{who} left {thing} at your place.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your boss", "the parish priest", "the bride", "a stranger from last night", "your sister’s husband", "a detective", "the man next door"] },
+        { "key": "thing", "kind": "thing", "fills": ["their wedding ring", "a gun", "handcuffs", "a severed finger", "their spouse", "a suitcase that hums", "a winning lottery ticket"] }
+      ]
+    },
+    {
+      "genre": "Drama", "tone": "wryly",
+      "template": "Your best friend is sleeping with {who}.", "counterpart": "your best friend",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your spouse", "your mother", "your boss", "a vampire", "the bride", "your twin", "your ex, again"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "darkly funny",
+      "template": "You confessed {thing} to the wrong priest.", "counterpart": "the priest",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["an affair", "a murder", "a forged will", "a crush on the bishop", "where the money is", "the heist plan", "what you did in Lisbon"] }
+      ]
+    },
+    {
+      "genre": "Adventure", "tone": "feverishly",
+      "template": "Handcuffed to {who} in {place}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your nemesis", "a bounty hunter", "your divorce lawyer", "a stranger from the party", "a cop", "a very calm nun", "a smuggler queen"] },
+        { "key": "place", "kind": "place", "fills": ["a sinking riverboat", "a jungle temple", "a burning casino", "the back of a hearse", "a church, mid-wedding", "a lift between floors", "a sultan’s dungeon"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "wryly",
+      "template": "Your therapist is in love with {who}.", "counterpart": "your therapist",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["you", "your mother", "your other personality", "your old maths teacher", "the devil", "a client who died", "your spouse"] }
+      ]
+    },
+    {
+      "genre": "Drama", "tone": "slowly",
+      "template": "Your new neighbour is {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your ex", "a famous dominatrix", "a vampire", "the man you hit with your car", "your therapist", "a retired assassin", "your first love, widowed"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "slowly",
+      "template": "{who} bought your {thing} online.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your mother", "the devil", "a collector in Prague", "your first love", "a man who says he’s you", "a detective", "a cult leader"] },
+        { "key": "thing", "kind": "thing", "fills": ["wedding dress", "worn socks", "soul", "diary", "old phone", "childhood home", "voice"] }
+      ]
+    },
+    {
+      "genre": "Fantasy", "tone": "wryly",
+      "template": "The dragon wants {tribute} this year.", "counterpart": "the dragon",
+      "blanks": [
+        { "key": "tribute", "kind": "thing", "fills": ["you", "a husband", "a dance at midsummer", "the mayor", "gold and a back rub", "a better poet", "your hand in marriage"] }
+      ]
+    },
+    {
+      "genre": "Mythic", "tone": "playfully",
+      "template": "The god of {domain} has chosen you as their lover.", "counterpart": "the god of {domain}",
+      "blanks": [
+        { "key": "domain", "kind": "thing", "fills": ["war", "storms", "the sea", "the dead", "wine and madness", "small mistakes", "the harvest"] }
+      ]
+    },
+    {
+      "genre": "Folk horror", "tone": "with dread",
+      "template": "The village chose you to marry {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["the corn king", "the man in the wicker mask", "the spirit of the lake", "the miller’s silent son", "the oldest widow", "the thing in the woods", "the last priest"] }
+      ]
+    },
+    {
+      "genre": "Court intrigue", "tone": "wryly",
+      "template": "You’re the new bodyguard to {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["the crown princess", "a scandalous duke", "the high priestess", "the emperor’s favourite", "a famous courtesan", "a pop star on a bender", "your ex"] }
+      ]
+    },
+    {
+      "genre": "Regency", "tone": "playfully",
+      "template": "Seen leaving {who}’s carriage at dawn.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["the scandalous duke", "your sister’s suitor", "a notorious widow", "the bishop", "the Prince Regent", "your fiancé’s brother", "a highwayman"] }
+      ]
+    },
+    {
+      "genre": "Science fiction", "tone": "wryly",
+      "template": "Six months on {place} with only {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["a mining asteroid", "a deep-sea station", "a Mars outpost", "an Antarctic base", "a lighthouse rock", "a generation ship’s night shift", "a stalled space elevator"] },
+        { "key": "who", "kind": "person", "fills": ["your ex-fiancé", "your boss", "a rival engineer", "the station’s hologram", "a very handsome android", "an alien envoy", "your commanding officer"] }
+      ]
+    },
+    {
+      "genre": "Science fiction", "tone": "darkly funny",
+      "template": "Your clone is dating {who}.", "counterpart": "your clone",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your spouse", "your old nemesis", "your boss", "your mother’s new husband", "your therapist", "you, technically", "the woman you’ve loved for years"] }
+      ]
+    },
+    {
+      "genre": "Fantasy", "tone": "dreamily",
+      "template": "You keep showing up in {who}’s dreams.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your boss", "a stranger across the street", "your best friend’s wife", "a death-row inmate", "the president", "your ex-fiancé", "a sleeping god"] }
+      ]
+    },
+    {
+      "genre": "Cyberpunk", "tone": "coldly",
+      "template": "{who} wants to buy your {thing}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["a pop star", "a grieving widow", "a corporate assassin", "your landlord", "a dying billionaire", "a cop", "the woman next door"] },
+        { "key": "thing", "kind": "thing", "fills": ["memories of your first love", "face", "voice", "last ten years", "dreams", "name", "shadow"] }
+      ]
+    },
+    {
+      "genre": "Horror", "tone": "slowly",
+      "template": "{who} has no reflection.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your new lover", "your husband of ten years", "the night nurse", "your fiancée", "the bartender at the Blue Lantern", "the cellist from the opera", "your mother"] }
+      ]
+    },
+    {
+      "genre": "Horror", "tone": "with dread",
+      "template": "Welcomed back to {place}, where you’ve never been.", "counterpart": "the night clerk",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["a roadside motel", "an alpine sanatorium", "a love hotel in Osaka", "a seaside guest house", "an abandoned honeymoon resort", "a hotel with no thirteenth floor", "a members-only club"] }
+      ]
+    },
+    {
+      "genre": "Cosmic horror", "tone": "slowly",
+      "template": "Since the eclipse, {who} speaks in your dead lover’s voice.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your husband", "the lighthouse keeper", "your best friend", "the late-night radio host", "your reflection", "the parish priest", "your new lover"] }
+      ]
+    },
+    {
+      "genre": "Drama", "tone": "bitterly",
+      "template": "At your father’s funeral, you meet his {secret}.", "counterpart": "his {secret}",
+      "blanks": [
+        { "key": "secret", "kind": "person", "fills": ["widow", "other son", "lover of thirty years", "fiancée", "killer", "business partner in Macau", "real wife"] }
+      ]
+    },
+    {
+      "genre": "Mystery", "tone": "darkly funny",
+      "template": "Your book club is a front for {thing}.", "counterpart": "the book club’s founder",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["poisoning husbands", "a smuggling ring", "a coven", "a gambling den", "an underground fight club", "revenge, alphabetically", "the town’s only swingers’ party"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "darkly funny",
+      "template": "The hitman you hired is dating {who}.", "counterpart": "the hitman",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your spouse", "your mother", "your lawyer", "the detective", "your sister", "you, apparently", "your lover’s twin"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "brutally",
+      "template": "Kidnapped by mistake, along with {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your boss", "a stranger from the lift", "a nervous groom", "a tycoon’s spoiled heir", "the barista who hates you", "a man who says he’s a spy", "your mother-in-law"] }
+      ]
+    },
+    {
+      "genre": "Slice of life", "tone": "tenderly",
+      "template": "Last call at {place}. Only {who} is left.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["an all-night dive on the docks", "an airport hotel bar", "a jazz club going under", "a ski lodge in a blizzard", "a cruise ship lounge", "the last pub in a dying village", "a wedding reception at 3 a.m."] },
+        { "key": "who", "kind": "person", "fills": ["a bride still in her dress", "a famous actor in disguise", "a soldier on his last night of leave", "a widow who orders two drinks", "your ex", "a man with a briefcase of cash", "your boss"] }
+      ]
+    },
+    {
+      "genre": "Romance", "tone": "with longing",
+      "template": "Home for the summer. So is {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["the one who got away", "your ex-husband", "your sister’s husband", "the man who left you at the altar", "the woman you almost married", "your old rival, newly single", "your first love’s widow"] }
+      ]
+    },
+    {
+      "genre": "Drama", "tone": "slowly",
+      "template": "Your escort agency booked you with {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["a nervous bishop", "your sister’s husband", "a famous novelist", "your father’s best friend", "a crime boss", "a royal on holiday", "your old teacher"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "coldly",
+      "template": "Your partner hired {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["a private investigator", "a very attractive gardener", "a hitman", "an exorcist", "a couples’ coach who touches too much", "a divorce lawyer named Shark", "your ex, as the nanny"] }
+      ]
+    },
+    {
+      "genre": "Mystery", "tone": "slowly",
+      "template": "At the masquerade, the guest in {mask} killed the host.", "counterpart": "the guest in {mask}",
+      "blanks": [
+        { "key": "mask", "kind": "thing", "fills": ["the fox mask", "the plague doctor’s mask", "the golden mask", "black lace", "the porcelain doll face", "the stag’s head", "nothing at all"] }
+      ]
+    },
+    {
+      "genre": "Dark academia", "tone": "with longing",
+      "template": "Your thesis advisor asks you to {act}.", "counterpart": "your thesis advisor",
+      "blanks": [
+        { "key": "act", "kind": "act", "fills": ["bury a body", "fake their death", "seduce the dean", "burn the library", "raise the dead", "break into a vault", "marry them, for tax reasons"] }
+      ]
+    },
+    {
+      "genre": "Southern gothic", "tone": "slowly",
+      "template": "Your aunt left you her house, her debts, and {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["her much younger husband", "a lodger in the attic", "her lover of forty years", "the preacher she blackmailed", "a fortune teller", "her twin, who claims to be her", "a man chained in the cellar"] }
+      ]
+    },
+    {
+      "genre": "Weird west", "tone": "brutally",
+      "template": "The new sheriff is {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your ex-wife", "the outlaw you left for dead", "a preacher with two revolvers", "the woman who runs the brothel", "your twin brother", "a man who should be buried", "your father"] }
+      ]
+    },
+    {
+      "genre": "Heist", "tone": "playfully",
+      "template": "Your getaway crew is {who}.", "counterpart": "the crew’s ringleader",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["three grannies from bingo", "your ex and their new lover", "a hen party", "a church choir", "off-duty cops", "your entire family", "a mime troupe"] }
+      ]
+    },
+    {
+      "genre": "Space opera", "tone": "wryly",
+      "template": "Your cargo of {thing} just woke up.", "counterpart": "the cargo’s leader",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["cryo-sleeping royals", "alien diplomats", "pleasure androids", "a pirate queen", "clones of you", "sentient perfume", "very old vampires"] }
+      ]
+    },
+    {
+      "genre": "Wuxia", "tone": "with longing",
+      "template": "Duel {who} at dawn. Tonight they brought wine.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["your sworn brother", "the sect leader’s daughter", "the masked swordsman", "your former master", "the emperor’s assassin", "your teacher’s killer", "your first love"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "playfully",
+      "template": "You signed up for {thing} thinking it was a cooking class.", "counterpart": "the instructor",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["life drawing, as the model", "a tantric retreat", "a witches’ coven", "a cult induction", "a polar plunge club", "a couples’ retreat, alone", "an assassins’ guild"] }
+      ]
+    },
+    {
+      "genre": "Court intrigue", "tone": "slowly",
+      "template": "The king’s favourite has asked you for {thing}.", "counterpart": "the king’s favourite",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["a vial of poison", "a dance", "your silence", "one night alone", "your sister’s hand", "the queen’s letters", "your name, forever"] }
+      ]
+    },
+    {
+      "genre": "Horror", "tone": "feverishly",
+      "template": "Your date wants to spend the night at {place}.", "counterpart": "your date",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["the cemetery", "the abandoned asylum", "a cabin with no road", "the morgue where they work", "the house where a family died", "the mall after closing", "their mother’s"] }
+      ]
+    },
+    {
+      "genre": "Post-collapse", "tone": "brutally",
+      "template": "Trading {thing} for safe passage with {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "thing", "kind": "thing", "fills": ["your last bullets", "your name", "a night of company", "the antibiotics", "your dog", "a map to clean water", "your wedding ring"] },
+        { "key": "who", "kind": "person", "fills": ["a raider queen", "a convoy of nuns", "the bridge toll-keeper", "a man in a hazmat suit", "your old boss", "two silent brothers", "the man who sold you out"] }
+      ]
+    },
+    {
+      "genre": "Low fantasy", "tone": "feverishly",
+      "template": "Hiding {who} in your cellar. Soldiers at the door.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["the exiled queen", "a deserter", "your former lover", "a wounded witch", "the prince’s mistress", "the rebel leader", "the captain’s wife"] }
+      ]
+    },
+    {
+      "genre": "Comedy", "tone": "playfully",
+      "template": "Married last night in {place}, apparently to {who}.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["Las Vegas", "a submarine", "a Viking reenactment", "a drive-through chapel", "the embassy", "a fairy circle", "a prison visiting room"] },
+        { "key": "who", "kind": "person", "fills": ["your accountant", "an Elvis impersonator", "a minor Danish royal", "your sworn enemy", "the officiant", "a woman named Destiny", "a fae prince"] }
+      ]
+    },
+    {
+      "genre": "Noir", "tone": "coldly",
+      "template": "Your next hit is the singer at {place}.", "counterpart": "the singer",
+      "blanks": [
+        { "key": "place", "kind": "place", "fills": ["the Blue Orchid", "a speakeasy under the church", "the Ritz ballroom", "a Havana nightclub", "the docks’ worst bar", "the mayor’s private club", "your sister’s wedding"] }
+      ]
+    },
+    {
+      "genre": "Thriller", "tone": "slowly",
+      "template": "Your hotel key opens {who}’s room.", "counterpart": "{who}",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["a famous actor", "your boss", "a dead man", "the bride", "your ex", "a man with a gun", "your spouse"] }
+      ]
+    },
+    {
+      "genre": "Horror", "tone": "darkly funny",
+      "template": "Your exorcist is flirting with {who}.", "counterpart": "your exorcist",
+      "blanks": [
+        { "key": "who", "kind": "person", "fills": ["the demon", "your mother", "you", "your spouse", "the ghost in the attic", "the priest", "the plumber"] }
+      ]
     }
   ]
 }
