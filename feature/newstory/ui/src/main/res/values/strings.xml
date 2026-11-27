@@ -8,7 +8,7 @@
     <string name="wizard_prompt_starring">starring</string>
     <string name="wizard_prompt_tone">told</string>
     <string name="wizard_prompt_setting">set in</string>
-    <string name="wizard_prompt_limits">How far?</string>
+    <string name="wizard_prompt_limits">Maturity</string>
     <string name="wizard_prompt_premise">It begins</string>
     <string name="wizard_prompt_cast">Among them</string>
     <string name="wizard_prompt_opening">The opening</string>
@@ -114,7 +114,7 @@
 
     <string name="seeded_hint">Tap an underlined part to change it</string>
     <string name="seeded_die">Another seed</string>
-    <string name="seeded_people_prompt">Who’s who?</string>
+    <string name="seeded_people_prompt">Characters</string>
     <string name="seeded_optional">Optional</string>
     <string name="seeded_leave_note">Going back discards the opening. Your choices are kept.</string>
 </resources>
