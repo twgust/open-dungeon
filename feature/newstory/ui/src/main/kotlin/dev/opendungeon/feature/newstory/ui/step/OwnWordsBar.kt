@@ -39,8 +39,8 @@ import dev.opendungeon.feature.newstory.ui.R
 import dev.opendungeon.feature.newstory.ui.stepCopy
 
 /**
- * The dashed "my own" pill pinned above the bottom bar. Tapped, it opens into a line to write on;
- * "use" hands the words over and closes it.
+ * The dashed "Custom" pill pinned above the bottom bar. Tapped, it opens into a line to write on;
+ * "Use" hands the words over and closes it.
  */
 @Composable
 internal fun OwnWordsBar(step: CreationStep, onUse: (String) -> Unit, modifier: Modifier = Modifier) {

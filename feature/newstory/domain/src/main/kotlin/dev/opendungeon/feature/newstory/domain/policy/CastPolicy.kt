@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
- * "Among them": the people on offer, each in or out of the story. At least one has to be in. A model
+ * "Characters": the people on offer, each in or out of the story. At least one has to be in. A model
  * casts people on arrival; the die swaps everyone not yet in the story for new people. A card shows a
  * sealed secret only as a flag.
  */
