@@ -38,6 +38,8 @@ feature/models/ui        Model picker, parameter editor and try screens, thin Vi
 feature/models/domain    ModelPicker, ModelTuner, TryRun interactors; ParameterSheet     (JVM)
 feature/newstory/ui      Story creation screens and their thin ViewModel
 feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, step writers  (JVM)
+feature/library/ui       Library screen and its thin ViewModel
+feature/library/domain   Library interactor: list, rename, delete with undo, background naming (JVM)
 feature/play/ui          Play screen and its thin ViewModel
 feature/play/domain      PlaySession interactor: continue, retry, guide, edit, stop, undo (JVM)
 data/openrouter          Remote catalog and account repository over the REST client    (JVM)
@@ -45,8 +47,8 @@ data/models              Catalog cache, chosen model and tunings over Room (Andr
 data/story               StoryDraftRepository and StoryRepository over Room (Android)
 data/generation          Text and structured generation on Koog, OpenRouterChatClient   (JVM)
 domain/openrouter        Catalog, setup and account repositories; test fixtures        (JVM)
-domain/story             Drafts, stories and beats, characters, the sentence builder, repositories (JVM)
-domain/drafting          Drafting model; premise, cast, opening and beat use cases, prompts (JVM)
+domain/story             Drafts, stories and beats, characters, the sentence builder, repositories; test fixtures (JVM)
+domain/drafting          Drafting model; premise, cast, opening, beat and title use cases, prompts (JVM)
 domain/generation        TextGenerator, StructuredGenerator, usage, typed errors        (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
 core/ui                  Compose helpers, error messages

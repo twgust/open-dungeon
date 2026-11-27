@@ -82,7 +82,7 @@ class DefaultPlaySessionTest {
     @Test
     fun `opening again once open changes nothing`() = test { session, repository ->
         session.typeTurn("I wait.")
-        repository.stories.value += salt.id to salt.copy(beats = listOf(opening))
+        repository.byId.value += salt.id to salt.copy(beats = listOf(opening))
         session.start(salt.id)
         assertEquals("I wait.", session.playing.turn.text)
         assertEquals(3, session.playing.beats.size)

@@ -3,7 +3,6 @@ package dev.opendungeon.feature.connect.domain
 import dev.opendungeon.core.model.AiModel
 import dev.opendungeon.core.model.DataError
 import dev.opendungeon.core.model.KeyInfo
-import dev.opendungeon.domain.story.StoryId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,8 +46,8 @@ public sealed interface Connection {
 
     public data object Validating : Connection
 
-    /** [story] is the story played last, to continue from home; `null` until one has begun. */
-    public data class Connected(val key: Remote<KeyInfo>, val model: ModelChoice, val story: StoryId? = null) :
+    /** Home is the library once a story exists: [showsLibrary]. Until then it offers to start one. */
+    public data class Connected(val key: Remote<KeyInfo>, val model: ModelChoice, val showsLibrary: Boolean = false) :
         Connection
 }
 

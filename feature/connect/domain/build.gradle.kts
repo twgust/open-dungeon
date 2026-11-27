@@ -11,4 +11,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(testFixtures(projects.domain.openrouter))
+    testImplementation(testFixtures(projects.domain.story))
 }

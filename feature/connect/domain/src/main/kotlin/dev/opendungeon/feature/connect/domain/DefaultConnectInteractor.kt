@@ -8,7 +8,6 @@ import dev.opendungeon.domain.openrouter.Catalog
 import dev.opendungeon.domain.openrouter.ModelCatalogRepository
 import dev.opendungeon.domain.openrouter.ModelSetupRepository
 import dev.opendungeon.domain.openrouter.OpenRouterAccountRepository
-import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StoryRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -21,8 +20,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -32,8 +33,8 @@ import kotlinx.coroutines.launch
 /**
  * The stored key drives the link: whenever one appears, its details are fetched, and the catalog too if
  * none is stored; whenever it is gone, the state returns to key entry. The chosen model comes from the
- * stored catalog and choice, so a choice made elsewhere shows here at once. So does the story to
- * continue, the one saved last.
+ * stored catalog and choice, so a choice made elsewhere shows here at once. So does whether any story
+ * exists, which makes home the library.
  *
  * Every verb is called from the screen's thread and changes [link] before it returns, so the checks
  * below see each verb's effect before the next verb arrives.
@@ -59,8 +60,10 @@ internal class DefaultConnectInteractor(
 
     private val link = MutableStateFlow<Link>(Link.Loading)
 
+    private val anyStory = stories.stories.map { it.isNotEmpty() }.distinctUntilChanged()
+
     override val state: StateFlow<Connection> =
-        combine(link, catalog.catalog, setup.chosenModel, stories.latest, ::render)
+        combine(link, catalog.catalog, setup.chosenModel, anyStory, ::render)
             .stateIn(scope, SharingStarted.Eagerly, Connection.Loading)
 
     private val failureChannel = Channel<DataError>(Channel.BUFFERED)
@@ -132,14 +135,14 @@ internal class DefaultConnectInteractor(
         link.value = Link.Disconnected(error = null)
     }
 
-    private fun render(link: Link, stored: Catalog?, chosen: ModelId?, story: StoryId?): Connection = when (link) {
+    private fun render(link: Link, stored: Catalog?, chosen: ModelId?, anyStory: Boolean): Connection = when (link) {
         Link.Loading -> Connection.Loading
         is Link.Disconnected -> Connection.Disconnected(link.error)
         Link.Validating -> Connection.Validating
         is Link.Connected -> Connection.Connected(
             key = link.key,
             model = choiceOf(stored, chosen, link.catalogFetch),
-            story = story,
+            showsLibrary = anyStory,
         )
     }
 

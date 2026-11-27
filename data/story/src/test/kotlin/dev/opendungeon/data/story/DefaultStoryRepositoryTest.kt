@@ -19,6 +19,7 @@ import dev.opendungeon.domain.story.Story
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.domain.story.StorySetup
+import dev.opendungeon.domain.story.StorySummary
 import dev.opendungeon.domain.story.Unsent
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -113,17 +114,58 @@ class DefaultStoryRepositoryTest {
     }
 
     @Test
-    fun `latest follows the story saved last`() = runTest {
-        assertNull(repository.latest.first())
+    fun `stories are listed the one played last first, and follow every save`() = runTest {
+        assertEquals(emptyList(), repository.stories.first())
         repository.begin(salt, from = DraftId("none"))
-        assertEquals(salt.id, repository.latest.first())
         // The same people in another story, as when a story is begun twice from one cast.
         val other = salt.copy(id = StoryId("other"), beats = listOf(Beat(BeatId("o1"), Beat.Kind.Opening, "Snow.")))
         assertEquals(Outcome.Success(Unit), repository.begin(other, from = DraftId("none")))
         assertEquals(other, repository.story(other.id).value())
-        assertEquals(other.id, repository.latest.first())
+        assertEquals(listOf(other.id, salt.id), repository.stories.first().map(StorySummary::id))
+
         repository.save(salt.copy(unsent = Unsent(turn = "I wait.")))
-        assertEquals(salt.id, repository.latest.first())
+
+        val listed = repository.stories.first()
+        assertEquals(listOf(salt.id, other.id), listed.map(StorySummary::id))
+        assertEquals(StorySummary(salt.id, null, salt.setup.genres, clock.last), listed.first())
+    }
+
+    @Test
+    fun `a title is kept apart from play, so saves never write it and naming never replaces it`() = runTest {
+        repository.begin(salt, from = DraftId("none"))
+        val playedAt = repository.stories.first().single().playedAt
+
+        repository.nameIfUntitled(salt.id, "The Salt Key")
+        repository.nameIfUntitled(salt.id, "Brine")
+        assertEquals("The Salt Key", repository.story(salt.id).value()?.title)
+        assertEquals(playedAt, repository.stories.first().single().playedAt, "naming is not playing")
+
+        repository.rename(salt.id, "Brine")
+        // A copy of the story from before it was named, as play holds it.
+        repository.save(salt.copy(guide = "Maren lies."))
+
+        val stored = repository.story(salt.id).value()
+        assertEquals("Brine", stored?.title)
+        assertEquals("Maren lies.", stored?.guide)
+    }
+
+    @Test
+    fun `a removed story is gone with its people and beats, and a late save does not bring it back`() = runTest {
+        repository.begin(salt, from = DraftId("none"))
+
+        assertEquals(Outcome.Success(Unit), repository.remove(salt.id))
+        assertEquals(Outcome.Success(Unit), repository.remove(salt.id), "removing what is gone succeeds")
+
+        assertNull(repository.story(salt.id).value())
+        assertEquals(emptyList(), repository.stories.first())
+        assertIs<Outcome.Failure<StorageError>>(repository.save(salt))
+        assertNull(repository.story(salt.id).value())
+        for (table in listOf("story", "story_character", "story_beat")) {
+            database.openHelper.readableDatabase.query("SELECT COUNT(*) FROM $table").use { rows ->
+                rows.moveToFirst()
+                assertEquals(0, rows.getInt(0), "$table is empty")
+            }
+        }
     }
 
     @Test
@@ -148,6 +190,8 @@ class DefaultStoryRepositoryTest {
     /** Each reading is a millisecond after the last, so the story saved last is never tied. */
     private class TickingClock : Clock {
         private var millis = 1_700_000_000_000L
+
+        val last: Instant get() = Instant.fromEpochMilliseconds(millis)
 
         override fun now(): Instant = Instant.fromEpochMilliseconds(++millis)
     }

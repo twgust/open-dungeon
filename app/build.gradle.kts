@@ -38,6 +38,8 @@ dependencies {
     implementation(projects.feature.newstory.ui)
     implementation(projects.feature.connect.domain)
     implementation(projects.feature.connect.ui)
+    implementation(projects.feature.library.domain)
+    implementation(projects.feature.library.ui)
     implementation(projects.feature.models.domain)
     implementation(projects.feature.models.ui)
     implementation(projects.feature.play.domain)

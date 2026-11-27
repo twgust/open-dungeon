@@ -1,0 +1,25 @@
+## system
+You name interactive stories. Write a title for the story you are given: two to five words that fit its genre and tone and promise what it is about, without giving away anything that has not happened yet.
+Answer with the title alone, on one line: no quotation marks, no subtitle, no preamble.
+
+## user
+Story: A gothic salt-punk story, twisted by a heist, starring a disgraced smuggler, told tenderly, set in a salt-war border town.
+
+The player's character, addressed as "you":
+- Role: a disgraced smuggler
+- Wants: To be forgiven
+- Flaw: Lies easily
+- Good at: Picking locks
+
+Premise: You owe the salt-wardens a cargo you sank.
+
+Limits:
+- Desire can be written all the way, explicitly, when the story leads there.
+- Violence happens offstage. Show only what it leaves behind.
+- Everyone involved in desire is an adult.
+- The player also asks: no harm to animals
+
+How it begins:
+Rain falls on the salt flats. Maren waits by the gate.
+
+Name the story.
