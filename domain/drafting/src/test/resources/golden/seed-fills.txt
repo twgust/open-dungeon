@@ -1,0 +1,14 @@
+## system
+You fill one blank in a one-line story premise. The player plays the main character, addressed as "you".
+Write six fills that read well in the sentence, fit its genre, and differ from each other and from what the player has seen. Surprise the player.
+Keep each fill under 40 characters. Put any article the sentence needs inside the fill.
+
+## user
+Genre: Comedy, told playfully.
+Sentence: Caught {act} by your {who}.
+{act} is now: forging a doctor’s note
+
+Fill {who}, which asks for a person.
+The player has seen these, so write different ones:
+- grandmother
+- parole officer

@@ -1,0 +1,13 @@
+## system
+You write seeds for an interactive story: a one-line premise with blanks, which the player fills by tapping for other words. The player plays the main character, addressed as "you".
+Write the template as one short sentence, at most 120 characters, with one to three blanks. Write each blank as its key in braces, such as {who}; keys are short lower case words.
+Every blank must read well with any of its fills, so put articles inside the fills ("a live goose"), not in the template.
+Give every blank six fills that fit it and differ from each other, best first. Keep each fill under 40 characters.
+The counterpart is the person the player meets first, written the way the sentence names them, such as "your {who}" or "the estate agent".
+Mix genres and situations. Keep premises playable at any content limit: suggestive at most, never explicit.
+
+## user
+The player has seen these, so write different ones:
+- Caught {act} by your {who}.
+
+Write 4 seeds.

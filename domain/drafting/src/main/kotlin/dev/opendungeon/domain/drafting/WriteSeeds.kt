@@ -1,0 +1,192 @@
+package dev.opendungeon.domain.drafting
+
+import dev.opendungeon.core.model.Outcome
+import dev.opendungeon.domain.generation.ChatMessage
+import dev.opendungeon.domain.generation.StructuredGenerator
+import dev.opendungeon.domain.generation.StructuredRequest
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/** Writes new seeds once the ones that come with the app are used up. */
+public interface WriteSeeds {
+    /**
+     * Up to [count] new seeds, none of them one of [avoiding]. Seeds the model got wrong, such as a blank
+     * the template never uses, are left out; [DraftingError.Unusable] when none is left.
+     */
+    public suspend operator fun invoke(
+        model: DraftingModel,
+        avoiding: List<Seed>,
+        count: Int = DEFAULT_COUNT,
+    ): Outcome<List<Seed>, DraftingError>
+
+    public companion object {
+        public const val DEFAULT_COUNT: Int = 4
+    }
+}
+
+@Inject
+@ContributesBinding(AppScope::class)
+public class DefaultWriteSeeds(private val generator: StructuredGenerator) : WriteSeeds {
+
+    override suspend fun invoke(
+        model: DraftingModel,
+        avoiding: List<Seed>,
+        count: Int,
+    ): Outcome<List<Seed>, DraftingError> {
+        require(count >= 1) { "Write at least one seed, not $count" }
+        val request = StructuredRequest(
+            model = model.model,
+            messages = SeedsPrompt.messages(avoiding, count),
+            serializer = SeedsPayload.serializer(),
+            descriptions = SeedsPayload.DESCRIPTIONS,
+            examples = listOf(SeedsPayload.EXAMPLE),
+            tuning = model.tuning,
+        )
+        val payload = when (val answer = generator.generate(request)) {
+            is Outcome.Failure -> return Outcome.Failure(DraftingError.Generation(answer.error))
+            is Outcome.Success -> answer.value
+        }
+        val known = avoiding.mapTo(HashSet()) { it.template.lowercase() }
+        val seeds = payload.seeds
+            .mapNotNull { it.toSeed() }
+            .filter { known.add(it.template.lowercase()) }
+            .take(count)
+        return if (seeds.isEmpty()) Outcome.Failure(DraftingError.Unusable) else Outcome.Success(seeds)
+    }
+}
+
+/** The instructions and the ask for new seeds. */
+internal object SeedsPrompt {
+
+    fun messages(avoiding: List<Seed>, count: Int): List<ChatMessage> = listOf(
+        ChatMessage.System(SYSTEM),
+        ChatMessage.User(
+            buildString {
+                if (avoiding.isNotEmpty()) {
+                    append("The player has seen these, so write different ones:")
+                    avoiding.forEach { append("\n- ${it.template}") }
+                    append("\n\n")
+                }
+                append(if (count == 1) "Write one seed." else "Write $count seeds.")
+            },
+        ),
+    )
+
+    private val SYSTEM =
+        """
+        You write seeds for an interactive story: a one-line premise with blanks, which the player fills by tapping for other words. The player plays the main character, addressed as "you".
+        Write the template as one short sentence, at most 120 characters, with one to three blanks. Write each blank as its key in braces, such as {who}; keys are short lower case words.
+        Every blank must read well with any of its fills, so put articles inside the fills ("a live goose"), not in the template.
+        Give every blank six fills that fit it and differ from each other, best first. Keep each fill under 40 characters.
+        The counterpart is the person the player meets first, written the way the sentence names them, such as "your {who}" or "the estate agent".
+        Mix genres and situations. Keep premises playable at any content limit: suggestive at most, never explicit.
+        """.trimIndent()
+}
+
+/** What the model answers. Every field is required, so the schema stays valid for strict structured outputs. */
+@Serializable
+@SerialName("Seeds")
+internal data class SeedsPayload(val seeds: List<SeedPayload>) {
+    companion object {
+        val DESCRIPTIONS: Map<String, String> = mapOf(
+            "Seeds.seeds" to "The seeds, each a different situation",
+            "Seed.genre" to "The genre, in one or two words, capitalised: \"Comedy\"",
+            "Seed.tone" to "How it is told, as an adverb or short phrase: \"wryly\", \"with dread\"",
+            "Seed.template" to "One sentence with each blank written as {key}",
+            "Seed.counterpart" to "The person the player meets first, as the sentence names them: \"your {who}\"",
+            "Seed.blanks" to "Every blank in the template, once each",
+            "Blank.key" to "The blank's key as written in the template, lower case letters only",
+            "Blank.kind" to "What the blank asks for",
+            "Blank.fills" to "Six fills that fit the blank, best first",
+        )
+
+        val EXAMPLE = SeedsPayload(
+            listOf(
+                SeedPayload(
+                    genre = "Comedy",
+                    tone = "playfully",
+                    template = "Caught {act} by your {who}.",
+                    counterpart = "your {who}",
+                    blanks = listOf(
+                        BlankPayload(
+                            key = "act",
+                            kind = BlankKindPayload.Act,
+                            fills = listOf(
+                                "forging a doctor’s note",
+                                "selling the family silver",
+                                "reading their diary",
+                                "wearing their wedding dress",
+                                "rehearsing a breakup speech",
+                                "teaching the parrot to swear",
+                            ),
+                        ),
+                        BlankPayload(
+                            key = "who",
+                            kind = BlankKindPayload.Person,
+                            fills = listOf("grandmother", "parole officer", "ex", "boss", "priest", "younger sister"),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+}
+
+@Serializable
+@SerialName("Seed")
+internal data class SeedPayload(
+    val genre: String,
+    val tone: String,
+    val template: String,
+    val counterpart: String,
+    val blanks: List<BlankPayload>,
+) {
+    fun toSeed(): Seed? = Seed.of(
+        genre = genre,
+        tone = tone,
+        template = template,
+        counterpart = counterpart,
+        blanks = blanks.map { Triple(it.key, it.kind.toKind(), it.fills) },
+    )
+}
+
+@Serializable
+@SerialName("Blank")
+internal data class BlankPayload(val key: String, val kind: BlankKindPayload, val fills: List<String>)
+
+/** A blank's kind as the schema names it, apart from [Seed.Kind] so a rename there never changes the schema. */
+@Serializable
+@SerialName("BlankKind")
+internal enum class BlankKindPayload {
+    @SerialName("person")
+    Person,
+
+    @SerialName("thing")
+    Thing,
+
+    @SerialName("act")
+    Act,
+
+    @SerialName("place")
+    Place,
+    ;
+
+    fun toKind(): Seed.Kind = when (this) {
+        Person -> Seed.Kind.Person
+        Thing -> Seed.Kind.Thing
+        Act -> Seed.Kind.Act
+        Place -> Seed.Kind.Place
+    }
+}
+
+/** How a kind is named in prompts. */
+internal val Seed.Kind.word: String
+    get() = when (this) {
+        Seed.Kind.Person -> "a person"
+        Seed.Kind.Thing -> "a thing"
+        Seed.Kind.Act -> "something done"
+        Seed.Kind.Place -> "a place"
+    }

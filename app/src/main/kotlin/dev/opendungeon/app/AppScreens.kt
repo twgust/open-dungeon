@@ -15,6 +15,8 @@ import dev.opendungeon.feature.models.ui.picker.ModelPickerRoute
 import dev.opendungeon.feature.models.ui.trial.TryRoute
 import dev.opendungeon.feature.models.ui.tuner.ModelTunerRoute
 import dev.opendungeon.feature.newstory.ui.NewStoryRoute
+import dev.opendungeon.feature.newstory.ui.choice.NewStoryChoiceRoute
+import dev.opendungeon.feature.newstory.ui.seeded.SeededRoute
 import dev.opendungeon.feature.play.ui.PlayRoute
 import kotlinx.serialization.Serializable
 
@@ -31,8 +33,17 @@ private data object Tuning : NavKey
 @Serializable
 private data object Trial : NavKey
 
+/** The choice between the two ways into a story. */
 @Serializable
 private data object NewStory : NavKey
+
+/** Story creation step by step, resuming the open draft if there is one. */
+@Serializable
+private data object CustomStory : NavKey
+
+/** Story creation from a seed. */
+@Serializable
+private data object SeededStory : NavKey
 
 /** A story being played. Holds the id's text, since that is what survives the process. */
 @Serializable
@@ -71,6 +82,21 @@ internal fun AppScreens() {
             entry<Tuning> { ModelTunerRoute(onBack = backStack::pop, onTry = { backStack.add(Trial) }) }
             entry<Trial> { TryRoute(onLeave = backStack::pop) }
             entry<NewStory> {
+                // The choice gives way to the path chosen, so back from either path goes home.
+                NewStoryChoiceRoute(
+                    onSeedPath = { backStack.replaceTop(SeededStory) },
+                    onCustomPath = { backStack.replaceTop(CustomStory) },
+                    onLeave = backStack::pop,
+                )
+            }
+            entry<SeededStory> {
+                SeededRoute(
+                    onLeave = backStack::pop,
+                    onModels = { backStack.add(Models) },
+                    onBegin = { story -> backStack.replaceTop(Play(story.value)) },
+                )
+            }
+            entry<CustomStory> {
                 NewStoryRoute(
                     onLeave = backStack::pop,
                     onModels = { backStack.add(Models) },

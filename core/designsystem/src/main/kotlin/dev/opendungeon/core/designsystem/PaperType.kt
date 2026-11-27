@@ -26,7 +26,7 @@ public object PaperFonts {
 
 @Immutable
 public data class PaperType(
-    /** A step's prompt: "twisted by", "How far?". */
+    /** A step's prompt: "twisted by", "Maturity". */
     val prompt: TextStyle,
     val pill: TextStyle,
     /** The player's own pill and anything else in their voice. */
