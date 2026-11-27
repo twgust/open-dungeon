@@ -21,6 +21,7 @@ import dev.opendungeon.core.designsystem.component.CardLine
 import dev.opendungeon.core.designsystem.component.CharacterCard
 import dev.opendungeon.core.designsystem.component.LineDieButton
 import dev.opendungeon.core.designsystem.component.PaperField
+import dev.opendungeon.core.ui.rememberEditedText
 import dev.opendungeon.feature.newstory.domain.DraftEdit
 import dev.opendungeon.feature.newstory.domain.ShownLine
 import dev.opendungeon.feature.newstory.domain.StepBody

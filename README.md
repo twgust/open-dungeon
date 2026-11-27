@@ -24,7 +24,7 @@ defaults are listed, with reasons, in `config/detekt/detekt.yml`.
 | DI | [Metro](https://github.com/ZacSweers/metro) with contribution-based graphs (`@ContributesBinding`, `@ContributesIntoMap`) and `metrox` for ViewModels and constructor-injected Activities |
 | Networking | Ktor client (OkHttp engine) + kotlinx.serialization |
 | Generation | [Koog](https://github.com/JetBrains/koog), with our own `OpenRouterChatClient` on Koog's OpenAI-compatible base, behind `TextGenerator` / `StructuredGenerator` |
-| Storage | Room for drafts, the model catalog, the chosen model and tunings (schemas exported to `core/database/schemas`); DataStore for the API key, AES-GCM encrypted with an Android Keystore key |
+| Storage | Room for drafts, stories in play, the model catalog, the chosen model and tunings (schemas exported to `core/database/schemas`); DataStore for the API key, AES-GCM encrypted with an Android Keystore key |
 | Build | Gradle 9, version catalog, convention plugins in `build-logic`; ktlint (with compose-rules) and detekt on every module |
 | Tests | JUnit 5, kotlinx-coroutines-test, Turbine, Ktor `MockEngine`, OkHttp `MockWebServer`; Robolectric only for Room |
 
@@ -38,13 +38,15 @@ feature/models/ui        Model picker, parameter editor and try screens, thin Vi
 feature/models/domain    ModelPicker, ModelTuner, TryRun interactors; ParameterSheet     (JVM)
 feature/newstory/ui      Story creation screens and their thin ViewModel
 feature/newstory/domain  StoryWizard interactor, one StepPolicy per step, step writers  (JVM)
+feature/play/ui          Play screen and its thin ViewModel
+feature/play/domain      PlaySession interactor: continue, retry, guide, edit, stop, undo (JVM)
 data/openrouter          Remote catalog and account repository over the REST client    (JVM)
 data/models              Catalog cache, chosen model and tunings over Room (Android)
-data/story               StoryDraftRepository over Room (Android)
+data/story               StoryDraftRepository and StoryRepository over Room (Android)
 data/generation          Text and structured generation on Koog, OpenRouterChatClient   (JVM)
 domain/openrouter        Catalog, setup and account repositories; test fixtures        (JVM)
-domain/story             Drafts, characters, the sentence builder, StoryDraftRepository     (JVM)
-domain/drafting          Drafting model; premise, cast and opening use cases, prompts    (JVM)
+domain/story             Drafts, stories and beats, characters, the sentence builder, repositories (JVM)
+domain/drafting          Drafting model; premise, cast, opening and beat use cases, prompts (JVM)
 domain/generation        TextGenerator, StructuredGenerator, usage, typed errors        (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
 core/ui                  Compose helpers, error messages

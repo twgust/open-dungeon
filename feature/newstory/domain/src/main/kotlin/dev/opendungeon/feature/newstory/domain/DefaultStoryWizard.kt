@@ -4,6 +4,7 @@ import dev.opendungeon.core.model.Outcome
 import dev.opendungeon.domain.drafting.DraftingError
 import dev.opendungeon.domain.drafting.DraftingModel
 import dev.opendungeon.domain.drafting.ResolveDraftingModel
+import dev.opendungeon.domain.story.BeginStory
 import dev.opendungeon.domain.story.CharacterLine
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
@@ -58,6 +59,7 @@ internal class DefaultStoryWizard(
     private val sentences: SentenceBuilder,
     private val ids: IdGenerator,
     drafter: ResolveDraftingModel,
+    private val beginStory: BeginStory,
     private val typingSettles: Duration = TYPING_SETTLES,
 ) : StoryWizard {
 
@@ -207,9 +209,16 @@ internal class DefaultStoryWizard(
     override fun begin() = enqueue {
         val current = draft?.takeIf { writing == null } ?: return@enqueue
         if (current.step.following != null || !policyOf(current).canAdvance(current)) return@enqueue
-        when (val saved = save(current)) {
-            is Outcome.Failure -> report(WizardFailure.Storage(saved.error))
-            is Outcome.Success -> outcomeChannel.send(WizardOutcome.Begun(current.id))
+        when (val begun = beginStory(current)) {
+            is Outcome.Failure -> report(WizardFailure.Storage(begun.error))
+            is Outcome.Success -> {
+                // The draft is a story now and gone from storage, so nothing of it is saved again: with no
+                // draft open, every verb after this is ignored and nothing is saved on the way out.
+                settling?.cancel()
+                draft = null
+                stored = null
+                outcomeChannel.send(WizardOutcome.Begun(begun.value))
+            }
         }
     }
 
@@ -524,7 +533,8 @@ public class DefaultStoryWizardFactory(
     private val sentences: SentenceBuilder,
     private val ids: IdGenerator,
     private val drafter: ResolveDraftingModel,
+    private val beginStory: BeginStory,
 ) : StoryWizard.Factory {
     override fun create(scope: CoroutineScope): StoryWizard =
-        DefaultStoryWizard(scope, repository, policies, sentences, ids, drafter)
+        DefaultStoryWizard(scope, repository, policies, sentences, ids, drafter, beginStory)
 }

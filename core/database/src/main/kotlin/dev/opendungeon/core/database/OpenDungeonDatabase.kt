@@ -12,6 +12,10 @@ import dev.opendungeon.core.database.model.ChosenModelEntity
 import dev.opendungeon.core.database.model.ModelTuningEntity
 import dev.opendungeon.core.database.model.RankingDao
 import dev.opendungeon.core.database.model.SetupDao
+import dev.opendungeon.core.database.play.BeatEntity
+import dev.opendungeon.core.database.play.StoryCharacterEntity
+import dev.opendungeon.core.database.play.StoryDao
+import dev.opendungeon.core.database.play.StoryEntity
 import dev.opendungeon.core.database.story.DraftCharacterEntity
 import dev.opendungeon.core.database.story.StoryDraftDao
 import dev.opendungeon.core.database.story.StoryDraftEntity
@@ -32,14 +36,19 @@ import dev.opendungeon.core.database.story.StoryDraftEntity
         CatalogRankEntity::class,
         ChosenModelEntity::class,
         ModelTuningEntity::class,
+        StoryEntity::class,
+        StoryCharacterEntity::class,
+        BeatEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
         // 2 adds the model catalog, the chosen model and tunings: new tables only.
         AutoMigration(from = 1, to = 2),
         // 3 replaces the auditioned takes with one opening: see [OpeningMigration].
         AutoMigration(from = 2, to = 3, spec = OpeningMigration::class),
+        // 4 adds begun stories, their people and their beats: new tables only.
+        AutoMigration(from = 3, to = 4),
     ],
 )
 @TypeConverters(StorageConverters::class)
@@ -51,6 +60,8 @@ public abstract class OpenDungeonDatabase : RoomDatabase() {
     public abstract fun rankingDao(): RankingDao
 
     public abstract fun setupDao(): SetupDao
+
+    public abstract fun storyDao(): StoryDao
 
     public companion object {
         public const val FILE_NAME: String = "open-dungeon.db"

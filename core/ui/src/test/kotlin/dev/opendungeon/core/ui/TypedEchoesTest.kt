@@ -1,4 +1,4 @@
-package dev.opendungeon.feature.newstory.ui.step
+package dev.opendungeon.core.ui
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

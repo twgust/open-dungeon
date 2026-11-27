@@ -10,12 +10,14 @@ import dev.opendungeon.domain.drafting.ResolveDraftingModel
 import dev.opendungeon.domain.drafting.WriteOpening
 import dev.opendungeon.domain.drafting.WritingProgress
 import dev.opendungeon.domain.openrouter.testing.aiModel
+import dev.opendungeon.domain.story.BeginStory
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.IdGenerator
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.domain.story.StoryDraftRepository
+import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.policy.CastPolicy
 import dev.opendungeon.feature.newstory.domain.policy.GenrePolicy
 import dev.opendungeon.feature.newstory.domain.policy.LimitsPolicy
@@ -189,5 +191,24 @@ internal class ScriptedCast : CastPeople {
         val answer = CompletableDeferred<Outcome<List<Character>, DraftingError>>()
         calls += draft to answer
         return answer.await()
+    }
+}
+
+/**
+ * Begins stories as the app does, closing the draft in [drafts], and keeps what it began from. [fails]
+ * makes that many of the next calls fail with [StorageError.Full], leaving the draft where it was.
+ */
+internal class FakeBeginStory(private val drafts: InMemoryDraftRepository) : BeginStory {
+    val begun = mutableListOf<StoryDraft>()
+    var fails = 0
+
+    override suspend fun invoke(draft: StoryDraft): Outcome<StoryId, StorageError> {
+        if (fails > 0) {
+            fails--
+            return Outcome.Failure(StorageError.Full)
+        }
+        begun += draft
+        drafts.drafts.value -= draft.id
+        return Outcome.Success(StoryId("story-${begun.size}"))
     }
 }

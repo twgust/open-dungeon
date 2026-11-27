@@ -1,7 +1,7 @@
 package dev.opendungeon.feature.newstory.ui
 
 import dev.opendungeon.domain.story.CharacterLine
-import dev.opendungeon.domain.story.DraftId
+import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.DraftEdit
 import dev.opendungeon.feature.newstory.domain.LeaveAnswer
@@ -56,8 +56,8 @@ sealed interface WizardEffect {
     /** Creation was left from its first step; the draft is kept to resume. */
     data object Leave : WizardEffect
 
-    /** The player began the story; [draft] is saved, opening and all, for play to start from. */
-    data class Begin(val draft: DraftId) : WizardEffect
+    /** The player began the story, which play starts from. */
+    data class Begin(val story: StoryId) : WizardEffect
 
     /** Something the player did could not be kept; the screen already shows it taken back. */
     data class ShowFailure(val failure: WizardFailure) : WizardEffect

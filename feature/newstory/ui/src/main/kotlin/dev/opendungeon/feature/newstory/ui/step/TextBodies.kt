@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.component.PaperField
+import dev.opendungeon.core.ui.rememberEditedText
 import dev.opendungeon.feature.newstory.domain.DraftEdit
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.ui.R

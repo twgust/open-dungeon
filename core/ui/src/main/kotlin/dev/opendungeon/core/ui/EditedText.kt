@@ -1,4 +1,4 @@
-package dev.opendungeon.feature.newstory.ui.step
+package dev.opendungeon.core.ui
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.drop
  * the field did not type, the field takes it, so the next keystroke never writes stale text back.
  */
 @Composable
-internal fun rememberEditedText(value: String, onEdit: (String) -> Unit): TextFieldState {
+public fun rememberEditedText(value: String, onEdit: (String) -> Unit): TextFieldState {
     val field = rememberTextFieldState(value)
     val echoes = remember { TypedEchoes() }
     val latestOnEdit by rememberUpdatedState(onEdit)

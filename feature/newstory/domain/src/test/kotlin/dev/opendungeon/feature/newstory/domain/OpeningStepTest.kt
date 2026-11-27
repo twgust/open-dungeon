@@ -11,8 +11,12 @@ import dev.opendungeon.domain.story.DefaultSentenceBuilder
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Phrase
 import dev.opendungeon.domain.story.StoryDraft
+import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.StepBody.Opening.Wand
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -33,6 +37,7 @@ class OpeningStepTest {
 
     private val opening = ScriptedWriting()
     private val drafter = FakeDrafter(storyteller)
+    private lateinit var begin: FakeBeginStory
 
     private val onOpening = StoryDraft(
         DraftId("d"),
@@ -49,6 +54,7 @@ class OpeningStepTest {
         block: suspend TestScope.(StoryWizard, InMemoryDraftRepository) -> Unit,
     ) = runTest(UnconfinedTestDispatcher()) {
         val repository = InMemoryDraftRepository(draft)
+        begin = FakeBeginStory(repository)
         val wizard = DefaultStoryWizard(
             backgroundScope,
             repository,
@@ -56,6 +62,7 @@ class OpeningStepTest {
             DefaultSentenceBuilder(),
             CountingIds("person"),
             drafter,
+            begin,
         )
         wizard.start()
         block(wizard, repository)
@@ -264,15 +271,48 @@ class OpeningStepTest {
         }
 
     @Test
-    fun `Begin saves the opening and hands the draft on`() = test { wizard, repository ->
-        wizard.edit(DraftEdit.Opening("You wait."))
+    fun `Begin turns the draft into a story, typed text and all, and hands the story on`() =
+        test { wizard, repository ->
+            wizard.edit(DraftEdit.Opening("You wait."))
 
-        wizard.outcomes.test {
-            wizard.begin()
-            assertEquals(WizardOutcome.Begun(DraftId("d")), awaitItem())
+            wizard.outcomes.test {
+                wizard.begin()
+                assertEquals(WizardOutcome.Begun(StoryId("story-1")), awaitItem())
+            }
+            assertEquals("You wait.", begin.begun.single().opening, "typed text begins the story before it settles")
+            assertTrue(repository.drafts.value.isEmpty(), "the draft is closed")
         }
-        assertEquals("You wait.", repository.stored.opening, "typed text is saved before the story begins")
-    }
+
+    @Test
+    fun `after Begin the wizard is done, and nothing it does saves the draft again`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val repository = InMemoryDraftRepository(onOpening)
+            begin = FakeBeginStory(repository)
+            val scope = CoroutineScope(coroutineContext + Job())
+            val wizard = DefaultStoryWizard(
+                scope,
+                repository,
+                wizardPolicies(opening = opening),
+                DefaultSentenceBuilder(),
+                CountingIds("person"),
+                drafter,
+                begin,
+            )
+            wizard.start()
+            wizard.edit(DraftEdit.Opening("You wait."))
+            wizard.begin()
+            val saves = repository.saves
+
+            wizard.edit(DraftEdit.Opening("You wait. Rain."))
+            wizard.roll()
+            advanceTimeBy(DefaultStoryWizard.TYPING_SETTLES * 2)
+            scope.cancel()
+            runCurrent()
+
+            assertEquals(saves, repository.saves)
+            assertTrue(repository.drafts.value.isEmpty(), "the closed draft is never written back")
+            assertTrue(opening.runs.isEmpty())
+        }
 
     @Test
     fun `Begin does nothing while the opening is empty or being written`() = test { wizard, _ ->
@@ -286,10 +326,9 @@ class OpeningStepTest {
     }
 
     @Test
-    fun `Begin that cannot save says why and stays on the step`() =
+    fun `Begin that cannot store the story says why and stays on the step, draft and all`() =
         test(onOpening.copy(opening = "You wait.")) { wizard, repository ->
-            wizard.edit(DraftEdit.Opening("You wait. Rain."))
-            repository.failSaves = 1
+            begin.fails = 1
 
             wizard.outcomes.test {
                 wizard.begin()
@@ -297,6 +336,12 @@ class OpeningStepTest {
                 expectNoEvents()
             }
             assertEquals(CreationStep.Opening, wizard.current().step)
+            assertEquals("You wait.", repository.stored.opening)
+
+            wizard.outcomes.test {
+                wizard.begin()
+                assertEquals(WizardOutcome.Begun(StoryId("story-1")), awaitItem())
+            }
         }
 
     @Test
@@ -309,6 +354,7 @@ class OpeningStepTest {
             DefaultSentenceBuilder(),
             CountingIds("person"),
             drafter,
+            FakeBeginStory(repository),
         )
         wizard.start()
 

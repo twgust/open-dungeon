@@ -6,6 +6,7 @@ import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Sentence
 import dev.opendungeon.domain.story.StorageError
+import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.DraftEdit
 import dev.opendungeon.feature.newstory.domain.LeaveAnswer
@@ -177,12 +178,12 @@ class StoryWizardViewModelTest {
     }
 
     @Test
-    fun `beginning the story becomes a begin effect carrying the draft`() = runTest {
+    fun `beginning the story becomes a begin effect carrying the story`() = runTest {
         val viewModel = StoryWizardViewModel(factory)
 
         viewModel.effects.test {
-            wizard.outcomeChannel.send(WizardOutcome.Begun(DraftId("d")))
-            assertEquals(WizardEffect.Begin(DraftId("d")), awaitItem())
+            wizard.outcomeChannel.send(WizardOutcome.Begun(StoryId("s")))
+            assertEquals(WizardEffect.Begin(StoryId("s")), awaitItem())
         }
     }
 

@@ -59,6 +59,7 @@ import dev.opendungeon.core.designsystem.component.BeginButton
 import dev.opendungeon.core.designsystem.component.GhostTextButton
 import dev.opendungeon.core.designsystem.component.PaperField
 import dev.opendungeon.core.designsystem.component.SentenceLead
+import dev.opendungeon.core.ui.rememberEditedText
 import dev.opendungeon.feature.newstory.domain.DraftEdit
 import dev.opendungeon.feature.newstory.domain.StepBody
 import dev.opendungeon.feature.newstory.domain.WizardState

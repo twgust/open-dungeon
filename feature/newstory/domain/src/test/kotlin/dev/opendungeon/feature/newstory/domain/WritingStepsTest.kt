@@ -77,6 +77,7 @@ class WritingStepsTest {
         DefaultSentenceBuilder(),
         CountingIds("person"),
         drafter,
+        FakeBeginStory(repository),
     )
 
     private suspend fun StoryWizard.current(): WizardState = state.filterNotNull().first()

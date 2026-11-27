@@ -117,13 +117,13 @@ public fun GhostTextButton(
 }
 
 /**
- * A hairline pill with an icon that asks for something to be done, such as the wand. [running] fills
- * it with ink, for the one thing that is under way and can be stopped from it.
+ * A hairline pill that asks for something to be done, such as the wand, with its [icon] when it has one.
+ * [running] fills it with ink, for the one thing that is under way and can be stopped from it.
  */
 @Composable
 public fun ActionPill(
     text: String,
-    icon: ImageVector,
+    icon: ImageVector?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     running: Boolean = false,
@@ -140,10 +140,10 @@ public fun ActionPill(
         onToggle = onClick,
         picked = null,
         enabled = enabled,
-        padding = PaddingValues(start = 14.dp, top = 12.dp, end = 18.dp, bottom = 12.dp),
+        padding = PaddingValues(start = if (icon == null) 18.dp else 14.dp, top = 12.dp, end = 18.dp, bottom = 12.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(18.dp))
+            icon?.let { Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(18.dp)) }
             Text(text, style = Paper.type.button, color = content)
         }
     }
@@ -199,6 +199,21 @@ public fun NextArrow(
 /** The last step's ink pill that starts the story. Faded until the story can start. */
 @Composable
 public fun BeginButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    InkButton(text = text, onClick = onClick, modifier = modifier, enabled = enabled)
+}
+
+/**
+ * The ink pill for the page's main act, such as Begin or Continue, with the wand when a model writes
+ * because of it. Faded until it can act.
+ */
+@Composable
+public fun InkButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+) {
     val colors = Paper.colors
     PillFrame(
         modifier = modifier
@@ -208,12 +223,19 @@ public fun BeginButton(text: String, onClick: () -> Unit, modifier: Modifier = M
         onToggle = onClick,
         picked = null,
         enabled = enabled,
-        padding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+        padding = PaddingValues(start = if (icon == null) 24.dp else 20.dp, end = 24.dp, top = 12.dp, bottom = 12.dp),
     ) {
-        Text(
-            text,
-            style = TextStyle(fontFamily = Paper.type.pill.fontFamily, fontSize = 21.sp, fontStyle = FontStyle.Italic),
-            color = colors.onInk,
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.CenterVertically) {
+            icon?.let { Icon(it, contentDescription = null, tint = colors.onInk, modifier = Modifier.size(18.dp)) }
+            Text(
+                text,
+                style = TextStyle(
+                    fontFamily = Paper.type.pill.fontFamily,
+                    fontSize = 21.sp,
+                    fontStyle = FontStyle.Italic,
+                ),
+                color = colors.onInk,
+            )
+        }
     }
 }

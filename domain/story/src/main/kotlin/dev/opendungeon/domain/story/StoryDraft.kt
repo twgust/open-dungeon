@@ -4,18 +4,18 @@ package dev.opendungeon.domain.story
 public data class StoryDraft(
     val id: DraftId,
     val step: CreationStep = CreationStep.Genre,
-    val genres: List<Phrase> = emptyList(),
-    val twist: Phrase? = null,
-    val protagonist: Character? = null,
-    val tone: Phrase? = null,
-    val setting: Phrase? = null,
-    val limits: ContentLimits = ContentLimits(),
-    val premise: Phrase? = null,
+    override val genres: List<Phrase> = emptyList(),
+    override val twist: Phrase? = null,
+    override val protagonist: Character? = null,
+    override val tone: Phrase? = null,
+    override val setting: Phrase? = null,
+    override val limits: ContentLimits = ContentLimits(),
+    override val premise: Phrase? = null,
     val cast: List<CastMember> = emptyList(),
     /** How the story begins, as the player wrote it or kept it from a model. Play starts from it. */
     val opening: String = "",
-) {
-    val castInStory: List<Character>
+) : StoryChoices {
+    override val castInStory: List<Character>
         get() = cast.filter(CastMember::inStory).map(CastMember::character)
 
     public companion object {

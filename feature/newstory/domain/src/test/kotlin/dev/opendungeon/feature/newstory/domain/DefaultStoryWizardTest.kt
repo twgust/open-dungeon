@@ -39,7 +39,15 @@ class DefaultStoryWizardTest {
         scope: CoroutineScope,
         repository: InMemoryDraftRepository,
         policies: Set<StepPolicy> = this.policies,
-    ) = DefaultStoryWizard(scope, repository, policies, DefaultSentenceBuilder(), CountingIds("draft"), FakeDrafter())
+    ) = DefaultStoryWizard(
+        scope,
+        repository,
+        policies,
+        DefaultSentenceBuilder(),
+        CountingIds("draft"),
+        FakeDrafter(),
+        FakeBeginStory(repository),
+    )
 
     private suspend fun StoryWizard.current(): WizardState = state.filterNotNull().first()
 

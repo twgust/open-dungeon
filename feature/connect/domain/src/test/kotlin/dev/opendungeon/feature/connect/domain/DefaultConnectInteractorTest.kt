@@ -11,6 +11,11 @@ import dev.opendungeon.domain.openrouter.testing.FETCHED_AT
 import dev.opendungeon.domain.openrouter.testing.FakeModelCatalog
 import dev.opendungeon.domain.openrouter.testing.FakeModelSetup
 import dev.opendungeon.domain.openrouter.testing.aiModel
+import dev.opendungeon.domain.story.DraftId
+import dev.opendungeon.domain.story.StorageError
+import dev.opendungeon.domain.story.Story
+import dev.opendungeon.domain.story.StoryId
+import dev.opendungeon.domain.story.StoryRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,7 +63,31 @@ class DefaultConnectInteractorTest {
         account: FakeAccount,
         catalog: FakeModelCatalog = FakeModelCatalog(),
         setup: FakeModelSetup = FakeModelSetup(),
-    ) = DefaultConnectInteractor(backgroundScope, account, catalog, setup)
+        stories: FakeStories = FakeStories(),
+    ) = DefaultConnectInteractor(backgroundScope, account, catalog, setup, stories)
+
+    /** Only the latest story matters here; nothing else of a story is read. */
+    private class FakeStories : StoryRepository {
+        override val latest = MutableStateFlow<StoryId?>(null)
+
+        override suspend fun story(id: StoryId): Outcome<Story?, StorageError> = Outcome.Success(null)
+
+        override suspend fun begin(story: Story, from: DraftId): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+
+        override suspend fun save(story: Story): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+    }
+
+    @Test
+    fun `home offers the story saved last, and follows a new one`() = runTest(UnconfinedTestDispatcher()) {
+        val account = FakeAccount(connected = true)
+        val stories = FakeStories()
+        val interactor = interactor(account, FakeModelCatalog(storedCatalog), stories = stories)
+        assertEquals(loaded, interactor.state.value)
+
+        stories.latest.value = StoryId("salt-war")
+
+        assertEquals(loaded.copy(story = StoryId("salt-war")), interactor.state.value)
+    }
 
     @Test
     fun `a rejected key returns to key entry with the reason`() = runTest(UnconfinedTestDispatcher()) {
