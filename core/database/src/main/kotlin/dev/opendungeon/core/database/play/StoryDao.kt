@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.Flow
 @Suppress("TooManyFunctions") // One query per thing done to a story; Room needs each as its own function.
 public interface StoryDao {
 
+    /** A story in the trash is not read. */
     @Transaction
-    @Query("SELECT * FROM story WHERE id = :id")
+    @Query("SELECT * FROM story WHERE id = :id AND deleted_at IS NULL")
     public suspend fun get(id: String): StoredStory?
 
-    /** Ties on the time are broken by id, so the order never flickers between two reads. */
-    @Query("SELECT id, title, genres, updated_at FROM story ORDER BY updated_at DESC, id")
+    /** Stories in the trash are left out. Ties on the time are broken by id, so the order never flickers. */
+    @Query(
+        "SELECT id, title, genres, updated_at FROM story WHERE deleted_at IS NULL ORDER BY updated_at DESC, id",
+    )
     public fun listings(): Flow<List<StoryListing>>
 
     /**
@@ -69,9 +72,15 @@ public interface StoryDao {
     @Query("UPDATE story SET title = :title WHERE id = :id AND title IS NULL")
     public suspend fun nameIfUntitled(id: String, title: String)
 
-    /** Its people and beats go with it, by the cascade. */
-    @Query("DELETE FROM story WHERE id = :id")
-    public suspend fun delete(id: String)
+    @Query("UPDATE story SET deleted_at = :at WHERE id = :id")
+    public suspend fun trash(id: String, at: Long)
+
+    @Query("UPDATE story SET deleted_at = NULL WHERE id = :id")
+    public suspend fun restore(id: String)
+
+    /** Their people and beats go with them, by the cascade. */
+    @Query("DELETE FROM story WHERE deleted_at IS NOT NULL")
+    public suspend fun emptyTrash()
 
     @Insert
     public suspend fun insertCharacters(characters: List<StoryCharacterEntity>)

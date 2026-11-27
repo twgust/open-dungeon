@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.Flow
  * Storage failures are expected, if rare, and come back as [StorageError]; nothing here throws them.
  */
 public interface StoryRepository {
-    /** The story with [id], or `null` when there is none. */
+    /** The story with [id], or `null` when there is none or it is in the trash. */
     public suspend fun story(id: StoryId): Outcome<Story?, StorageError>
 
     /**
-     * Every story, the one played last first. Follows every change. A database that cannot be read offers
+     * Every story but those in the trash, the one played last first. Follows every change. A database that cannot be read offers
      * no stories, rather than fail whoever follows it.
      */
     public val stories: Flow<List<StorySummary>>
@@ -36,6 +36,16 @@ public interface StoryRepository {
     /** Calls the story [title] only if it has no title yet, so a name the player gave is never replaced. */
     public suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError>
 
-    /** Removes the story with everything in it. Removing a story that is not there succeeds. */
-    public suspend fun remove(id: StoryId): Outcome<Unit, StorageError>
+    /**
+     * Puts the story in the trash: it is no longer listed or read, and stays stored until [emptyTrash], so
+     * [restore] can bring it back exactly as it was, even after the app restarts. Writes run in the order
+     * they are called, so a restore right after a trash always wins.
+     */
+    public suspend fun trash(id: StoryId): Outcome<Unit, StorageError>
+
+    /** Takes the story out of the trash. A story that is not in it is left as it is. */
+    public suspend fun restore(id: StoryId): Outcome<Unit, StorageError>
+
+    /** Removes every story in the trash for good, with everything in them. */
+    public suspend fun emptyTrash(): Outcome<Unit, StorageError>
 }

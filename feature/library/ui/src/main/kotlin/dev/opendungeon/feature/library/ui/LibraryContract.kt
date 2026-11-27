@@ -22,7 +22,7 @@ sealed interface LibraryIntent {
 
     data object CancelEdit : LibraryIntent
 
-    data object Delete : LibraryIntent
+    data class Delete(val story: StoryId) : LibraryIntent
 
     data object Undo : LibraryIntent
 }

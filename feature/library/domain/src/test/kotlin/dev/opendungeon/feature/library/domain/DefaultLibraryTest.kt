@@ -1,10 +1,7 @@
 package dev.opendungeon.feature.library.domain
 
 import app.cash.turbine.test
-import dev.opendungeon.core.model.Outcome
-import dev.opendungeon.domain.drafting.DraftingError
-import dev.opendungeon.domain.drafting.NameStory
-import dev.opendungeon.domain.drafting.NamingError
+import dev.opendungeon.domain.drafting.NameUntitledStories
 import dev.opendungeon.domain.story.Beat
 import dev.opendungeon.domain.story.BeatId
 import dev.opendungeon.domain.story.DraftId
@@ -18,11 +15,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,34 +33,29 @@ class DefaultLibraryTest {
     private val salt = story("salt", title = "The Salt Key", genre = "Gothic")
     private val snow = story("snow", title = "Snowbound")
 
-    /** Names every story it is asked to, unless told to fail, and remembers whom it was asked about. */
-    private class FakeNaming(private val stories: InMemoryStories) : NameStory {
-        val asked = mutableListOf<StoryId>()
-        var fails = false
-        var gate: CompletableDeferred<Unit>? = null
+    /** Counts how often naming is started; naming itself is tested where it lives. */
+    private class CountingNaming : NameUntitledStories {
+        var started = 0
 
-        override suspend fun invoke(id: StoryId): Outcome<Unit, NamingError> {
-            asked += id
-            gate?.await()
-            if (fails) return Outcome.Failure(NamingError.Drafting(DraftingError.NoModel))
-            stories.nameIfUntitled(id, "Named ${id.value}")
-            return Outcome.Success(Unit)
+        override suspend fun invoke() {
+            started++
+            awaitCancellation()
         }
     }
 
-    private class Setup(val library: Library, val stories: InMemoryStories, val naming: FakeNaming, val scope: Job)
+    private class Setup(val library: Library, val stories: InMemoryStories, val naming: CountingNaming)
 
     /** Begins [stories] in order, so the last is the one played last. */
     private suspend fun TestScope.library(
         vararg stories: Story,
-        naming: (InMemoryStories) -> FakeNaming = ::FakeNaming,
+        prepare: suspend InMemoryStories.() -> Unit = {},
     ): Setup {
         val stored = InMemoryStories()
         stories.forEach { stored.begin(it, from = DraftId("draft")) }
-        val names = naming(stored)
+        stored.prepare()
+        val naming = CountingNaming()
         val scope = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext[Job]))
-        val library = DefaultLibrary(scope, stored, names, undoWindow = WINDOW)
-        return Setup(library, stored, names, scope.coroutineContext[Job]!!)
+        return Setup(DefaultLibrary(scope, stored, naming, undoWindow = WINDOW), stored, naming)
     }
 
     private val Setup.shown get() = library.state.value.stories.map { it.title }
@@ -80,32 +71,13 @@ class DefaultLibraryTest {
     }
 
     @Test
-    fun `untitled stories are named one at a time, each asked about once`() = runTest(UnconfinedTestDispatcher()) {
-        val gate = CompletableDeferred<Unit>()
-        val setup = library(
-            story("a"),
-            story("b"),
-            salt,
-            naming = { FakeNaming(it).apply { this.gate = gate } },
-        )
-
-        assertEquals(listOf(StoryId("b")), setup.naming.asked, "the one played last first, and one at a time")
-        assertEquals(listOf("The Salt Key", null, null), setup.shown)
-        gate.complete(Unit)
-
-        assertEquals(listOf(StoryId("b"), StoryId("a")), setup.naming.asked)
-        assertEquals(listOf("The Salt Key", "Named b", "Named a"), setup.shown)
-    }
-
-    @Test
-    fun `a story that cannot be named stays untitled, and is not asked about again`() =
+    fun `opening empties the trash of earlier sessions and starts naming, once`() =
         runTest(UnconfinedTestDispatcher()) {
-            val setup = library(story("a"), naming = { FakeNaming(it).apply { fails = true } })
+            val setup = library(salt, snow) { trash(StoryId("salt")) }
 
-            setup.stories.save(story("a").copy(guide = "Again."))
-
-            assertEquals(listOf(StoryId("a")), setup.naming.asked)
-            assertEquals(listOf<String?>(null), setup.shown)
+            assertNull(setup.stories.stored(salt.id), "trashed before this library, so gone for good")
+            assertEquals(listOf("Snowbound"), setup.shown)
+            assertEquals(1, setup.naming.started)
         }
 
     @Test
@@ -129,7 +101,7 @@ class DefaultLibraryTest {
 
     @Test
     fun `an untitled story opens with an empty title`() = runTest(UnconfinedTestDispatcher()) {
-        val library = library(story("a"), naming = { FakeNaming(it).apply { fails = true } }).library
+        val library = library(story("a")).library
 
         library.edit(StoryId("a"))
 
@@ -169,105 +141,113 @@ class DefaultLibraryTest {
     }
 
     @Test
-    fun `cancelling keeps nothing, and verbs without an open title change nothing`() =
-        runTest(UnconfinedTestDispatcher()) {
-            val setup = library(salt)
+    fun `verbs that mean nothing now change nothing`() = runTest(UnconfinedTestDispatcher()) {
+        val setup = library(salt)
 
-            setup.library.saveTitle()
-            setup.library.delete()
-            setup.library.undoDelete()
-            setup.library.typeTitle("Brine")
-            setup.library.edit(StoryId("elsewhere"))
-            setup.library.edit(salt.id)
-            setup.library.typeTitle("Brine")
-            setup.library.cancelEdit()
-
-            assertNull(setup.library.state.value.editing)
-            assertEquals(listOf("The Salt Key"), setup.shown)
-            assertEquals(listOf("begin salt"), setup.stories.writes)
-        }
-
-    @Test
-    fun `a deleted story leaves at once and comes back on undo, never removed`() = runTest(UnconfinedTestDispatcher()) {
-        val setup = library(salt, snow)
+        setup.library.saveTitle()
+        setup.library.undoDelete()
+        setup.library.typeTitle("Brine")
+        setup.library.delete(StoryId("elsewhere"))
+        setup.library.edit(StoryId("elsewhere"))
         setup.library.edit(salt.id)
-
-        setup.library.delete()
+        setup.library.typeTitle("Brine")
+        setup.library.cancelEdit()
 
         assertNull(setup.library.state.value.editing)
-        assertEquals(salt.id, setup.library.state.value.undo)
-        assertEquals(listOf("Snowbound"), setup.shown)
-        setup.library.edit(salt.id)
-        assertNull(setup.library.state.value.editing, "a deleted story cannot be opened")
-
-        setup.library.undoDelete()
-        advanceTimeBy(WINDOW * 2)
-
-        assertNull(setup.library.state.value.undo)
-        assertEquals(listOf("Snowbound", "The Salt Key"), setup.shown)
-        assertEquals(salt, setup.stories.stored(salt.id)?.copy(title = salt.title))
+        assertEquals(listOf("The Salt Key"), setup.shown)
+        assertEquals(listOf("begin salt", "empty trash"), setup.stories.writes)
     }
 
     @Test
-    fun `a deleted story is removed for good once the undo window ends`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a delete is trashed at once, closes its title, and undo brings it back where it was`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val setup = library(salt, snow)
+            setup.library.edit(salt.id)
+
+            setup.library.delete(salt.id)
+
+            assertNull(setup.library.state.value.editing)
+            assertEquals(salt.id, setup.library.state.value.undo)
+            assertEquals(listOf("Snowbound"), setup.shown)
+            assertTrue(setup.stories.isTrashed(salt.id), "stored as deleted at once, so the app may die now")
+
+            setup.library.undoDelete()
+
+            assertNull(setup.library.state.value.undo)
+            assertEquals(listOf("Snowbound", "The Salt Key"), setup.shown)
+            assertFalse(setup.stories.isTrashed(salt.id))
+        }
+
+    @Test
+    fun `an undo shows at once, before storage has it`() = runTest(UnconfinedTestDispatcher()) {
         val setup = library(salt, snow)
-        setup.library.edit(salt.id)
-        setup.library.delete()
+        setup.library.delete(salt.id)
+        val hold = CompletableDeferred<Unit>()
+        setup.stories.hold = hold
+
+        setup.library.undoDelete()
+
+        assertEquals(listOf("Snowbound", "The Salt Key"), setup.shown)
+        hold.complete(Unit)
+        assertEquals(listOf("Snowbound", "The Salt Key"), setup.shown)
+    }
+
+    @Test
+    fun `undo is offered for the window, then the story stays deleted`() = runTest(UnconfinedTestDispatcher()) {
+        val setup = library(salt, snow)
+        setup.library.delete(salt.id)
 
         advanceTimeBy(WINDOW - 1.seconds)
         assertEquals(salt.id, setup.library.state.value.undo)
         advanceTimeBy(2.seconds)
 
         assertNull(setup.library.state.value.undo)
-        assertNull(setup.stories.stored(salt.id))
-        assertEquals(listOf("Snowbound"), setup.shown)
         setup.library.undoDelete()
         assertEquals(listOf("Snowbound"), setup.shown, "too late to take back")
+        assertTrue(setup.stories.isTrashed(salt.id))
     }
 
     @Test
-    fun `a delete storage refuses brings the story back, and says so`() = runTest(UnconfinedTestDispatcher()) {
-        val setup = library(salt)
+    fun `a second delete takes over the offer, and only it can be taken back`() = runTest(UnconfinedTestDispatcher()) {
+        val setup = library(salt, snow)
+        setup.library.delete(salt.id)
+        advanceTimeBy(WINDOW - 1.seconds)
+
+        setup.library.delete(snow.id)
+        advanceTimeBy(2.seconds)
+
+        assertEquals(snow.id, setup.library.state.value.undo, "a new delete gets the whole window")
+        setup.library.undoDelete()
+        assertEquals(listOf("Snowbound"), setup.shown)
+        assertTrue(setup.stories.isTrashed(salt.id))
+    }
+
+    @Test
+    fun `a delete storage refuses puts the story back, and says so`() = runTest(UnconfinedTestDispatcher()) {
+        val setup = library(salt, snow)
+        setup.stories.fail = 1
 
         setup.library.failures.test {
-            setup.library.edit(salt.id)
-            setup.library.delete()
-            setup.stories.fail = 1
-            advanceTimeBy(WINDOW + 1.seconds)
+            setup.library.delete(salt.id)
 
             assertEquals(LibraryFailure.Delete(StorageError.Full), awaitItem())
-            assertEquals(listOf("The Salt Key"), setup.shown)
+            assertEquals(listOf("Snowbound", "The Salt Key"), setup.shown)
             assertNull(setup.library.state.value.undo)
         }
     }
 
     @Test
-    fun `a second delete removes the first for good, and only the second can be taken back`() =
-        runTest(UnconfinedTestDispatcher()) {
-            val setup = library(salt, snow)
-            setup.library.edit(salt.id)
-            setup.library.delete()
+    fun `an undo storage refuses leaves the story deleted, and says so`() = runTest(UnconfinedTestDispatcher()) {
+        val setup = library(salt, snow)
+        setup.library.delete(salt.id)
+        setup.stories.fail = 1
 
-            setup.library.edit(snow.id)
-            setup.library.delete()
-            runCurrent()
-
-            assertNull(setup.stories.stored(salt.id))
-            assertEquals(snow.id, setup.library.state.value.undo)
+        setup.library.failures.test {
             setup.library.undoDelete()
+
+            assertEquals(LibraryFailure.Undo(StorageError.Full), awaitItem())
             assertEquals(listOf("Snowbound"), setup.shown)
         }
-
-    @Test
-    fun `closing the library inside the undo window still removes the story`() = runTest(UnconfinedTestDispatcher()) {
-        val setup = library(salt)
-        setup.library.edit(salt.id)
-        setup.library.delete()
-
-        setup.scope.cancel()
-        runCurrent()
-
-        assertNull(setup.stories.stored(salt.id))
     }
 
     private companion object {
@@ -275,9 +255,9 @@ class DefaultLibraryTest {
 
         fun story(id: String, title: String? = null, genre: String? = null) = Story(
             id = StoryId(id),
-            title = title,
             setup = StorySetup(genres = listOfNotNull(genre?.let(Phrase::Offered))),
             beats = listOf(Beat(BeatId("$id-1"), Beat.Kind.Opening, "Rain falls.")),
+            title = title,
         )
     }
 }

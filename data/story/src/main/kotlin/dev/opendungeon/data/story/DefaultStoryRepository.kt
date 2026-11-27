@@ -85,8 +85,17 @@ public class DefaultStoryRepository(private val dao: StoryDao, private val clock
     override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
         storage { dao.nameIfUntitled(id.value, title) }
 
-    override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = lock.withLock {
-        storage { dao.delete(id.value) }.also { if (it is Outcome.Success) written.remove(id) }
+    override suspend fun trash(id: StoryId): Outcome<Unit, StorageError> = lock.withLock {
+        storage { dao.trash(id.value, at = now()) }
+    }
+
+    override suspend fun restore(id: StoryId): Outcome<Unit, StorageError> = lock.withLock {
+        storage { dao.restore(id.value) }
+    }
+
+    override suspend fun emptyTrash(): Outcome<Unit, StorageError> = lock.withLock {
+        // What this repository wrote of a removed story is forgotten: a story can only be read again by id.
+        storage { dao.emptyTrash() }.also { if (it is Outcome.Success) written.clear() }
     }
 
     private fun now(): Long = clock.now().toEpochMilliseconds()

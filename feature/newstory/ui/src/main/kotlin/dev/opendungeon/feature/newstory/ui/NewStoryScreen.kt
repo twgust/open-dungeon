@@ -51,6 +51,7 @@ import dev.opendungeon.core.designsystem.component.NextArrow
 import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.designsystem.component.ProgressLine
 import dev.opendungeon.core.designsystem.component.SentenceLead
+import dev.opendungeon.core.designsystem.component.SheetButton
 import dev.opendungeon.core.designsystem.component.StepTransition
 import dev.opendungeon.core.ui.CollectEffects
 import dev.opendungeon.core.ui.ErrorMessages
@@ -276,24 +277,6 @@ private fun LeaveSheet(note: Int?, onIntent: (WizardIntent) -> Unit) {
                 )
             }
         }
-    }
-}
-
-/** A sans pill for the sheet's answers; [ink] marks the one that acts. */
-@Composable
-private fun SheetButton(text: String, onClick: () -> Unit, ink: Boolean = false) {
-    val colors = Paper.colors
-    Box(
-        Modifier
-            .heightIn(min = 48.dp)
-            .clip(CircleShape)
-            .border(1.dp, if (ink) colors.ink else colors.hairline, CircleShape)
-            .background(if (ink) colors.ink else colors.card, CircleShape)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 18.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text, style = Paper.type.button, color = if (ink) colors.onInk else colors.ink)
     }
 }
 

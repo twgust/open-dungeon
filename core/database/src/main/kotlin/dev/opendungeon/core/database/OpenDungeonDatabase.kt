@@ -40,7 +40,7 @@ import dev.opendungeon.core.database.story.StoryDraftEntity
         StoryCharacterEntity::class,
         BeatEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         // 2 adds the model catalog, the chosen model and tunings: new tables only.
@@ -51,6 +51,8 @@ import dev.opendungeon.core.database.story.StoryDraftEntity
         AutoMigration(from = 3, to = 4),
         // 5 adds story titles: one nullable column, so every story arrives untitled.
         AutoMigration(from = 4, to = 5),
+        // 6 adds the trash: one nullable column, so no story arrives deleted.
+        AutoMigration(from = 5, to = 6),
     ],
 )
 @TypeConverters(StorageConverters::class)

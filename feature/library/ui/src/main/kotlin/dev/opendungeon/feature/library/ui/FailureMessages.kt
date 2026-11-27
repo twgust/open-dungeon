@@ -8,11 +8,17 @@ import dev.opendungeon.feature.library.domain.LibraryFailure
 
 /** What each failure says: what did not happen, then why when the reason helps. */
 @Immutable
-internal class FailureMessages(private val rename: String, private val delete: String, private val full: String) {
+internal class FailureMessages(
+    private val rename: String,
+    private val delete: String,
+    private val undo: String,
+    private val full: String,
+) {
     fun of(failure: LibraryFailure): String {
         val what = when (failure) {
             is LibraryFailure.Rename -> rename
             is LibraryFailure.Delete -> delete
+            is LibraryFailure.Undo -> undo
         }
         return when (failure.error) {
             StorageError.Full -> "$what $full"
@@ -25,5 +31,6 @@ internal class FailureMessages(private val rename: String, private val delete: S
 internal fun failureMessages(): FailureMessages = FailureMessages(
     rename = stringResource(R.string.library_rename_failed),
     delete = stringResource(R.string.library_delete_failed),
+    undo = stringResource(R.string.library_undo_failed),
     full = stringResource(R.string.library_storage_full),
 )

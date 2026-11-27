@@ -86,7 +86,11 @@ internal class InMemoryStories(vararg stories: Story) : StoryRepository {
     override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
         error("Play never names")
 
-    override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = error("Play never removes")
+    override suspend fun trash(id: StoryId): Outcome<Unit, StorageError> = error("Play never deletes")
+
+    override suspend fun restore(id: StoryId): Outcome<Unit, StorageError> = error("Play never deletes")
+
+    override suspend fun emptyTrash(): Outcome<Unit, StorageError> = error("Play never deletes")
 }
 
 /** The drafting model a test sets. */

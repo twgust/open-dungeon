@@ -37,7 +37,7 @@ class LibraryViewModel(libraryFactory: Library.Factory) :
         is LibraryIntent.TypeTitle -> library.typeTitle(intent.text)
         LibraryIntent.SaveTitle -> library.saveTitle()
         LibraryIntent.CancelEdit -> library.cancelEdit()
-        LibraryIntent.Delete -> library.delete()
+        is LibraryIntent.Delete -> library.delete(intent.story)
         LibraryIntent.Undo -> library.undoDelete()
     }
 }

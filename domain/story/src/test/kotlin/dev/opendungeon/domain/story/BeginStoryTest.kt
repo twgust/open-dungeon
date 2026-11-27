@@ -31,7 +31,11 @@ class BeginStoryTest {
         override suspend fun nameIfUntitled(id: StoryId, title: String): Outcome<Unit, StorageError> =
             Outcome.Success(Unit)
 
-        override suspend fun remove(id: StoryId): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+        override suspend fun trash(id: StoryId): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+
+        override suspend fun restore(id: StoryId): Outcome<Unit, StorageError> = Outcome.Success(Unit)
+
+        override suspend fun emptyTrash(): Outcome<Unit, StorageError> = Outcome.Success(Unit)
     }
 
     private class CountingIds : IdGenerator {

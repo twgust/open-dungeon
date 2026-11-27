@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
@@ -237,5 +239,33 @@ public fun InkButton(
                 color = colors.onInk,
             )
         }
+    }
+}
+
+/**
+ * A sans pill for a sheet's answers, such as Cancel and Save; [ink] marks the one that acts. Faded while
+ * it cannot act.
+ */
+@Composable
+public fun SheetButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    ink: Boolean = false,
+    enabled: Boolean = true,
+) {
+    val colors = Paper.colors
+    Box(
+        modifier
+            .heightIn(min = 48.dp)
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .clip(CircleShape)
+            .border(1.dp, if (ink) colors.ink else colors.hairline, CircleShape)
+            .background(if (ink) colors.ink else colors.card, CircleShape)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = Paper.type.button, color = if (ink) colors.onInk else colors.ink)
     }
 }

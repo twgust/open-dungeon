@@ -57,6 +57,24 @@ class StoryMigrationTest {
         }
     }
 
+    @Test
+    fun `no story arrives in the trash`() {
+        helper.createDatabase(NAME, 5).use { db ->
+            db.execSQL(
+                "INSERT INTO story (id, title, genres, limit_desire, limit_violence, unsent_turn, updated_at) " +
+                    "VALUES ('s', 'The Salt Key', '[]', 'close', 'felt', '', 7)",
+            )
+        }
+
+        helper.runMigrationsAndValidate(NAME, 6, true).use { db ->
+            db.query("SELECT title, deleted_at FROM story").use { rows ->
+                rows.moveToFirst()
+                assertEquals("The Salt Key", rows.getString(0))
+                assertTrue(rows.isNull(1))
+            }
+        }
+    }
+
     private companion object {
         const val NAME = "story-migration-test.db"
     }
