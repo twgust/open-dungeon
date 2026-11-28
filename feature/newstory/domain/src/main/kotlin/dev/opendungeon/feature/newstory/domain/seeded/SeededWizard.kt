@@ -11,14 +11,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The fast way into a story: a premise with blanks, who the two people are if the player cares to say,
- * how far the story may go, and then the story begins, written by a model.
+ * The fast way into a story: a premise with blanks the player fills, who the two people are if the player
+ * cares to say, how far the story may go, and then the story begins, written by a model.
  *
  * Like the custom wizard, callers state what the player did and the wizard decides what it means. Verbs
  * run one at a time, show their result at once, and verbs that mean nothing where the player is are
  * ignored. Nothing is stored until the story begins: a seeded story takes seconds to set up, so it has
  * no draft to resume, and an open custom draft is never touched.
+ *
+ * There is one function for each thing the player can do, so the functions are many by design.
  */
+@Suppress("TooManyFunctions")
 public interface SeededWizard {
 
     /** What to show, or `null` until [start]. */
@@ -30,10 +33,19 @@ public interface SeededWizard {
     /** Deals the first seed. Does nothing once started. */
     public fun start()
 
-    /** The next words for one blank of the seed, written by a model once the seed's own run out. */
-    public fun reroll(blank: String)
+    /** Picks one blank of the seed, to show the words that could fill it. */
+    public fun pick(blank: String)
 
-    /** Another seed, written by a model once those that come with the app run out. */
+    /**
+     * Puts [words] in [blank], either one of its suggestions or the player's own, and picks the next blank
+     * still empty. Braces and line breaks are left out and long words cut, so the player's own always fit.
+     */
+    public fun fill(blank: String, words: String)
+
+    /** Asks a model for more words for [blank]. The only way a blank's words come from a model. */
+    public fun suggestMore(blank: String)
+
+    /** Another seed, its blanks empty, written by a model once those that come with the app run out. */
     public fun rollSeed()
 
     /** The player's words about one of the two people, kept as typed. */
@@ -45,7 +57,7 @@ public interface SeededWizard {
     /** The player's own limits, in their words. */
     public fun submitOwn(text: String)
 
-    /** Moves on, stopping whatever a model is writing and keeping what is shown. */
+    /** Moves on once every blank is filled, stopping whatever a model is writing and keeping what is shown. */
     public fun next()
 
     /** Steps back. While the story is being written it asks first: [SeededState.confirmingLeave]. */
@@ -86,7 +98,7 @@ public data class SeededState(
 
 /** Which controls are live. */
 public data class SeededControls(
-    /** Forward is live: next, or on the limits, Begin. */
+    /** Forward is live: next once every blank is filled, or on the limits, Begin. */
     val canAdvance: Boolean,
     /** Forward begins the story. */
     val begins: Boolean,
@@ -94,14 +106,23 @@ public data class SeededControls(
     val canRoll: Boolean,
     /** A model is writing something that stopping would cut short. */
     val canStop: Boolean,
-    /** The step takes the player's own words in its "Custom" pill. */
+    /** The step takes the player's own words in its "Custom" pill: the limits, or the picked blank. */
     val takesOwnWords: Boolean,
 )
 
 public sealed interface SeededBody {
 
-    /** The seed's sentence, its blanks tappable. [replacing] while a model writes new seeds to replace it. */
-    public data class Seed(val genre: String, val parts: List<SeedPart>, val replacing: Boolean) : SeededBody
+    /**
+     * The seed's sentence, its blanks tappable, empty until the player fills them, and under it the words
+     * for the picked blank. [replacing] while a model writes new seeds to replace it.
+     */
+    public data class Seed(
+        val genre: String,
+        val parts: List<SeedPart>,
+        /** The words for the picked blank; `null` when none is picked. */
+        val suggestions: Suggestions?,
+        val replacing: Boolean,
+    ) : SeededBody
 
     /** Two short fields, both optional, under the premise. */
     public data class People(
@@ -131,17 +152,29 @@ public sealed interface SeededBody {
 
 /** A piece of the seed's sentence. */
 public sealed interface SeedPart {
-    public val text: String
 
-    public data class Text(override val text: String) : SeedPart
+    public data class Text(val text: String) : SeedPart
 
-    /** A blank the player can tap for other words. [pending] while a model writes more words for it. */
+    /** A blank the player taps to pick it. */
     public data class Blank(
         val key: String,
         val kind: Seed.Kind,
-        override val text: String,
-        val pending: Boolean,
-        /** Tapping it would do something now. */
-        val canReroll: Boolean,
+        /** The words the player put in it, capitalised where they open the sentence; `null` while empty. */
+        val words: String?,
+        /** Its suggestions are the ones shown. */
+        val picked: Boolean,
     ) : SeedPart
 }
+
+/** The words that could fill one blank, in the order they were written. */
+public data class Suggestions(
+    val blank: String,
+    val kind: Seed.Kind,
+    val words: List<String>,
+    /** The words in the blank now, if any. */
+    val chosen: String?,
+    /** A model is writing more. */
+    val pending: Boolean,
+    /** Asking for more would do something now. */
+    val canSuggestMore: Boolean,
+)

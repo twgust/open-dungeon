@@ -82,6 +82,16 @@ public data class Seed(
         return copy(blanks = blanks.map { if (it.key == blank.key) blank else it })
     }
 
+    /**
+     * This seed with [words] in the blank [key], or `null` when there is no such blank or the words cannot
+     * stand in one: empty, too long, or with braces or a line break. The blank's other words are kept.
+     */
+    public fun filled(key: String, words: String): Seed? {
+        val blank = blank(key) ?: return null
+        val fill = words.trim().takeIf(String::isFillable) ?: return null
+        return with(blank.copy(fill = fill))
+    }
+
     private fun partsOf(text: String, capitalise: Boolean = true): List<Part> {
         val parts = mutableListOf<Part>()
         var at = 0

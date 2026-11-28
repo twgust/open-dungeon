@@ -38,6 +38,7 @@ import dev.opendungeon.core.designsystem.component.PaperNotices
 import dev.opendungeon.core.designsystem.component.ProgressLine
 import dev.opendungeon.core.designsystem.component.StepTransition
 import dev.opendungeon.core.ui.CollectEffects
+import dev.opendungeon.domain.drafting.Seed
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.seeded.SeededBody
@@ -115,10 +116,7 @@ private fun ColumnScope.StepPage(state: SeededState, onIntent: (SeededIntent) ->
     StepTransition(state = state, stepOf = SeededState::step, modifier = Modifier.weight(1f)) { shown ->
         Column(Modifier.fillMaxSize()) {
             Stage(shown, onIntent, Modifier.weight(1f))
-            if (shown.controls.takesOwnWords) {
-                // The limits are the custom wizard's step, so their own words are too.
-                OwnWordsBar(step = CreationStep.Limits, onUse = { onIntent(SeededIntent.Own(it)) })
-            }
+            if (shown.controls.takesOwnWords) OwnWords(shown, onIntent)
         }
     }
     BottomBar(state, onIntent)
@@ -144,6 +142,25 @@ private fun Stage(state: SeededState, onIntent: (SeededIntent) -> Unit, modifier
             is SeededBody.Making -> MakingBody(body)
         }
         state.writer?.let { ModelLineText(it, onChoose = { onIntent(SeededIntent.ChooseModel) }) }
+    }
+}
+
+/** The "Custom" pill: words of the player's own for the picked blank, or their own limits. */
+@Composable
+private fun OwnWords(state: SeededState, onIntent: (SeededIntent) -> Unit) {
+    when (val body = state.body) {
+        is SeededBody.Seed -> body.suggestions?.let { shown ->
+            OwnWordsBar(
+                label = stringResource(shown.kind.ownLabel),
+                hint = stringResource(R.string.seeded_own_hint),
+                key = shown.blank,
+                onUse = { onIntent(SeededIntent.FillBlank(shown.blank, it)) },
+                maxLength = Seed.MAX_FILL_LENGTH,
+            )
+        }
+        // The limits are the custom wizard's step, so their own words are too.
+        is SeededBody.Limits -> OwnWordsBar(step = CreationStep.Limits, onUse = { onIntent(SeededIntent.Own(it)) })
+        is SeededBody.People, is SeededBody.Making -> Unit
     }
 }
 
@@ -186,7 +203,7 @@ private fun BottomBar(state: SeededState, onIntent: (SeededIntent) -> Unit) {
 /** The seed stands alone in the middle of the page; the later steps lead with it at the top. */
 private val SeededStep.topPadding: Dp
     get() = when (this) {
-        SeededStep.Seed -> 96.dp
+        SeededStep.Seed -> 56.dp
         SeededStep.People, SeededStep.Limits -> 40.dp
         SeededStep.Making -> 24.dp
     }
