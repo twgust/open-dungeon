@@ -11,7 +11,8 @@ import dev.opendungeon.feature.newstory.domain.vocabulary.WordGroup
 
 /**
  * One list's groups as the story so far calls for them. The groups in the registers of the story's
- * genres are open and come first, in the order they are written; the others are folded after them. A
+ * genres are open and come first, in the order they are written, except that an opt-in register the
+ * story asked for leads; the others are folded after them. A
  * story whose genres name no register, such as one in the player's own words, opens every group that is
  * not [opt-in][Register.optIn].
  */
@@ -53,7 +54,9 @@ internal class Shelf private constructor(private val groups: List<WordGroup>, pr
             val groups = vocabulary.groups(list)
             val called = groups.filter { group -> group.registers.any(registers::contains) }
             val open = called.ifEmpty { groups.filterNot { group -> group.registers.all(Register::optIn) } }
-            return Shelf(groups, open.toSet())
+            // An opt-in register is only ever asked for on purpose, so its groups lead the ones it opened.
+            val ordered = groups.sortedByDescending { group -> group.registers.any { it.optIn && it in registers } }
+            return Shelf(ordered, open.toSet())
         }
 
         /** The genre shelf: every group open, since the genre is what decides the rest. */

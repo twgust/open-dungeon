@@ -44,6 +44,14 @@ class ShelfTest {
     }
 
     @Test
+    fun `an adult genre's groups lead the other genre's`() {
+        assertEquals(
+            listOf("After dark" to true, "Everyday" to true, "Dark" to false),
+            groupsOf(draftOf(Phrase.Offered("Slice of life"), Phrase.Offered("Erotic"))),
+        )
+    }
+
+    @Test
     fun `a pick in a folded group opens it, after the called-for ones`() {
         val draft = draftOf(Phrase.Offered("Slice of life")).copy(setting = Phrase.Offered("a drowned city"))
 
