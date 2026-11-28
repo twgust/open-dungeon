@@ -48,7 +48,7 @@ data/story               StoryDraftRepository and StoryRepository over Room (And
 data/generation          Text and structured generation on Koog, OpenRouterChatClient   (JVM)
 domain/openrouter        Catalog, setup and account repositories; test fixtures        (JVM)
 domain/story             Drafts, stories and beats, characters, the sentence builder, repositories; test fixtures (JVM)
-domain/drafting          Drafting model; seeds; premise, cast, opening, beat, title and seed use cases, prompts (JVM)
+domain/drafting          Drafting model; seeds; premise, cast, opening, beat, title and seed use cases, prompts, the name slop guard (JVM)
 domain/generation        TextGenerator, StructuredGenerator, usage, typed errors        (JVM)
 core/designsystem        Paper theme, bundled fonts, pills, dice, cards (Android)
 core/ui                  Compose helpers, error messages
@@ -58,6 +58,8 @@ core/credentials         ApiKeyStore, the contract core/datastore implements    
 core/network             OpenRouter REST client and DTOs                                   (JVM)
 core/mvi                 MviViewModel base                                                 (JVM)
 core/model               Domain types: ApiKey, AiModel, ModelParameter, Tuning, Outcome, DataError (JVM)
+tools/continuity         Continuity harness: replays scripted stories through context policies and scores recall,
+                         leaks and contradictions against OpenRouter; never shipped, see its README (JVM)
 ```
 
 Dependencies point downwards only. A repository's interface lives in a `domain` module and its

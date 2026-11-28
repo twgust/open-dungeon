@@ -20,7 +20,13 @@ sealed interface SeededIntent {
     data object Open : SeededIntent
 
     /** A blank of the seed was tapped. */
-    data class Reroll(val blank: String) : SeededIntent
+    data class PickBlank(val blank: String) : SeededIntent
+
+    /** A suggestion was tapped for a blank, or the player used their own words for it. */
+    data class FillBlank(val blank: String, val words: String) : SeededIntent
+
+    /** The wand under a blank's suggestions: a model writes more. */
+    data class MoreWords(val blank: String) : SeededIntent
 
     /** The die: another seed. */
     data object RollSeed : SeededIntent

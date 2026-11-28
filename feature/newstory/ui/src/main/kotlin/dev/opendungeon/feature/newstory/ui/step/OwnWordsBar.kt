@@ -45,9 +45,31 @@ import dev.opendungeon.feature.newstory.ui.stepCopy
 @Composable
 internal fun OwnWordsBar(step: CreationStep, onUse: (String) -> Unit, modifier: Modifier = Modifier) {
     val copy = stepCopy(step)
-    var open by rememberSaveable(step) { mutableStateOf(false) }
+    OwnWordsBar(
+        label = stringResource(copy.ownLabel),
+        hint = copy.ownHint?.let { stringResource(it) },
+        key = step,
+        onUse = onUse,
+        modifier = modifier,
+    )
+}
+
+/**
+ * The same bar for any words of the player's own. It closes, dropping what was typed, whenever [key]
+ * changes, since the words were for something else.
+ */
+@Composable
+internal fun OwnWordsBar(
+    label: String,
+    hint: String?,
+    key: Any,
+    onUse: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    maxLength: Int? = null,
+) {
+    var open by rememberSaveable(key) { mutableStateOf(false) }
     val words = rememberTextFieldState()
-    val label = stringResource(copy.ownLabel)
+    LaunchedEffect(key) { words.clearText() }
     val use = {
         if (words.text.isNotBlank()) {
             onUse(words.text.toString())
@@ -71,10 +93,11 @@ internal fun OwnWordsBar(step: CreationStep, onUse: (String) -> Unit, modifier: 
                     PaperField(
                         state = words,
                         label = label,
-                        placeholder = copy.ownHint?.let { stringResource(it) },
+                        placeholder = hint,
                         style = Paper.type.body.copy(fontSize = 21.sp),
                         underlined = true,
                         singleLine = true,
+                        maxLength = maxLength,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         onKeyboardAction = use,
                         modifier = Modifier.weight(1f).focusRequester(focus),

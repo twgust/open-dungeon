@@ -109,7 +109,17 @@
     <string name="choice_custom_new">Build it step by step</string>
     <string name="choice_custom_resume">Resume your draft</string>
 
-    <string name="seeded_hint">Tap an underlined part to change it</string>
+    <string name="seeded_kind_person">Person</string>
+    <string name="seeded_kind_thing">Thing</string>
+    <string name="seeded_kind_act">Act</string>
+    <string name="seeded_kind_place">Place</string>
+    <string name="seeded_own_person">Custom person</string>
+    <string name="seeded_own_thing">Custom thing</string>
+    <string name="seeded_own_act">Custom act</string>
+    <string name="seeded_own_place">Custom place</string>
+    <string name="seeded_own_hint">Your words</string>
+    <string name="seeded_blank_empty">empty</string>
+    <string name="seeded_more">More words</string>
     <string name="seeded_die">New seed</string>
     <string name="seeded_people_prompt">Characters</string>
     <string name="seeded_optional">Optional</string>

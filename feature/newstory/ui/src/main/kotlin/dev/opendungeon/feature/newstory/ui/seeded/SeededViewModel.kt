@@ -33,7 +33,9 @@ class SeededViewModel(wizardFactory: SeededWizard.Factory) :
 
     override fun onIntent(intent: SeededIntent) = when (intent) {
         SeededIntent.Open -> wizard.start()
-        is SeededIntent.Reroll -> wizard.reroll(intent.blank)
+        is SeededIntent.PickBlank -> wizard.pick(intent.blank)
+        is SeededIntent.FillBlank -> wizard.fill(intent.blank, intent.words)
+        is SeededIntent.MoreWords -> wizard.suggestMore(intent.blank)
         SeededIntent.RollSeed -> wizard.rollSeed()
         is SeededIntent.Describe -> wizard.describe(intent.person, intent.text)
         is SeededIntent.Pick -> wizard.select(intent.choice)

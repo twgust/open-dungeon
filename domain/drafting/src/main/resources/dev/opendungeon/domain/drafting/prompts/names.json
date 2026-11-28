@@ -1,0 +1,94 @@
+{
+  "always": "Name people the way their families in this world would have: from the language, class and era the setting implies. Use names real people carry or have carried; a name never announces who someone is. Each genre's examples show the kind of name, so choose others like them.",
+  "styles": [
+    {
+      "genres": ["slice of life", "comedy", "romance", "drama", "romcom", "coming of age", "urban fantasy"],
+      "names": "Ordinary names of the setting's country and decade, the kind on a class list or a work rota: Lisa, Jonas, Emma Berg, Dave. Mostly common names, and nicknames the way friends use them."
+    },
+    {
+      "genres": ["mystery", "thriller", "heist", "crime", "detective"],
+      "names": "Common, forgettable names of the setting's place and time, as a police report would list them: Karen Holt, Mehmet Aydin, Paul Lindqvist."
+    },
+    {
+      "genres": ["horror", "survival horror", "slasher"],
+      "names": "Plain names of the setting's place and time, so the dread lands on ordinary people: Jenny, Mark Doyle, Carol Webb."
+    },
+    {
+      "genres": ["noir", "hardboiled"],
+      "names": "Names of a 1940s American city, clipped by use, with the immigrant surnames of its neighbourhoods: Lou Barelli, Vera Novak, Frankie Doyle."
+    },
+    {
+      "genres": ["gothic"],
+      "names": "Period names of the setting's place and century, spelled as a parish register spells them: Agnes, Edmund Pole, Harriet, Josiah Crane."
+    },
+    {
+      "genres": ["southern gothic"],
+      "names": "Names of the rural American South, handed down and shortened: Lurleen, Boyd, Darla Pruitt, Earl Junior."
+    },
+    {
+      "genres": ["regency", "period drama"],
+      "names": "English names of the 1810s, gentry and servants alike, with the titles and forms of address of the day: Miss Harriet Lowe, Mr Bramley, Sukey, Tom."
+    },
+    {
+      "genres": ["dark academia"],
+      "names": "Names of an old university's students and fellows in the setting's country, family names often used as first names: Hugo Lattimer, Margaret, Kit Avery."
+    },
+    {
+      "genres": ["court intrigue", "political intrigue"],
+      "names": "Names of a court's nobility and household drawn from one real language and its titles: Countess Ilse von Brandt, Lord Osbert, Father Anselm, the steward Gerlach."
+    },
+    {
+      "genres": ["fantasy", "low fantasy", "high fantasy", "sword and sorcery", "grimdark", "dark fantasy"],
+      "names": "Names from one real old language the setting suggests, such as Old Norse, Welsh, Occitan, Czech or Persian, short and worn by use like medieval names: Hild, Osric, Berthe, Wat the cooper."
+    },
+    {
+      "genres": ["folk horror"],
+      "names": "Old-fashioned rural names of the region the setting suggests, repeated down the generations: Hester, Amos, Ruth Pennick, old Mother Darrow."
+    },
+    {
+      "genres": ["mythic", "myth", "mythology"],
+      "names": "Names in the language of the myth the setting draws on, attested or built the way that language builds them: Kleon or Ismene for Greek myth, Sigrun for Norse."
+    },
+    {
+      "genres": ["wuxia", "xianxia", "martial arts"],
+      "names": "Chinese names in pinyin, family name first, with sect titles, courtesy names and nicknames: Zhao Wen, Elder Sister Lin, Old Man Qiu."
+    },
+    {
+      "genres": ["weird west", "western"],
+      "names": "Names of the 1870s frontier, Anglo, Mexican, Chinese and Native alike, with nicknames earned: Josiah Pell, Mercy, Lupe Ortega, Two-Bit Cal."
+    },
+    {
+      "genres": ["pulp adventure", "adventure", "pulp"],
+      "names": "Names of the 1930s for the expedition, and for the locals the names they give themselves: Dorothy Fenn, Max Adler, Rashid al-Tamimi."
+    },
+    {
+      "genres": ["space opera", "science fiction", "sci-fi", "scifi", "sf"],
+      "names": "Names real people carry today, mixed by migration and drifted a little by time: Ade Okafor, Ines Park, Tomasz, Yuki Brandt. Invent names for ships, not for people."
+    },
+    {
+      "genres": ["cyberpunk"],
+      "names": "The real mix of languages of the city the setting suggests, and street handles that are ordinary words or nicknames: Mei Tanaka-Ruiz, Big Sergei, Dot."
+    },
+    {
+      "genres": ["solarpunk"],
+      "names": "Names real people of the region carry, with the odd newer word-name used sparingly: Femi, Johanna Ek, Luz, Tavi."
+    },
+    {
+      "genres": ["post-collapse", "post-apocalyptic", "post-apocalypse"],
+      "names": "Names from before the collapse, worn down by use, and a few children named after what survivors value: Pete, Dee Marsh, Kowalski, a girl called Salt."
+    },
+    {
+      "genres": ["cosmic horror", "lovecraftian"],
+      "names": "Plain period names of the setting's place, as on a deed or a death notice; the strangeness belongs to the things, not the people: Wilbur Hale, Edith Marsh."
+    }
+  ],
+  "worn": [
+    "kael*", "cael*", "valen", "vael*", "mara", "maera", "elara", "elaria", "lyra", "lyris", "lyriel", "lyrien",
+    "seraphin*", "seraphiel", "zephyr*", "nyx", "kestrel", "liora", "elowen", "lirael", "aelin", "aeliana", "aeris",
+    "aldric", "eldrin", "corvin*", "cassian", "lysander", "evander", "vesper", "riven", "sable", "ember",
+    "thalindra", "sylvaine", "veyra", "veylan", "vex", "selara", "ilyana",
+    "thorne", "thorn", "voss", "vance", "vale", "blackwood", "ashford", "ashwood", "nightshade", "ravencroft",
+    "blackthorn*", "stormwind", "silverleaf", "moonwhisper", "shadowmere",
+    "sarah chen", "elena vance", "elias vance", "marcus chen"
+  ]
+}

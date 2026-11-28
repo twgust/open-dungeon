@@ -39,7 +39,8 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
         val ownFeature = ":feature:$feature"
         val allowedPrefixes = listOf(":core:", ":domain:", "$ownFeature:")
         val modulePath = path
-        configurations.configureEach {
+        // detekt's rule classpath runs the project's own rules over the feature; none of it reaches the feature's code.
+        configurations.matching { it.name != DETEKT_PLUGINS }.configureEach {
             val configuration = name
             dependencies.withType(ProjectDependency::class.java).configureEach {
                 val dependencyPath = path
@@ -52,5 +53,9 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    private companion object {
+        const val DETEKT_PLUGINS = "detektPlugins"
     }
 }

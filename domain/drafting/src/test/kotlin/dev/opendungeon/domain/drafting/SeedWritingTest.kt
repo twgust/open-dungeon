@@ -130,7 +130,14 @@ class SeedWritingTest {
     )
 
     private fun castSeed(answer: Outcome<Any, GenerationError>) = ScriptedStructuredGenerator(answer).let {
-        it to DefaultCastSeed(it, CountingIds("person"), DefaultSentenceBuilder())
+        it to
+            DefaultCastSeed(
+                it,
+                CountingIds("person"),
+                replaceWornNames(it),
+                BundledNamingGuide(),
+                DefaultSentenceBuilder(),
+            )
     }
 
     @Test
@@ -147,6 +154,52 @@ class SeedWritingTest {
         assertEquals(Secret.None, people.you.secret)
         assertEquals(CharacterId("person-2"), people.them.id)
         assertEquals(Secret.Sealed("She forged the relic herself, years ago"), people.them.secret)
+    }
+
+    @Test
+    fun `a worn name is replaced, unless the player wrote it`() = runTest {
+        val them = SeedCastPayload.EXAMPLE.them.copy(name = "Lyra Vance")
+        val you = SeedCastPayload.EXAMPLE.you.copy(name = "Elara")
+        val generator = QueuedStructuredGenerator(
+            Outcome.Success(SeedCastPayload(you = you, them = them)),
+            Outcome.Success(RenamesPayload(listOf(RenamePayload(1, "Agnes Pole")))),
+        )
+        val cast = DefaultCastSeed(
+            generator,
+            CountingIds("person"),
+            replaceWornNames(generator),
+            BundledNamingGuide(),
+            DefaultSentenceBuilder(),
+        )
+
+        val people = assertIs<Outcome.Success<SeedCast>>(
+            cast(seededDraft, "your grandmother", you = "a nurse called Elara", them = null, model = drafter),
+        ).value
+
+        assertEquals("Elara", people.you.name)
+        assertEquals("Agnes Pole", people.them.name)
+    }
+
+    @Test
+    fun `a worn name that cannot be replaced makes the cast unusable`() = runTest {
+        val them = SeedCastPayload.EXAMPLE.them.copy(name = "Kael")
+        val generator = QueuedStructuredGenerator(
+            Outcome.Success(SeedCastPayload.EXAMPLE.copy(them = them)),
+            Outcome.Success(RenamesPayload(listOf(RenamePayload(1, "Kaelen")))),
+            Outcome.Success(RenamesPayload(listOf(RenamePayload(1, "Caelum")))),
+        )
+        val cast = DefaultCastSeed(
+            generator,
+            CountingIds("person"),
+            replaceWornNames(generator),
+            BundledNamingGuide(),
+            DefaultSentenceBuilder(),
+        )
+
+        assertEquals(
+            Outcome.Failure(DraftingError.Unusable),
+            cast(seededDraft, "your grandmother", you = null, them = null, model = drafter),
+        )
     }
 
     @Test
@@ -208,7 +261,7 @@ class SeedWritingTest {
 
     @Test
     fun `the prompt for a seeded cast, with the player's words and without`() {
-        val prompt = SeedCastPrompt(StoryBrief(DefaultSentenceBuilder()))
+        val prompt = SeedCastPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
 
         assertGolden(
             "seed-cast",

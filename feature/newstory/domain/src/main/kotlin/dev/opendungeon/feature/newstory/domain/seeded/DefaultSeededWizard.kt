@@ -49,7 +49,8 @@ import kotlin.random.Random
  * to it, tagged with the run it belongs to, so a result that arrives after the run was stopped is dropped.
  *
  * Seeds are dealt from the bundled deck, shuffled, and a model writes more only once the deck is used
- * up; a blank's words work the same way. The limits are the custom wizard's own rules ([LimitsPolicy]),
+ * up. A seed is dealt with its blanks empty: the player fills each from the words it came with, or their
+ * own, and a model writes more words for a blank only when the player asks for them. The limits are the custom wizard's own rules ([LimitsPolicy]),
  * applied to an in-memory draft that also carries everything the model writes, so beginning the story
  * is the custom wizard's [BeginStory] too.
  *
@@ -84,8 +85,17 @@ internal class DefaultSeededWizard(
 
     private var step = SeededStep.Seed
 
-    /** The seed on screen; `null` until started. */
+    /** The seed on screen, holding the player's words in the blanks they filled; `null` until started. */
     private var seed: Seed? = null
+
+    /** The words that could fill each blank of [seed], in the order they were written. */
+    private var suggestions: Map<String, List<String>> = emptyMap()
+
+    /** The blanks of [seed] the player filled; the others show empty. */
+    private var filled: Set<String> = emptySet()
+
+    /** The blank whose suggestions are shown, if any. */
+    private var picked: String? = null
 
     /** Seeds still to deal, in order. */
     private val coming = ArrayDeque<Seed>()
@@ -133,25 +143,39 @@ internal class DefaultSeededWizard(
 
     override fun start() = enqueue {
         if (draft != null) return@enqueue
+        // The deck is read before the draft opens, so a deck that throws leaves start free to be tried again.
+        val shuffled = deck.seeds.shuffled(random)
         draft = StoryDraft(DraftId(ids.next()), step = CreationStep.Limits)
-        coming += deck.seeds.shuffled(random)
+        coming += shuffled
         coming.removeFirstOrNull()?.let(::deal) ?: writeSeeds()
     }
 
-    override fun reroll(blank: String) = enqueueOn(SeededStep.Seed) {
+    override fun pick(blank: String) = enqueueOn(SeededStep.Seed) {
+        if (seed?.blank(blank) == null) return@enqueueOn
+        picked = blank
+        render()
+    }
+
+    override fun fill(blank: String, words: String) = enqueueOn(SeededStep.Seed) {
+        val current = seed ?: return@enqueueOn
+        val fitting = words.filterNot { it in UNFILLABLE }.trim().take(Seed.MAX_FILL_LENGTH).trim()
+        seed = current.filled(blank, fitting) ?: return@enqueueOn
+        filled += blank
+        picked = firstEmpty()
+        render()
+    }
+
+    override fun suggestMore(blank: String) = enqueueOn(SeededStep.Seed) {
         val current = seed ?: return@enqueueOn
         if (work != null) return@enqueueOn
-        val old = current.blank(blank) ?: return@enqueueOn
-        val next = old.next()
-        if (next != null) {
-            seed = current.with(next)
-            render()
-            return@enqueueOn
-        }
+        val shown = current.blank(blank) ?: return@enqueueOn
         val model = drafting ?: return@enqueueOn report(WizardFailure.Drafting(DraftingError.NoModel))
+        // The model is told every word offered so far, so it writes only new ones.
+        val known = suggestions[blank].orEmpty().filterNot { it.equals(shown.fill, ignoreCase = true) }
+        val asked = current.with(shown.copy(unused = known, used = emptyList()))
         launchWork(Work.Filling(blank)) { run ->
-            val filled = fillBlank(current, blank, model)
-            enqueue { onFilled(run, filled) }
+            val written = fillBlank(asked, blank, model)
+            enqueue { onFilled(run, written) }
         }
     }
 
@@ -185,7 +209,7 @@ internal class DefaultSeededWizard(
     override fun next() = enqueue {
         if (seed == null || closed) return@enqueue
         val following = when (step) {
-            SeededStep.Seed -> SeededStep.People
+            SeededStep.Seed -> if (allFilled()) SeededStep.People else return@enqueue
             SeededStep.People -> SeededStep.Limits
             SeededStep.Limits, SeededStep.Making -> return@enqueue
         }
@@ -314,21 +338,26 @@ internal class DefaultSeededWizard(
         report(WizardFailure.Drafting(error))
     }
 
-    private suspend fun onFilled(run: Work, filled: Outcome<Seed, DraftingError>) {
+    /** New words join the end of the blank's suggestions; words it already offers are left out. */
+    private suspend fun onFilled(run: Work, written: Outcome<Seed, DraftingError>) {
         if (work !== run) return
         endWork()
         val key = (run as Work.Filling).blank
-        when (filled) {
-            is Outcome.Failure -> {
-                render()
-                report(WizardFailure.Drafting(filled.error))
-            }
-            is Outcome.Success -> {
-                val more = filled.value
-                seed = more.blank(key)?.next()?.let(more::with) ?: more
-                render()
-            }
+        val known = suggestions[key].orEmpty()
+        val fresh = when (written) {
+            is Outcome.Failure -> return failed(WizardFailure.Drafting(written.error))
+            is Outcome.Success -> written.value.blank(key)?.let { it.shown + it.unused }.orEmpty()
         }
+        val seen = known.mapTo(HashSet()) { it.lowercase() }
+        val more = fresh.filter { seen.add(it.lowercase()) }
+        if (more.isEmpty()) return failed(WizardFailure.Drafting(DraftingError.Unusable))
+        suggestions += key to known + more
+        render()
+    }
+
+    private suspend fun failed(failure: WizardFailure) {
+        render()
+        report(failure)
     }
 
     /** Asks a model for more seeds than the deck had, and deals the first once they come. */
@@ -355,11 +384,21 @@ internal class DefaultSeededWizard(
         }
     }
 
+    /** Puts [next] on screen with its blanks empty and the first one picked. */
     private fun deal(next: Seed) {
         seed = next
         dealt += next
+        suggestions = next.blanks.associate { it.key to it.shown + it.unused }
+        filled = emptySet()
+        picked = firstEmpty()
         render()
     }
+
+    /** The first blank of the sentence still empty, if any. */
+    private fun firstEmpty(): String? =
+        seed?.parts?.filterIsInstance<Seed.Part.Filled>()?.map { it.key }?.firstOrNull { it !in filled }
+
+    private fun allFilled(): Boolean = seed?.blanks?.all { it.key in filled } == true
 
     private fun stepTo(target: SeededStep) {
         step = target
@@ -441,12 +480,12 @@ internal class DefaultSeededWizard(
                         is Seed.Part.Filled -> SeedPart.Blank(
                             key = part.key,
                             kind = part.kind,
-                            text = part.text,
-                            pending = running is Work.Filling && running.blank == part.key,
-                            canReroll = idle,
+                            words = part.text.takeIf { part.key in filled },
+                            picked = part.key == picked,
                         )
                     }
                 },
+                suggestions = picked?.let { key -> suggestionsOf(seed, key, running) },
                 replacing = running is Work.Replacing,
             )
             SeededStep.People -> SeededBody.People(premise, you, them, seed.counterpartText, MAX_DESCRIPTION_LENGTH)
@@ -466,17 +505,34 @@ internal class DefaultSeededWizard(
             body = body,
             controls = SeededControls(
                 canAdvance = when (step) {
-                    SeededStep.Seed, SeededStep.People -> true
+                    SeededStep.Seed -> allFilled()
+                    SeededStep.People -> true
                     SeededStep.Limits -> idle
                     SeededStep.Making -> false
                 },
                 begins = step == SeededStep.Limits,
                 canRoll = step == SeededStep.Seed && idle,
                 canStop = !idle,
-                takesOwnWords = step == SeededStep.Limits && limits.takesOwnWords(draft),
+                takesOwnWords = when (step) {
+                    SeededStep.Seed -> picked != null
+                    SeededStep.Limits -> limits.takesOwnWords(draft)
+                    SeededStep.People, SeededStep.Making -> false
+                },
             ),
             writer = if (writes && draftingKnown) ModelLine(model = drafting?.model?.name, writing = !idle) else null,
             confirmingLeave = confirmingLeave,
+        )
+    }
+
+    private fun suggestionsOf(seed: Seed, key: String, running: Work?): Suggestions? {
+        val blank = seed.blank(key) ?: return null
+        return Suggestions(
+            blank = key,
+            kind = blank.kind,
+            words = suggestions[key].orEmpty(),
+            chosen = blank.fill.takeIf { key in filled },
+            pending = running is Work.Filling && running.blank == key,
+            canSuggestMore = running == null,
         )
     }
 
@@ -516,6 +572,9 @@ internal class DefaultSeededWizard(
     companion object {
         /** A line or two about someone: enough to steer the model, short enough to stay a sketch. */
         const val MAX_DESCRIPTION_LENGTH: Int = 200
+
+        /** Characters that cannot stand in a blank, left out of the player's own words. */
+        private const val UNFILLABLE = "{}\n\r"
     }
 }
 

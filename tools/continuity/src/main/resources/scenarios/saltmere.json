@@ -1,0 +1,517 @@
+{
+  "id": "saltmere",
+  "title": "The dark lighthouse of Saltmere",
+  "premise": "A courier arrives in the fishing port of Saltmere to deliver a sealed letter and leave on the first ship out. The town's lighthouse has gone dark, the harbourmaster is frightened, and a stolen ledger is worth killing for.",
+  "protagonist": {
+    "id": "you",
+    "name": "Wren Halloway",
+    "sheet": "A courier with a debt to clear and a talent for going unnoticed. Wants to finish the job and get out of Saltmere."
+  },
+  "cast": [
+    {
+      "id": "kael",
+      "name": "Kael Brannock",
+      "sheet": "A former harbour watchman with a bad leg and a dry, loyal manner, who knows every alley in Saltmere and guides strangers for a coin."
+    },
+    {
+      "id": "oren",
+      "name": "Oren Vask",
+      "sheet": "A broad, soft-spoken shipping agent who runs the Saltmere quays from a counting-house above the fish market."
+    },
+    {
+      "id": "fenn",
+      "name": "Aldous Fenn",
+      "sheet": "The harbourmaster: thin, punctilious, and keeper of every ship's papers."
+    },
+    {
+      "id": "mara",
+      "name": "Mara Quill",
+      "sheet": "The harbour apothecary: quick hands, a dry wit, and a shop that smells of camphor and tar."
+    },
+    {
+      "id": "tobin",
+      "name": "Tobin Quill",
+      "sheet": "Mara's younger brother, a dockhand with more nerve than sense."
+    }
+  ],
+  "turns": [
+    {
+      "id": "t00",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "The coach leaves you at the harbour gate of Saltmere as the light goes. Out on the point the lighthouse stands black against the sky. Nobody has lit it for three nights now, and the whole town talks of nothing else: at the gate, on the quay, in the doorway of every tavern you pass. A lean man with a stiff left leg pushes off the gatepost. 'Kael Brannock,' he says. 'Used to be the watch. Now I show people where things are, for a coin. You look like someone who needs to find a thing quickly.'"
+        }
+      ]
+    },
+    {
+      "id": "t01",
+      "player": "I hand Kael a coin and ask him to take me to Oren Vask.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael bites the coin out of habit and pockets it. He leads you along the fish quay, past racks of drying cod and boys sluicing the cobbles, talking as he limps. Oren Vask, he says, runs half the berths in the harbour and all of the gossip; his counting-house sits above the fish market, up a stair that smells of brine. 'He pays couriers well,' Kael says, 'and he never forgets a face. Mind that.'"
+        }
+      ]
+    },
+    {
+      "id": "t02",
+      "player": "I climb the stair, introduce myself, and hand Oren the sealed letter.",
+      "present": ["kael", "oren"],
+      "narration": [
+        {
+          "text": "Oren Vask is a broad man behind a narrow desk, ledgers stacked around him like a wall. He breaks the seal, reads the letter twice, and his face does not move at all. Then he holds the page to the candle and watches it burn to the corner before dropping it in the grate. 'Delivered,' he says mildly. 'Thank you, courier.' Kael, leaning in the doorway, raises an eyebrow at you and says nothing."
+        }
+      ]
+    },
+    {
+      "id": "t03",
+      "player": "I tell Oren I need passage out of Saltmere as soon as possible.",
+      "present": ["kael", "oren"],
+      "narration": [
+        {
+          "text": "Oren steeples his fingers. 'Passage I can give you. The Grey Heron is mine, and she sails when I say.' He nods at a gap among the ledgers on his desk. 'But I have lost something. My own ledger, red leather, taken from this room four nights ago. Bring it back to me and you sail on the Grey Heron, berth and board paid. That is my promise.' He holds out his hand, and you shake on it while Kael watches from the door."
+        }
+      ]
+    },
+    {
+      "id": "t04",
+      "player": "I ask Kael to wait outside, then ask Oren quietly who he thinks took the ledger.",
+      "present": ["oren"],
+      "narration": [
+        {
+          "text": "Kael shrugs and limps out; the door clicks shut behind him. Oren lowers his voice anyway. 'Between us, the harbourmaster. Aldous Fenn was in this room the night it went, with his pen and his papers and his questions. I cannot accuse the harbourmaster of theft without proof, and I will not have it said in the street. So it stays in this room.' He looks at you until you nod."
+        }
+      ]
+    },
+    {
+      "id": "t05",
+      "player": "Back outside, I have Kael keep watch while I climb into the harbour office through the back window.",
+      "present": [],
+      "narration": [
+        {
+          "text": "Kael takes up a post at the corner, out of sight, whistling a fishing song. The harbour office is dark and its back window is latched, so you wrap your sleeve around your fist and break a pane. You climb through too fast: a tooth of glass opens a long cut across your left palm. You wind your handkerchief round it and wait for the sting to settle, listening. Nobody comes."
+        }
+      ]
+    },
+    {
+      "id": "t06",
+      "player": "I search the office by the light from the street.",
+      "present": [],
+      "narration": [
+        {
+          "text": "Shipping papers, tide tables, a cold pipe. No red ledger. But one book on the shelf is too light for its size, and when you open it the pages have been cut out to make a hollow. Inside lies a heavy brass key with a ring worn smooth by a thumb. You slip the brass key into your pocket."
+        }
+      ]
+    },
+    {
+      "id": "t07",
+      "player": "I freeze when I hear the door, then decide to talk instead of running.",
+      "present": ["fenn"],
+      "narration": [
+        {
+          "text": "A thin man with a lantern stops in the doorway: Aldous Fenn, the harbourmaster, in his nightshirt and coat. He does not shout. He looks frightened, not angry. 'Vask sent you,' he says. 'Then tell him I never touched his ledger. Tobin Quill stole it, Mara Quill's brother, the dockhand. And tell no one else, because whoever has that book is in danger. Meet me tomorrow at noon in the Drowned Lantern. I will tell you the rest there.' He steps aside to let you go."
+        }
+      ]
+    },
+    {
+      "id": "t08",
+      "player": "At noon I go to the Drowned Lantern with Kael and sit down with Fenn.",
+      "present": ["kael", "fenn", "mara"],
+      "narration": [
+        {
+          "text": "The Drowned Lantern is loud with fishermen. Fenn has a corner table and keeps his back to the wall. Mara Quill, the apothecary, is making her rounds with a tray of mulled wine for her regulars and sets a steaming cup before the harbourmaster."
+        },
+        {
+          "text": "As she leans over the table, you alone see her tip a small green phial into Fenn's cup, quick as a card trick. Kael is looking at the door, Fenn at you, and nobody else notices.",
+          "perceivedBy": []
+        },
+        {
+          "text": "Fenn drinks deeply against the cold and starts to speak about the ledger."
+        }
+      ]
+    },
+    {
+      "id": "t09",
+      "player": "I lean in and ask Fenn what is in the ledger.",
+      "present": ["kael", "fenn", "mara"],
+      "narration": [
+        {
+          "text": "Fenn opens his mouth to answer and the words do not come. His hand goes to his chest; the cup rolls off the table. He slides sideways off the bench, and by the time Kael has him on the floor his eyes are fixed and empty. Aldous Fenn, harbourmaster of Saltmere, is dead. Mara kneels, checks his pulse with practised fingers, and says to the room, 'His heart. It was always weak.'"
+        }
+      ]
+    },
+    {
+      "id": "t10",
+      "player": "Outside, I ask Kael to come with me to the gaol.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael shakes his head. 'Not tonight. I have business at the market, and it will not wait.' He does not meet your eye. He limps off towards the market square and leaves you at the corner with the noise of the tavern behind you and the dark lighthouse ahead."
+        }
+      ]
+    },
+    {
+      "id": "t11",
+      "player": "I go to the gaol alone and talk to Tobin Quill through the bars.",
+      "present": ["tobin"],
+      "narration": [
+        {
+          "text": "Tobin Quill is young, bruised, and in for brawling. When you mention the ledger he laughs without humour. 'Aye, I took it. Mara asked me to, said it would set things right. I gave the ledger straight to my sister the same night, and then I got drunk and hit a watchman, and here I am.' He presses his face to the bars. 'Don't tell her I told you.'"
+        }
+      ]
+    },
+    {
+      "id": "t12",
+      "player": "Unable to sleep, I walk the harbour at midnight and end up on the north pier.",
+      "present": [],
+      "narration": [
+        {
+          "text": "Fog lies on the water. At the end of the north pier a rowing boat bumps the pilings, and two men in oilskins stand talking with a third you know by his limp: Kael. You flatten yourself behind a stack of crates. Kael hands the smugglers a heavy purse, they hand him a sealed packet, and the boat slides away into the fog without a light. Kael walks back up the pier without seeing you."
+        }
+      ]
+    },
+    {
+      "id": "t13",
+      "player": "In the morning I find Kael at the inn and ask him where he was last night.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael is eating porridge as if nothing happened. 'At the market all night,' he says. 'Haggling over rope with old Dunmore, who never sleeps and never drops a price.' He smiles easily and goes back to his bowl."
+        }
+      ]
+    },
+    {
+      "id": "t14",
+      "player": "I ask Kael what he made of Fenn's death.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael sets his spoon down. 'You heard Mara. A weak heart. The man lived on nerves and cold tea, and he was frightened of his own shadow lately. It happens.' He shrugs, but he rubs his bad leg the way he does when he is uneasy. 'Sad business. Saltmere will need a new harbourmaster.'"
+        }
+      ]
+    },
+    {
+      "id": "t15",
+      "player": "I visit Mara's apothecary, pretending I need something for a headache.",
+      "present": ["mara"],
+      "narration": [
+        {
+          "text": "Mara's shop is all jars and drawers and the smell of camphor. She weighs out willow bark for you and talks about the weather."
+        },
+        {
+          "text": "While she turns to the scales, you see a spine of red leather on the high shelf, half hidden behind a row of jars: Oren's ledger, here in Mara's apothecary. Mara does not notice where your eyes went.",
+          "perceivedBy": []
+        }
+      ]
+    },
+    {
+      "id": "t16",
+      "player": "I ask Mara whether there is any work for a courier.",
+      "present": ["mara"],
+      "narration": [
+        {
+          "text": "Mara considers you over the counter. 'There might be. Captain Isolde Marr of the Grey Heron owes me for a crate of tinctures. Carry her this note and the money comes back with you, and I'll pay your share.' She folds a note into an envelope and seals it with wax. 'Marr is the Heron's captain, and she does not like strangers, so mention my name first.'"
+        }
+      ]
+    },
+    {
+      "id": "t17",
+      "player": "I show Mara the brass key and offer it to her if she tells me what it opens.",
+      "present": ["mara"],
+      "narration": [
+        {
+          "text": "Mara goes very still when she sees it. 'That,' she says, 'opens the lighthouse door. The old keeper's key; there were only ever two.' She holds out her hand, and you give her the brass key. She closes her fingers over it and slips it into her apron. 'You have done yourself a kindness,' she says. Mara holds the brass key now."
+        }
+      ]
+    },
+    {
+      "id": "t18",
+      "player": "Back at the inn I share supper with Kael and ask about his family.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Over fish stew Kael loosens a little. He has a sister, he says, Ama, who keeps bees in Varrow, three days inland, and writes to him every month to tell him to come and live where the ground does not move. 'One day,' he says. 'When I have enough put by.' He talks about Varrow's orchards for a long time, as if he can see them."
+        }
+      ]
+    },
+    {
+      "id": "t19",
+      "player": "When the room empties, I tell Kael what I saw Mara do to Fenn's wine.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "You tell him low and plain: the green phial, Mara's hand over the cup, Fenn drinking. Mara Quill poisoned the harbourmaster. Kael listens without interrupting. When you finish he is quiet for a long while. 'Not his heart, then,' he says at last. 'I believed her. Everyone did.' He looks at you differently now. 'You have told nobody else?'"
+        }
+      ]
+    },
+    {
+      "id": "t20",
+      "player": "I tell Kael I mean to look inside the lighthouse, and ask him to come.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael nods slowly. 'Tomorrow night, then, after the tide turns. I know the path along the point, and where it crumbles.' He taps his bad leg. 'I will be slow on the rocks, but I will be there.'"
+        }
+      ]
+    },
+    {
+      "id": "t21",
+      "player": "I leave Kael at the foot of Oren's stair and go up alone to tell Oren that Mara has his ledger.",
+      "present": ["oren"],
+      "narration": [
+        {
+          "text": "Oren hears you out with no expression at all. 'Mara Quill,' he says. 'Well.' He makes a note in a small book. 'Then you have two days. I will hold the Grey Heron in harbour; she sails on the night of the new moon and not an hour later, with you aboard or without you. Bring me my ledger by then.'"
+        }
+      ]
+    },
+    {
+      "id": "t22",
+      "player": "The next night I go out along the point to the lighthouse with Kael.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "The path is slick with spray. Kael curses the rocks all the way. The lighthouse door stands open; someone has used a key before you. Inside, the oil store is empty, the barrels staved in, and up in the lantern room the great lamp's wick has been cut and its lenses smashed. The lighthouse lamp has been sabotaged on purpose. Above you, on the gallery, someone is moving."
+        }
+      ]
+    },
+    {
+      "id": "t23",
+      "player": "I climb the stair and confront whoever is up there.",
+      "present": ["kael", "mara"],
+      "narration": [
+        {
+          "text": "Mara Quill crouches by a brazier on the gallery, feeding it pages from a red ledger. She does not run. 'Read it, then,' she says, and thrusts a page at you. In Oren's neat hand: payments, month after month, to Aldous Fenn for keeping the lighthouse dark on the nights Oren's smugglers landed. The ledger proves Oren Vask paid the harbourmaster to keep the lighthouse dark. Kael reads it over your shoulder and swears."
+        }
+      ]
+    },
+    {
+      "id": "t24",
+      "player": "I ask Mara why she killed Fenn.",
+      "present": ["kael", "mara"],
+      "narration": [
+        {
+          "text": "'Because Fenn meant to save himself by selling my brother to Oren,' Mara says. 'Tobin took that book for me. Fenn would have named him.' Then she moves, faster than you expect: she flings the burning ledger at your feet and darts past Kael down the stair. Something rings on the steps as she goes. When the flames are stamped out you find it: the brass key, dropped in her flight. You pick it up and pocket it. The brass key is yours again."
+        }
+      ]
+    },
+    {
+      "id": "t25",
+      "player": "I ask Kael what he was really doing on the north pier.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael sits down hard on the stair. 'You saw that.' He does not deny it. 'I run messages for Oren's smugglers. Have done for a year. The purse is my wage for keeping the watch looking the other way. I told myself it was only brandy.' He looks up at the broken lamp. 'I did not know about this. I swear it.'"
+        }
+      ]
+    },
+    {
+      "id": "t26",
+      "player": "I gather up whatever is left of the ledger.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Most of the book is ash. You sift through the brazier and the scorched boards and save what you can: three pages survive, browned at the edges but legible, every one in Oren's hand. You fold the three surviving pages into your coat."
+        }
+      ]
+    },
+    {
+      "id": "t27",
+      "player": "At dawn on the harbour wall, I ask Kael what he thinks we should do with the pages.",
+      "present": ["kael"],
+      "narration": [
+        {
+          "text": "Kael watches the fishing boats go out. 'Take them to the magistrate at Hollin,' he says. 'Not to Oren. If Oren gets those pages, they burn too, and so do we.' He rubs his face. 'I know what it costs you. Your passage. I am still saying it.'"
+        }
+      ]
+    },
+    {
+      "id": "t28",
+      "player": "I go up to Oren's counting-house alone and show him a single page, keeping the rest hidden.",
+      "present": ["oren"],
+      "narration": [
+        {
+          "text": "Oren takes the page by its corner and reads it, and for the first time something moves in his face. 'Where is the rest?' he asks softly. You say nothing. He sets the page down on the desk between you. 'My offer stands,' he says. 'All of it, and you sail. Less than all of it, and you do not.'"
+        }
+      ]
+    }
+  ],
+  "facts": [
+    { "id": "lighthouse-dark", "text": "The Saltmere lighthouse had been dark for three nights when you arrived, and the whole town was talking about it.", "establishedIn": "t00" },
+    { "id": "letter-burned", "text": "Oren burned the sealed letter you delivered to him.", "establishedIn": "t02" },
+    { "id": "oren-promise", "text": "Oren promised you passage on the Grey Heron if you bring back his stolen ledger.", "establishedIn": "t03" },
+    { "id": "oren-suspects-fenn", "text": "Oren privately suspects the harbourmaster Aldous Fenn of taking his ledger.", "establishedIn": "t04" },
+    { "id": "hand-cut", "text": "Your left palm was cut on broken glass when you climbed into the harbour office.", "establishedIn": "t05" },
+    { "id": "key-with-you", "text": "You have the brass key you found hidden in the harbour office.", "establishedIn": "t06", "supersededBy": "key-with-mara" },
+    { "id": "tobin-stole-ledger", "text": "Tobin Quill, Mara's brother, stole Oren's ledger.", "establishedIn": "t07" },
+    { "id": "mara-poisoned-fenn", "text": "Mara Quill poisoned Aldous Fenn's wine.", "establishedIn": "t08" },
+    { "id": "fenn-dead", "text": "Aldous Fenn, the harbourmaster, is dead.", "establishedIn": "t09" },
+    { "id": "ledger-to-mara", "text": "Tobin gave the stolen ledger to his sister Mara.", "establishedIn": "t11" },
+    { "id": "kael-met-smugglers", "text": "Kael met smugglers on the north pier at midnight and gave them a purse.", "establishedIn": "t12" },
+    { "id": "kael-claimed-market", "text": "Kael claimed he spent that night at the market.", "establishedIn": "t13" },
+    { "id": "kael-believes-heart", "text": "Kael believes Fenn died of a weak heart.", "establishedIn": "t14", "supersededBy": "kael-knows-poison" },
+    { "id": "ledger-in-shop", "text": "You saw Oren's ledger on a high shelf in Mara's apothecary.", "establishedIn": "t15" },
+    { "id": "heron-captain", "text": "Isolde Marr is the captain of the Grey Heron.", "establishedIn": "t16" },
+    { "id": "key-with-mara", "text": "Mara holds the brass key; you gave it to her.", "establishedIn": "t17", "supersededBy": "key-with-you-again" },
+    { "id": "key-opens-lighthouse", "text": "The brass key opens the lighthouse door.", "establishedIn": "t17" },
+    { "id": "kael-sister-varrow", "text": "Kael's sister Ama keeps bees in Varrow.", "establishedIn": "t18" },
+    { "id": "kael-knows-poison", "text": "Kael knows that Mara poisoned Fenn, because you told him.", "establishedIn": "t19" },
+    { "id": "heron-sails-new-moon", "text": "The Grey Heron sails on the night of the new moon.", "establishedIn": "t21" },
+    { "id": "lamp-sabotaged", "text": "The lighthouse lamp was sabotaged: its wick cut, its lenses smashed and its oil store emptied.", "establishedIn": "t22" },
+    { "id": "oren-paid-fenn", "text": "The ledger shows Oren paid Fenn to keep the lighthouse dark on the nights his smugglers landed.", "establishedIn": "t23" },
+    { "id": "key-with-you-again", "text": "You have the brass key again; Mara dropped it as she fled the lighthouse.", "establishedIn": "t24" },
+    { "id": "kael-works-for-oren", "text": "Kael runs messages for Oren's smugglers.", "establishedIn": "t25" },
+    { "id": "three-pages", "text": "Only three pages of the ledger survived the fire, and you carry them.", "establishedIn": "t26" }
+  ],
+  "probes": [
+    {
+      "id": "kael-lighthouse-early",
+      "after": "t07",
+      "ask": { "type": "voice", "speaker": "kael", "line": "How long has that lighthouse been dark, anyway?" },
+      "expect": ["lighthouse-dark"],
+      "note": "Common knowledge Kael was there for; every policy should keep it."
+    },
+    {
+      "id": "kael-oren-suspicion-early",
+      "after": "t07",
+      "ask": { "type": "voice", "speaker": "kael", "line": "Who does Oren think took his ledger?" },
+      "forbid": ["oren-suspects-fenn"],
+      "note": "Oren said it only after Kael had left the room."
+    },
+    {
+      "id": "mara-kael-night",
+      "after": "t13",
+      "ask": { "type": "voice", "speaker": "mara", "line": "Do you know where Kael Brannock was last night?" },
+      "forbid": ["kael-met-smugglers"],
+      "note": "Only you saw the north pier."
+    },
+    {
+      "id": "kael-who-killed-fenn",
+      "after": "t14",
+      "ask": { "type": "voice", "speaker": "kael", "line": "Be honest with me. Do you think somebody killed Fenn?" },
+      "forbid": ["mara-poisoned-fenn"],
+      "guard": ["fenn-dead"],
+      "note": "Only you saw the phial. Kael should still think it was his heart."
+    },
+    {
+      "id": "mara-lighthouse-common",
+      "after": "t16",
+      "ask": { "type": "voice", "speaker": "mara", "line": "Strange times, with the lighthouse dark. How long has it been now?" },
+      "expect": ["lighthouse-dark"],
+      "note": "The whole town knows, but the story only says so in a scene Mara was not in. A strict perceived-only view fails this, which is the over-separation the ledger's public facts must fix."
+    },
+    {
+      "id": "key-holder-middle",
+      "after": "t20",
+      "ask": { "type": "question", "text": "Who has the brass key at this point in the story?" },
+      "expect": ["key-with-mara"],
+      "note": "The key changed hands three turns earlier."
+    },
+    {
+      "id": "kael-recalls-telling",
+      "after": "t20",
+      "ask": { "type": "voice", "speaker": "kael", "line": "Tell me again what I told you about Mara and Fenn's wine." },
+      "expect": ["mara-poisoned-fenn"],
+      "note": "Kael was told the secret, so he should know it now."
+    },
+    {
+      "id": "oren-fenn-death",
+      "after": "t21",
+      "ask": { "type": "voice", "speaker": "oren", "line": "Do you know how Fenn really died?" },
+      "forbid": ["mara-poisoned-fenn"],
+      "note": "You told Oren about the ledger, never about the poison."
+    },
+    {
+      "id": "kael-sister",
+      "after": "t27",
+      "ask": { "type": "voice", "speaker": "kael", "line": "If this goes wrong, where would you go? Your sister's?" },
+      "expect": ["kael-sister-varrow"],
+      "note": "Kael's own life, nine turns back."
+    },
+    {
+      "id": "kael-oren-suspicion-late",
+      "after": "t27",
+      "ask": { "type": "voice", "speaker": "kael", "line": "That first night, who did Oren say he suspected of taking the ledger?" },
+      "forbid": ["oren-suspects-fenn"],
+      "note": "Kael was outside the door; twenty-three turns later he still cannot know."
+    },
+    {
+      "id": "kael-ledger-proof",
+      "after": "t27",
+      "ask": { "type": "voice", "speaker": "kael", "line": "What exactly did those ledger pages prove?" },
+      "expect": ["oren-paid-fenn"],
+      "note": "Kael read the page over your shoulder."
+    },
+    {
+      "id": "oren-promise",
+      "after": "t28",
+      "ask": { "type": "question", "text": "What did Oren promise you, and on what condition?" },
+      "expect": ["oren-promise"]
+    },
+    {
+      "id": "hand-injury",
+      "after": "t28",
+      "ask": { "type": "question", "text": "Which of your hands is hurt, and how did it happen?" },
+      "expect": ["hand-cut"],
+      "note": "Mentioned once, long ago."
+    },
+    {
+      "id": "letter-fate",
+      "after": "t28",
+      "ask": { "type": "question", "text": "What happened to the sealed letter you came to Saltmere to deliver?" },
+      "expect": ["letter-burned"]
+    },
+    {
+      "id": "key-holder-end",
+      "after": "t28",
+      "ask": { "type": "question", "text": "Who has the brass key now?" },
+      "expect": ["key-with-you-again"],
+      "note": "The key changed hands twice; the latest owner is the answer."
+    },
+    {
+      "id": "ledger-chain",
+      "after": "t28",
+      "ask": { "type": "question", "text": "Who stole Oren's ledger, and who did they give it to?" },
+      "expect": ["tobin-stole-ledger", "ledger-to-mara"]
+    },
+    {
+      "id": "kael-alibi",
+      "after": "t28",
+      "ask": { "type": "question", "text": "Where did Kael say he spent the night after Fenn died, and where was he really?" },
+      "expect": ["kael-claimed-market", "kael-met-smugglers"]
+    },
+    {
+      "id": "lighthouse-why",
+      "after": "t28",
+      "ask": { "type": "question", "text": "Why was the lighthouse kept dark?" },
+      "expect": ["oren-paid-fenn"],
+      "guard": ["lamp-sabotaged"]
+    },
+    {
+      "id": "pages-left",
+      "after": "t28",
+      "ask": { "type": "question", "text": "How much of Oren's ledger is left, and who has it?" },
+      "expect": ["three-pages"]
+    },
+    {
+      "id": "visit-fenn",
+      "after": "t28",
+      "ask": { "type": "action", "text": "I leave Oren and go to the harbour office to ask Harbourmaster Fenn for my travel papers." },
+      "guard": ["fenn-dead"],
+      "note": "The narrator must not bring a dead man back."
+    },
+    {
+      "id": "ask-sailing",
+      "after": "t28",
+      "ask": { "type": "action", "text": "I ask Oren to remind me exactly when the Grey Heron sails." },
+      "expect": ["heron-sails-new-moon"]
+    },
+    {
+      "id": "captain-name",
+      "after": "t28",
+      "ask": { "type": "action", "text": "I tell Oren I will take my chances with the Heron's captain instead, and say her name." },
+      "expect": ["heron-captain"],
+      "note": "Only Mara named the captain, twelve turns back."
+    }
+  ]
+}
