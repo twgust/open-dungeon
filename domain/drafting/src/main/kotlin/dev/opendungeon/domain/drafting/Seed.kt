@@ -125,7 +125,7 @@ public data class Seed(
             return Seed(kind, telling, sentence, other, made)
         }
 
-        private val PLACEHOLDER = Regex("""\{([a-z]+)}""")
+        private val PLACEHOLDER = Regex("""\{([a-z]+)\}""")
         private val KEY = Regex("""[a-z]+""")
 
         @Suppress("CyclomaticComplexMethod", "ReturnCount")

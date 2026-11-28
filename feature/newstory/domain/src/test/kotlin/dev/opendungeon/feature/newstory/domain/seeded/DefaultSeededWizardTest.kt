@@ -48,7 +48,7 @@ class DefaultSeededWizardTest {
     )
 
     private fun test(
-        deck: List<Seed> = listOf(caught),
+        deck: SeedDeck = FixedDeck(listOf(caught)),
         model: Boolean = true,
         block: suspend TestScope.(Rig) -> Unit,
     ) = runTest(UnconfinedTestDispatcher()) {
@@ -59,7 +59,7 @@ class DefaultSeededWizardTest {
         val drafter = FakeDrafter(storyteller.takeIf { model })
         val wizard = DefaultSeededWizard(
             scope = backgroundScope,
-            deck = FixedDeck(deck),
+            deck = deck,
             writeSeeds = work,
             fillBlank = work,
             castSeed = work,
@@ -106,12 +106,47 @@ class DefaultSeededWizardTest {
     }
 
     @Test
-    fun `starting twice deals once`() = test(deck = listOf(caught, knocking)) { rig ->
+    fun `starting twice deals once`() = test(deck = FixedDeck(listOf(caught, knocking))) { rig ->
         rig.wizard.start()
         val first = rig.wizard.sentence()
         rig.wizard.start()
 
         assertEquals(first, rig.wizard.sentence())
+    }
+
+    @Test
+    fun `an empty deck asks a model for the first seed`() = test(deck = FixedDeck(emptyList())) { rig ->
+        rig.wizard.start()
+
+        val call = rig.work.seedCalls.single()
+        assertEquals(emptyList(), call.args)
+        call.answer.complete(Outcome.Success(listOf(knocking)))
+
+        assertEquals("The child keeps knocking.", rig.wizard.sentence())
+    }
+
+    @Test
+    fun `a deck that throws is reported, and starting again deals once it reads`() {
+        val deck = FlakyDeck(listOf(caught))
+        test(deck = deck) { rig ->
+            rig.wizard.outcomes.test {
+                rig.wizard.start()
+                val failure = assertIs<WizardOutcome.Failed>(awaitItem()).failure
+                assertIs<WizardFailure.Unexpected>(failure)
+            }
+            assertEquals(null, rig.wizard.state.value)
+
+            rig.wizard.start()
+
+            assertEquals(caught.text, rig.wizard.sentence())
+        }
+    }
+
+    /** A deck whose first read throws, as a bug in reading it would. */
+    private class FlakyDeck(private val whole: List<Seed>) : SeedDeck {
+        private var reads = 0
+        override val seeds: List<Seed>
+            get() = if (reads++ == 0) error("unreadable deck") else whole
     }
 
     @Test
@@ -193,7 +228,7 @@ class DefaultSeededWizardTest {
 
     @Test
     fun `the die deals every bundled seed once before a model writes more, avoiding all of them`() =
-        test(deck = listOf(caught, knocking)) { rig ->
+        test(deck = FixedDeck(listOf(caught, knocking))) { rig ->
             rig.wizard.start()
             val first = rig.wizard.sentence()
             rig.wizard.rollSeed()

@@ -10,7 +10,13 @@ class BundledSeedDeckTest {
     private val seeds = BundledSeedDeck().seeds
 
     @Test
-    fun `every bundled seed is whole, and there are enough to play a while before a model writes any`() {
+    fun `every seed in the bundled file is whole, so the deck leaves none out`() {
+        val file = requireNotNull(javaClass.getResource(BundledSeedDeck.RESOURCE)).readText()
+        assertEquals(SeedFile.entriesIn(file).size, seeds.size)
+    }
+
+    @Test
+    fun `there are enough bundled seeds to play a while before a model writes any`() {
         assertTrue(seeds.size >= 30, "only ${seeds.size} seeds")
     }
 

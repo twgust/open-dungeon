@@ -39,3 +39,10 @@ complexity:
   TooManyFunctions:
     # A class's private helpers are its own business; the public surface is what stays small.
     ignorePrivate: true
+
+# The project's own rules, from :tools:detekt-rules.
+open-dungeon:
+  active: true
+  UnescapedRegexBrace:
+    # Android compiles regexes with ICU, which rejects a lone `}` the JVM accepts: a JVM test cannot catch it.
+    active: true

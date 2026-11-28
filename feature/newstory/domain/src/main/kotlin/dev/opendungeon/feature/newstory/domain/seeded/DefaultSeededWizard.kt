@@ -133,8 +133,10 @@ internal class DefaultSeededWizard(
 
     override fun start() = enqueue {
         if (draft != null) return@enqueue
+        // The deck is read before the draft opens, so a deck that throws leaves start free to be tried again.
+        val shuffled = deck.seeds.shuffled(random)
         draft = StoryDraft(DraftId(ids.next()), step = CreationStep.Limits)
-        coming += deck.seeds.shuffled(random)
+        coming += shuffled
         coming.removeFirstOrNull()?.let(::deal) ?: writeSeeds()
     }
 
