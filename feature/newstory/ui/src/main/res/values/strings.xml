@@ -62,7 +62,7 @@
     <string name="wizard_desire_unspoken">Implied</string>
     <string name="wizard_desire_close">Fade to black</string>
     <string name="wizard_desire_all_the_way">Explicit</string>
-    <string name="wizard_violence_offstage">offstage</string>
+    <string name="wizard_violence_offstage">Offstage</string>
     <string name="wizard_violence_felt">On page</string>
     <string name="wizard_violence_shown">Graphic</string>
     <string name="wizard_limits_note">Also: %1$s</string>

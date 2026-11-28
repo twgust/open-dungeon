@@ -90,6 +90,42 @@ public object PaperIcons {
     /** A die showing two, for rolling one line. */
     public val SmallDie: ImageVector = die("SmallDie", pips = listOf(9f to 9f, 15f to 15f))
 
+    /** A chili with its stem, filled: one unit of heat on a desire scale. */
+    public val Chili: ImageVector = ImageVector.Builder("Chili", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = SolidColor(Color.Black)) {
+            moveTo(13.4f, 7.6f)
+            curveTo(16.4f, 8.2f, 17.4f, 11.2f, 15.8f, 14.8f)
+            curveTo(14.2f, 18.4f, 10.8f, 20.8f, 6.6f, 21.2f)
+            curveTo(8.8f, 18.8f, 9.8f, 16f, 9.8f, 13.2f)
+            curveTo(9.8f, 10.4f, 11f, 8f, 13.4f, 7.6f)
+            close()
+            moveTo(10f, 9.4f)
+            curveTo(10.2f, 7.4f, 12.2f, 6.2f, 14.4f, 6.6f)
+            curveTo(15.6f, 6.8f, 16.4f, 7.6f, 16.6f, 8.8f)
+            curveTo(15.2f, 7.8f, 12.4f, 7.8f, 10f, 9.4f)
+            close()
+        }
+        path(
+            stroke = SolidColor(Color.Black),
+            strokeLineWidth = 1.5f,
+            strokeLineCap = StrokeCap.Round,
+        ) {
+            moveTo(13.4f, 6.8f)
+            curveTo(13.4f, 5f, 14.2f, 3.6f, 15.8f, 3f)
+        }
+    }.build()
+
+    /** A filled drop: one unit of harm on a violence scale. */
+    public val Drop: ImageVector = ImageVector.Builder("Drop", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = SolidColor(Color.Black)) {
+            moveTo(12f, 3.2f)
+            curveTo(12f, 3.2f, 6f, 10.2f, 6f, 14.6f)
+            arcTo(6f, 6f, 0f, isMoreThanHalf = false, isPositiveArc = false, x1 = 18f, y1 = 14.6f)
+            curveTo(18f, 10.2f, 12f, 3.2f, 12f, 3.2f)
+            close()
+        }
+    }.build()
+
     private fun stroked(name: String, pathBuilder: PathBuilder.() -> Unit): ImageVector =
         ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
             path(
