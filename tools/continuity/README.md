@@ -43,6 +43,19 @@ export OPENROUTER_API_KEY=sk-or-v1-…
 ./gradlew -q :tools:continuity:run --args="run build/continuity/saltmere-300.json"
 ```
 
+On Windows, run the same commands from the repository folder in PowerShell. Set the key with
+`$env:` and call the wrapper as `.\gradlew.bat`. The key lasts only for that window.
+
+```powershell
+cd C:\path\to\open-dungeon
+$env:OPENROUTER_API_KEY = "sk-or-v1-…"
+.\gradlew.bat -q :tools:continuity:run --args="check saltmere"
+.\gradlew.bat -q :tools:continuity:run --args="run saltmere"
+```
+
+Everything inside `--args="…"` goes to the harness, so `run saltmere` on its own is not a command.
+The harness needs JDK 21, like the rest of the build.
+
 `--key-file <path>` reads the key from a file instead. Paths are relative to the repository root.
 Reports go to `build/continuity/<scenario>-<time>/`: `report.md` to read, `report.json` with every
 number, and `samples.json` with every answer and verdict.
