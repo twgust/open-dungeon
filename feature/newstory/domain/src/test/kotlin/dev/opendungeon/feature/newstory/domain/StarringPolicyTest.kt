@@ -87,4 +87,62 @@ class StarringPolicyTest {
         assertNull(policy.edit(emptyDraft, DraftEdit.YouLine(CharacterLine.Wants, "x")))
         assertFalse(policy.canAdvance(emptyDraft))
     }
+
+    @Test
+    fun `the player's own role deals a card and leads the roles, in its own group`() {
+        assertTrue(policy.takesOwnWords(emptyDraft))
+
+        val picked = policy.submitOwn(emptyDraft, "  a deserter who bakes bread ")!!
+        val you = picked.draft.protagonist!!
+
+        assertEquals("a deserter who bakes bread", you.role)
+        assertEquals("To be forgiven", you.wants)
+        assertFalse(picked.advance)
+        val first = assertIs<StepBody.Starring>(policy.body(picked.draft)).roles.first()
+        assertEquals(
+            OptionGroup(
+                null,
+                listOf(
+                    Option(
+                        Choice.Word("a deserter who bakes bread"),
+                        "a deserter who bakes bread",
+                        picked = true,
+                        own = true,
+                    ),
+                ),
+                open = true,
+            ),
+            first,
+        )
+    }
+
+    @Test
+    fun `an own role replaces an offered one and keeps the card`() {
+        val dealt = policy.select(emptyDraft, Choice.Word("a forger"))!!.draft
+
+        val own = policy.submitOwn(dealt, "a nun on the run")!!.draft.protagonist!!
+
+        assertEquals(dealt.protagonist!!.copy(role = "a nun on the run"), own)
+    }
+
+    @Test
+    fun `typing an offered role is picking it`() {
+        val draft = policy.submitOwn(emptyDraft, "A FORGER")!!.draft
+
+        assertEquals("a forger", draft.protagonist!!.role)
+        val body = assertIs<StepBody.Starring>(policy.body(draft))
+        assertTrue(body.roles.none { it.label == null }, "an offered role is not shown as the player's own")
+    }
+
+    @Test
+    fun `blank words are no role`() {
+        assertNull(policy.submitOwn(emptyDraft, "   "))
+    }
+
+    @Test
+    fun `tapping the player's own role again keeps it`() {
+        val draft = policy.submitOwn(emptyDraft, "a deserter")!!.draft
+
+        assertEquals(draft, policy.select(draft, Choice.Word("a deserter"))!!.draft)
+    }
 }

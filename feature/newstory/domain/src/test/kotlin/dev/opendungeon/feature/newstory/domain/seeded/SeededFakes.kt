@@ -10,20 +10,26 @@ import dev.opendungeon.domain.drafting.SeedCast
 import dev.opendungeon.domain.drafting.WriteSeeds
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
 import kotlinx.coroutines.CompletableDeferred
 
-internal fun seed(template: String, vararg blanks: Pair<String, List<String>>, counterpart: String = "your {who}") =
-    requireNotNull(
-        Seed.of(
-            genre = "Comedy",
-            tone = "wryly",
-            template = template,
-            counterpart = counterpart,
-            blanks = blanks.map { (key, fills) -> Triple(key, Seed.Kind.Person, fills) },
-        ),
-    )
+internal fun seed(
+    template: String,
+    vararg blanks: Pair<String, List<String>>,
+    counterpart: String = "your {who}",
+    shelf: Register = Register.Everyday,
+) = requireNotNull(
+    Seed.of(
+        genre = "Comedy",
+        tone = "wryly",
+        template = template,
+        counterpart = counterpart,
+        blanks = blanks.map { (key, fills) -> Triple(key, Seed.Kind.Person, fills) },
+        shelf = shelf,
+    ),
+)
 
 internal val caught = seed("Caught lying by your {who}.", "who" to listOf("grandmother", "boss"))
 internal val knocking = seed("The {who} keeps knocking.", "who" to listOf("child"), counterpart = "the {who}")
@@ -42,6 +48,9 @@ internal class ScriptedSeedWork :
     CastSeed {
 
     val seedCalls = mutableListOf<Call<List<Seed>, Outcome<List<Seed>, DraftingError>>>()
+
+    /** The shelf each call to [seedCalls] asked for, in the same order. */
+    val seedShelves = mutableListOf<Register?>()
     val fillCalls = mutableListOf<Call<Pair<Seed, String>, Outcome<Seed, DraftingError>>>()
     val castCalls = mutableListOf<Call<CastArgs, Outcome<SeedCast, DraftingError>>>()
 
@@ -49,10 +58,13 @@ internal class ScriptedSeedWork :
 
     override suspend fun invoke(
         model: DraftingModel,
+        shelf: Register?,
         avoiding: List<Seed>,
         count: Int,
-    ): Outcome<List<Seed>, DraftingError> =
-        Call<List<Seed>, Outcome<List<Seed>, DraftingError>>(avoiding).also { seedCalls += it }.answer.await()
+    ): Outcome<List<Seed>, DraftingError> {
+        seedShelves += shelf
+        return Call<List<Seed>, Outcome<List<Seed>, DraftingError>>(avoiding).also { seedCalls += it }.answer.await()
+    }
 
     override suspend fun invoke(seed: Seed, key: String, model: DraftingModel): Outcome<Seed, DraftingError> =
         Call<Pair<Seed, String>, Outcome<Seed, DraftingError>>(seed to key).also { fillCalls += it }.answer.await()

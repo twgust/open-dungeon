@@ -14,6 +14,7 @@ import dev.opendungeon.domain.story.BeginStory
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.IdGenerator
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.domain.story.StoryDraftRepository
@@ -30,6 +31,7 @@ import dev.opendungeon.feature.newstory.domain.policy.TwistPolicy
 import dev.opendungeon.feature.newstory.domain.vocabulary.RollChoice
 import dev.opendungeon.feature.newstory.domain.vocabulary.VocabularyList
 import dev.opendungeon.feature.newstory.domain.vocabulary.WizardVocabulary
+import dev.opendungeon.feature.newstory.domain.vocabulary.WordGroup
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -40,26 +42,57 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlin.coroutines.cancellation.CancellationException
 
-/** Short, recognisable lists, so assertions can name the words. */
+/**
+ * Short, recognisable lists, so assertions can name the words. Each list has one group per register
+ * the tests need: a dark one first, as most tests' stories are, then an everyday and an after-dark one.
+ */
 internal object TestVocabulary : WizardVocabulary {
+    private fun dark(vararg words: String) = WordGroup("Dark", setOf(Register.Dark), words.toList())
+
+    private fun everyday(vararg words: String) = WordGroup("Everyday", setOf(Register.Everyday), words.toList())
+
+    private fun afterDark(vararg words: String) = WordGroup("After dark", setOf(Register.AfterDark), words.toList())
+
     private val lists = mapOf(
-        VocabularyList.Genres to listOf("Gothic", "Noir", "Western", "Horror"),
-        VocabularyList.Twists to listOf("a heist", "a curse", "a wedding"),
-        VocabularyList.Roles to listOf("a disgraced smuggler", "a forger", "a ferry pilot"),
-        VocabularyList.Tones to listOf("tenderly", "coldly"),
-        VocabularyList.Settings to listOf("a salt-war border town", "a drowned city"),
-        VocabularyList.Wants to listOf("To be forgiven", "To get even"),
-        VocabularyList.Flaws to listOf("Lies easily", "Keeps every grudge"),
-        VocabularyList.GoodAt to listOf("Picking locks", "Making strangers talk"),
+        VocabularyList.Genres to listOf(
+            dark("Gothic", "Noir", "Western", "Horror"),
+            everyday("Slice of life"),
+            afterDark("Erotic"),
+        ),
+        VocabularyList.Twists to
+            listOf(dark("a heist", "a curse", "a wedding"), everyday("a first date"), afterDark("an affair")),
+        VocabularyList.Roles to listOf(
+            dark("a disgraced smuggler", "a forger", "a ferry pilot"),
+            everyday("a nurse", "a barista"),
+            afterDark("an escort"),
+        ),
+        VocabularyList.Tones to listOf(dark("tenderly", "coldly"), everyday("warmly"), afterDark("hungrily")),
+        VocabularyList.Settings to listOf(
+            dark("a salt-war border town", "a drowned city"),
+            everyday("a launderette"),
+            afterDark("a sauna"),
+        ),
+        VocabularyList.Wants to
+            listOf(dark("To be forgiven", "To get even"), everyday("To make rent"), afterDark("To be wanted")),
+        VocabularyList.Flaws to listOf(
+            dark("Lies easily", "Keeps every grudge"),
+            everyday("Says yes to everything"),
+            afterDark("Can't say no to a dare"),
+        ),
+        VocabularyList.GoodAt to listOf(
+            dark("Picking locks", "Making strangers talk"),
+            everyday("Fixing things"),
+            afterDark("Flirting"),
+        ),
     )
 
-    override fun get(list: VocabularyList): List<String> = lists.getValue(list)
+    override fun groups(list: VocabularyList): List<WordGroup> = lists.getValue(list)
 }
 
-/** Rolls the first words that are not being avoided, in list order. */
-internal class FirstWordsRoll(private val vocabulary: WizardVocabulary = TestVocabulary) : RollChoice {
-    override fun invoke(list: VocabularyList, count: Int, avoiding: Collection<String>): List<String> {
-        val (fresh, seen) = vocabulary[list].partition { it !in avoiding }
+/** Rolls the first words that are not being avoided, in the order given. */
+internal class FirstWordsRoll : RollChoice {
+    override fun invoke(words: List<String>, count: Int, avoiding: Collection<String>): List<String> {
+        val (fresh, seen) = words.partition { it !in avoiding }
         return (fresh + seen).take(count)
     }
 }

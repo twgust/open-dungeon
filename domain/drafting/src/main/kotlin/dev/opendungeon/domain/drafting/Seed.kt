@@ -1,5 +1,7 @@
 package dev.opendungeon.domain.drafting
 
+import dev.opendungeon.domain.story.Register
+
 /**
  * A premise to play straight away: one sentence with blanks, such as "Caught {act} by your {who}.", each
  * blank filled with words of its kind and holding more words that would fit it.
@@ -18,6 +20,8 @@ public data class Seed(
     /** The person the player meets first, in the same form: "your {who}", or "the estate agent". */
     val counterpart: String,
     val blanks: List<Blank>,
+    /** The shelf the seed is dealt from: the kind of life it is about. */
+    val shelf: Register,
 ) {
     init {
         val problem = problemOf(genre, tone, template, counterpart, blanks)
@@ -121,6 +125,7 @@ public data class Seed(
             template: String,
             counterpart: String,
             blanks: List<Triple<String, Kind, List<String>>>,
+            shelf: Register,
         ): Seed? {
             val made = blanks.map { (key, kind, fills) ->
                 val words = fills.map(String::trim).filter(String::isFillable).distinctBy { it.key() }
@@ -132,7 +137,7 @@ public data class Seed(
             val sentence = template.trim()
             val other = counterpart.trim()
             if (problemOf(kind, telling, sentence, other, made) != null) return null
-            return Seed(kind, telling, sentence, other, made)
+            return Seed(kind, telling, sentence, other, made, shelf)
         }
 
         private val PLACEHOLDER = Regex("""\{([a-z]+)\}""")

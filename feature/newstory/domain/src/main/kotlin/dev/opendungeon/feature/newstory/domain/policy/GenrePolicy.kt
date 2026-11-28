@@ -2,6 +2,7 @@ package dev.opendungeon.feature.newstory.domain.policy
 
 import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.Phrase
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.Selection
@@ -10,11 +11,15 @@ import dev.opendungeon.feature.newstory.domain.StepPolicy
 import dev.opendungeon.feature.newstory.domain.vocabulary.RollChoice
 import dev.opendungeon.feature.newstory.domain.vocabulary.VocabularyList
 import dev.opendungeon.feature.newstory.domain.vocabulary.WizardVocabulary
+import dev.opendungeon.feature.newstory.domain.vocabulary.WordGroup
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
-/** Up to two genres, offered or the player's own. Tapping a picked genre drops it; the die picks two and moves on. */
+/**
+ * Up to two genres, offered or the player's own, every group open. Tapping a picked genre drops it; the die
+ * picks two and moves on.
+ */
 @Inject
 @ContributesIntoSet(AppScope::class)
 public class GenrePolicy(private val vocabulary: WizardVocabulary, private val rollChoice: RollChoice) : StepPolicy {
@@ -23,8 +28,14 @@ public class GenrePolicy(private val vocabulary: WizardVocabulary, private val r
 
     private val offered: List<String> get() = vocabulary[VocabularyList.Genres]
 
+    /** The die never picks an [opt-in][Register.optIn] genre: those are only ever the player's choice. */
+    private val rollable: List<String>
+        get() = vocabulary.groups(VocabularyList.Genres)
+            .filterNot { group -> group.registers.any(Register::optIn) }
+            .flatMap(WordGroup::words)
+
     override fun body(draft: StoryDraft): StepBody =
-        StepBody.Words(wordOptions(offered, draft.genres), maxPicks = StoryDraft.MAX_GENRES)
+        StepBody.Words(Shelf.ofGenres(vocabulary).options(draft.genres), maxPicks = StoryDraft.MAX_GENRES)
 
     override fun canAdvance(draft: StoryDraft): Boolean = draft.genres.isNotEmpty()
 
@@ -51,7 +62,7 @@ public class GenrePolicy(private val vocabulary: WizardVocabulary, private val r
     }
 
     override suspend fun roll(draft: StoryDraft): Selection {
-        val genres = rollChoice(VocabularyList.Genres, StoryDraft.MAX_GENRES, avoiding = draft.genres.map(Phrase::text))
+        val genres = rollChoice(rollable, StoryDraft.MAX_GENRES, avoiding = draft.genres.map(Phrase::text))
         return Selection(draft.copy(genres = genres.map(Phrase::Offered)), advance = true)
     }
 }

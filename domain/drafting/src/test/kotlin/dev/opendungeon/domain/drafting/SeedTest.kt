@@ -1,5 +1,6 @@
 package dev.opendungeon.domain.drafting
 
+import dev.opendungeon.domain.story.Register
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,6 +19,7 @@ class SeedTest {
                 Triple("act", Seed.Kind.Act, listOf("forging a note", " forging a NOTE ", "", "lying")),
                 Triple("who", Seed.Kind.Person, listOf("grandmother", "boss")),
             ),
+            shelf = Register.Everyday,
         ),
     )
 
@@ -78,7 +80,16 @@ class SeedTest {
             counterpart: String = "the judge",
             keys: List<String> = listOf("who"),
             fills: List<String> = listOf("a"),
-        ) = Seed.of("Drama", "slowly", template, counterpart, keys.map { Triple(it, Seed.Kind.Person, fills) })
+        ) = Seed.of(
+            "Drama",
+            "slowly",
+            template,
+            counterpart,
+            keys.map {
+                Triple(it, Seed.Kind.Person, fills)
+            },
+            Register.Dark,
+        )
 
         assertNotNull(of("Judged by {who}."))
         assertNull(of("Judged by {who} and {what}."), "a blank without words")
@@ -107,7 +118,7 @@ class SeedTest {
     @Test
     fun `building a seed that is not whole is a bug`() {
         assertThrows<IllegalArgumentException> {
-            Seed("Drama", "slowly", "Judged by {who}.", "the judge", emptyList())
+            Seed("Drama", "slowly", "Judged by {who}.", "the judge", emptyList(), Register.Dark)
         }
     }
 

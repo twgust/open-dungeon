@@ -212,7 +212,7 @@ class DefaultStoryWizardTest {
             assertEquals(WizardOutcome.Failed(WizardFailure.Storage(StorageError.Full)), awaitItem())
         }
         val shown = assertIs<StepBody.Words>(wizard.current().body)
-        assertTrue(shown.options.none { it.picked }, "the screen shows the draft as it was")
+        assertTrue(shown.groups.flatMap { it.options }.none { it.picked }, "the screen shows the draft as it was")
         assertEquals(emptyList(), repository.stored.genres)
     }
 

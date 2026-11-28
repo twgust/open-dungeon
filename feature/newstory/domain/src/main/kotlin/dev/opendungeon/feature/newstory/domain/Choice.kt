@@ -24,3 +24,10 @@ public data class Option(
     /** The player's own words rather than one the app offered. */
     val own: Boolean = false,
 )
+
+/**
+ * Pills that belong together, under a [label]; the player's own words lead in a group with none. Open
+ * groups come first, the ones the story calls for. A folded group is still there to open and tap, it is
+ * just not what this story is likely to want.
+ */
+public data class OptionGroup(val label: String?, val options: List<Option>, val open: Boolean)

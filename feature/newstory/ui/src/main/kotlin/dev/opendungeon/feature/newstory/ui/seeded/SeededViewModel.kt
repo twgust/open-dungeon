@@ -37,6 +37,7 @@ class SeededViewModel(wizardFactory: SeededWizard.Factory) :
         is SeededIntent.FillBlank -> wizard.fill(intent.blank, intent.words)
         is SeededIntent.MoreWords -> wizard.suggestMore(intent.blank)
         SeededIntent.RollSeed -> wizard.rollSeed()
+        is SeededIntent.PickShelf -> wizard.pickShelf(intent.shelf)
         is SeededIntent.Describe -> wizard.describe(intent.person, intent.text)
         is SeededIntent.Pick -> wizard.select(intent.choice)
         is SeededIntent.Own -> wizard.submitOwn(intent.text)

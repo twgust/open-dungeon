@@ -91,9 +91,9 @@ class WordPoliciesTest {
 
         assertEquals(
             Option(Choice.Word("a stolen saint"), "a stolen saint", picked = true, own = true),
-            body.options.first(),
+            body.groups.flatMap { it.options }.first(),
         )
-        assertEquals(1, body.options.count(Option::picked))
+        assertEquals(1, body.groups.flatMap { it.options }.count(Option::picked))
         assertEquals(1, body.maxPicks)
     }
 }
