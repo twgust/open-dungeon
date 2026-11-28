@@ -5,6 +5,7 @@ import dev.opendungeon.tools.continuity.judge.JudgeFailure
 import dev.opendungeon.tools.continuity.judge.JudgeResult
 import dev.opendungeon.tools.continuity.judge.WhoIsWho
 import dev.opendungeon.tools.continuity.model.ModelChoice
+import dev.opendungeon.tools.continuity.probe.ProbePrompts
 import dev.opendungeon.tools.continuity.scenario.Probe
 import dev.opendungeon.tools.continuity.scenario.Scenario
 import dev.zacsweers.metro.AppScope
@@ -34,7 +35,8 @@ internal class DefaultProbeJudge(private val judge: Judge) : ProbeJudge {
     ): SampleOutcome {
         if (answer.text.isEmpty()) return SampleOutcome.Unanswered("The model answered with nothing")
         val facts = probe.facts.map { requireNotNull(scenario.fact(it)) { "No fact $it in ${scenario.id}" } }
-        return when (val result = judge.judge(answer.text, facts, WhoIsWho.of(scenario), model)) {
+        val prompt = ProbePrompts.ask(scenario, probe)
+        return when (val result = judge.judge(answer.text, facts, WhoIsWho.of(scenario), prompt, model)) {
             is JudgeResult.Judged -> SampleOutcome.Judged(
                 answer = answer.text,
                 cutOff = answer.cutOff,

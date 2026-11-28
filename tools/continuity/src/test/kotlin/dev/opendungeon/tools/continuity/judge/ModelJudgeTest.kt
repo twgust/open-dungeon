@@ -33,7 +33,7 @@ class ModelJudgeTest {
             ),
         )
 
-        val result = ModelJudge(generator).judge("The lamp is out.", facts, people, JUDGE)
+        val result = ModelJudge(generator).judge("The lamp is out.", facts, people, prompt = null, model = JUDGE)
 
         assertEquals(
             JudgeResult.Judged(
@@ -52,7 +52,7 @@ class ModelJudgeTest {
             Outcome.Success(JudgePayload(facts.map { CheckPayload(it.id.value, Verdict.Absent, "") })),
         )
 
-        ModelJudge(generator).judge("A passage.", facts, people, JUDGE)
+        ModelJudge(generator).judge("A passage.", facts, people, prompt = "The question: Who?", model = JUDGE)
 
         val request = generator.requests.single()
         val user = request.messages.filterIsInstance<ChatMessage.User>().single().text
@@ -61,6 +61,7 @@ class ModelJudgeTest {
         assertTrue("player's character, Wren" in user)
         assertTrue("- Kael: A guide with a limp." in user, "roles in an answer can only be tied to names this way")
         assertTrue("- Mara: An apothecary." in user)
+        assertTrue("The passage answers this:\n<<<\nThe question: Who?\n>>>" in user, "a bare name means nothing alone")
         assertEquals(JUDGE.model, request.model)
         assertEquals(JUDGE.tuning, request.tuning)
     }
@@ -84,7 +85,7 @@ class ModelJudgeTest {
         payloads.forEach { checks ->
             val result = ModelJudge(
                 FakeStructuredGenerator(Outcome.Success(JudgePayload(checks))),
-            ).judge("p", facts, people, JUDGE)
+            ).judge("p", facts, people, prompt = null, model = JUDGE)
 
             assertIs<JudgeFailure.Incomplete>((result as JudgeResult.Failed).reason)
         }
@@ -103,7 +104,9 @@ class ModelJudgeTest {
             ),
         )
 
-        val result = ModelJudge(generator).judge("I'd wager the apothecary.", facts, people, JUDGE)
+        val result = ModelJudge(
+            generator,
+        ).judge("I'd wager the apothecary.", facts, people, prompt = null, model = JUDGE)
 
         assertEquals(
             FactVerdict(Verdict.Suspected, "I'd wager the apothecary"),
@@ -115,7 +118,9 @@ class ModelJudgeTest {
     fun `a generation failure is reported as such`() = runTest {
         val error = GenerationError.Access(DataError.RateLimited("slow down"))
 
-        val result = ModelJudge(FakeStructuredGenerator(Outcome.Failure(error))).judge("p", facts, people, JUDGE)
+        val result = ModelJudge(
+            FakeStructuredGenerator(Outcome.Failure(error)),
+        ).judge("p", facts, people, prompt = null, model = JUDGE)
 
         assertEquals(JudgeResult.Failed(JudgeFailure.Generation(error)), result)
     }

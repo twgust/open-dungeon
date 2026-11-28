@@ -14,8 +14,16 @@ internal interface Judge {
     /**
      * @param passage what the model under test wrote, or a turn being checked.
      * @param people who the story's people are, so a role or a title in the passage can be tied to a name.
+     * @param prompt what the passage answers, when it answers something. "Aldous Fenn" alone asserts
+     *   nothing; as the answer to "Who does Oren think took his ledger?" it asserts a suspicion.
      */
-    suspend fun judge(passage: String, facts: List<Fact>, people: WhoIsWho, model: ModelChoice): JudgeResult
+    suspend fun judge(
+        passage: String,
+        facts: List<Fact>,
+        people: WhoIsWho,
+        prompt: String?,
+        model: ModelChoice,
+    ): JudgeResult
 }
 
 /**

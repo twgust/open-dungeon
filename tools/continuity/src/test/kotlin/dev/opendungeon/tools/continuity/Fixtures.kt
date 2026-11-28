@@ -140,7 +140,13 @@ internal class FakeJudge(private val verdict: (passage: String, fact: Fact) -> V
     Judge {
     val passages: MutableList<String> = CopyOnWriteArrayList()
 
-    override suspend fun judge(passage: String, facts: List<Fact>, people: WhoIsWho, model: ModelChoice): JudgeResult {
+    override suspend fun judge(
+        passage: String,
+        facts: List<Fact>,
+        people: WhoIsWho,
+        prompt: String?,
+        model: ModelChoice,
+    ): JudgeResult {
         passages += passage
         return JudgeResult.Judged(facts.associate { it.id to FactVerdict(verdict(passage, it), quote = "…") })
     }

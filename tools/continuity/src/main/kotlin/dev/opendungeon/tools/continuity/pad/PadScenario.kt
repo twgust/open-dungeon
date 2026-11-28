@@ -185,7 +185,7 @@ internal class DefaultPadScenario(private val generator: StructuredGenerator, pr
         val timeline = Timeline(scenario)
         val at = scenario.turns[gap].id
         val passage = "${turn.player}\n\n${turn.narrationText}"
-        val result = judge.judge(passage, scenario.facts, WhoIsWho.of(scenario), request.judge)
+        val result = judge.judge(passage, scenario.facts, WhoIsWho.of(scenario), prompt = null, model = request.judge)
         val verdicts = when (result) {
             is JudgeResult.Failed -> return when (val reason = result.reason) {
                 is JudgeFailure.Generation -> "The judge failed: ${reason.error}"

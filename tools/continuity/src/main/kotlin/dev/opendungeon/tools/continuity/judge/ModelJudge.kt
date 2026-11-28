@@ -22,11 +22,17 @@ import kotlinx.serialization.Serializable
 @ContributesBinding(AppScope::class)
 internal class ModelJudge(private val generator: StructuredGenerator) : Judge {
 
-    override suspend fun judge(passage: String, facts: List<Fact>, people: WhoIsWho, model: ModelChoice): JudgeResult {
+    override suspend fun judge(
+        passage: String,
+        facts: List<Fact>,
+        people: WhoIsWho,
+        prompt: String?,
+        model: ModelChoice,
+    ): JudgeResult {
         require(facts.isNotEmpty()) { "Judge at least one fact" }
         val request = StructuredRequest(
             model = model.model,
-            messages = messages(passage, facts, people),
+            messages = messages(passage, facts, people, prompt),
             serializer = JudgePayload.serializer(),
             descriptions = JudgePayload.DESCRIPTIONS,
             examples = listOf(JudgePayload.EXAMPLE),
@@ -38,22 +44,24 @@ internal class ModelJudge(private val generator: StructuredGenerator) : Judge {
         }
     }
 
-    private fun messages(passage: String, facts: List<Fact>, people: WhoIsWho): List<ChatMessage> = listOf(
-        ChatMessage.System(SYSTEM),
-        ChatMessage.User(
-            buildString {
-                append("In both the passage and the facts, \"you\" is the player's character, ")
-                append(people.protagonist.name).append(".")
-                if (people.cast.isNotEmpty()) {
-                    append("\n\nWho the story's people are:")
-                    people.cast.forEach { append("\n- ").append(it.name).append(": ").append(it.sheet) }
-                }
-                append("\n\nThe passage:\n<<<\n").append(passage.trim()).append("\n>>>")
-                append("\n\nThe facts:")
-                facts.forEach { append("\n- [").append(it.id.value).append("] ").append(it.text) }
-            },
-        ),
-    )
+    private fun messages(passage: String, facts: List<Fact>, people: WhoIsWho, prompt: String?): List<ChatMessage> =
+        listOf(
+            ChatMessage.System(SYSTEM),
+            ChatMessage.User(
+                buildString {
+                    append("In both the passage and the facts, \"you\" is the player's character, ")
+                    append(people.protagonist.name).append(".")
+                    if (people.cast.isNotEmpty()) {
+                        append("\n\nWho the story's people are:")
+                        people.cast.forEach { append("\n- ").append(it.name).append(": ").append(it.sheet) }
+                    }
+                    prompt?.let { append("\n\nThe passage answers this:\n<<<\n").append(it.trim()).append("\n>>>") }
+                    append("\n\nThe passage:\n<<<\n").append(passage.trim()).append("\n>>>")
+                    append("\n\nThe facts:")
+                    facts.forEach { append("\n- [").append(it.id.value).append("] ").append(it.text) }
+                },
+            ),
+        )
 
     /** Every fact asked about must come back exactly once; anything else means the verdicts cannot be trusted. */
     private fun JudgePayload.toResult(asked: List<FactId>): JudgeResult {
@@ -81,6 +89,7 @@ internal class ModelJudge(private val generator: StructuredGenerator) : Judge {
             - absent: none of these. A passage that says it does not know, or that is silent on the matter, leaves the fact absent.
             People are often named by their role, title or relation ("the harbourmaster", "her brother") or by a pronoun. Use the list of who the story's people are to tell who is meant, and judge the passage as if the name had been used whenever the reference is unmistakable.
             A character's words count as the passage stating them. A character who says they were told something, saw it, or know it, asserts it.
+            When the passage answers something, read it as that answer: a bare name given in reply to "who did it?" states that this person did it.
             Judge only what the passage says, never what is likely or what the rest of the story might hold.
             For every verdict but absent, quote the few words that decided it; for absent, leave the quote empty.
             """.trimIndent()

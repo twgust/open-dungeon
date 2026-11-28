@@ -30,6 +30,15 @@ class ProbePromptsTest {
     }
 
     @Test
+    fun `the ask a judge reads carries the question or the line, and none of the story`() {
+        assertEquals("The question: Who has the key?", ProbePrompts.ask(scenario, probe("who-key")))
+        assertEquals(
+            "You say to Kael: \"Who poisoned the wine?\" The passage is the answer.",
+            ProbePrompts.ask(scenario, probe("kael-poison")),
+        )
+    }
+
+    @Test
     fun `every prompt carries the setup, the context and the ask`() {
         listOf("kael-poison", "who-key").forEach { id ->
             val messages = ProbePrompts.messages(scenario, probe(id), context)

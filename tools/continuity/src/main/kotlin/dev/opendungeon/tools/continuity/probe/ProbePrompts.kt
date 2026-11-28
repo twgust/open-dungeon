@@ -21,6 +21,16 @@ internal object ProbePrompts {
         is Ask.Question, is Ask.Action -> Reader.Narrator
     }
 
+    /**
+     * The ask as a reader of the answer needs it, with none of the story: the question, the player's turn,
+     * or the line said to a character. The judge reads an answer against it.
+     */
+    fun ask(scenario: Scenario, probe: Probe): String = when (val ask = probe.ask) {
+        is Ask.Question -> "The question: ${ask.text}"
+        is Ask.Action -> "The player's turn, which the passage narrates the answer to: ${ask.text}"
+        is Ask.Voice -> "You say to ${speakerOf(scenario, ask).name}: \"${ask.line}\" The passage is the answer."
+    }
+
     fun messages(scenario: Scenario, probe: Probe, context: List<ContextBlock>): List<ChatMessage> {
         val story = buildString {
             append(setup(scenario))
@@ -36,7 +46,7 @@ internal object ProbePrompts {
                 ChatMessage.User("$story\n\n[The player's turn]\n${ask.text}\n\nWrite the next beat."),
             )
             is Ask.Voice -> {
-                val speaker = requireNotNull(scenario.member(ask.speaker)) { "No ${ask.speaker} in ${scenario.id}" }
+                val speaker = speakerOf(scenario, ask)
                 listOf(
                     ChatMessage.System(voiceSystem(speaker)),
                     ChatMessage.User(
@@ -46,6 +56,9 @@ internal object ProbePrompts {
             }
         }
     }
+
+    private fun speakerOf(scenario: Scenario, ask: Ask.Voice): CastMember =
+        requireNotNull(scenario.member(ask.speaker)) { "No ${ask.speaker} in ${scenario.id}" }
 
     /** The parts of a story that never change in play, the same for every policy and every reader. */
     private fun setup(scenario: Scenario): String = buildString {

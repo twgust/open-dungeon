@@ -45,7 +45,7 @@ internal class DefaultVerifyFacts(private val judge: Judge) : VerifyFacts {
         model: ModelChoice,
     ): List<String> {
         val passage = listOfNotNull(turn.player, turn.narrationText).joinToString(separator = "\n\n")
-        return when (val result = judge.judge(passage, facts, WhoIsWho.of(scenario), model)) {
+        return when (val result = judge.judge(passage, facts, WhoIsWho.of(scenario), prompt = null, model = model)) {
             is JudgeResult.Failed -> listOf(
                 when (val reason = result.reason) {
                     is JudgeFailure.Generation -> "Turn '${turn.id}' could not be judged: ${reason.error}"

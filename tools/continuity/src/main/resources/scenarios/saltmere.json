@@ -340,7 +340,7 @@
     { "id": "lighthouse-dark", "text": "The Saltmere lighthouse had been dark for three nights when you arrived, and the whole town was talking about it.", "establishedIn": "t00" },
     { "id": "letter-burned", "text": "Oren burned the sealed letter you delivered to him.", "establishedIn": "t02" },
     { "id": "oren-promise", "text": "Oren promised you passage on the Grey Heron if you bring back his stolen ledger.", "establishedIn": "t03" },
-    { "id": "oren-suspects-fenn", "text": "Oren privately suspects the harbourmaster Aldous Fenn of taking his ledger.", "establishedIn": "t04" },
+    { "id": "oren-suspects-fenn", "text": "Oren suspects the harbourmaster Aldous Fenn of taking his ledger.", "establishedIn": "t04" },
     { "id": "hand-cut", "text": "Your left palm was cut on broken glass when you climbed into the harbour office.", "establishedIn": "t05" },
     { "id": "key-with-you", "text": "You have the brass key you found hidden in the harbour office.", "establishedIn": "t06", "supersededBy": "key-with-mara" },
     { "id": "tobin-stole-ledger", "text": "Tobin Quill, Mara's brother, stole Oren's ledger.", "establishedIn": "t07" },
