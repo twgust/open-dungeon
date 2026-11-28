@@ -19,6 +19,7 @@ import dev.opendungeon.domain.story.CreationStep
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.IdGenerator
 import dev.opendungeon.domain.story.Phrase
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.StoryDraft
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.LeaveAnswer
@@ -48,8 +49,9 @@ import kotlin.random.Random
  * only place the wizard's state changes. A model's work runs beside the loop and hands its result back
  * to it, tagged with the run it belongs to, so a result that arrives after the run was stopped is dropped.
  *
- * Seeds are dealt from the bundled deck, shuffled, and a model writes more only once the deck is used
- * up. A seed is dealt with its blanks empty: the player fills each from the words it came with, or their
+ * Seeds are dealt from the bundled deck, shuffled, from the shelf the player picked, and a model writes
+ * more for that shelf only once the deck has none left on it. Until the player sets the limits, they
+ * start where the seed on screen suggests: an [opt-in][Register.optIn] shelf's seeds start explicit. A seed is dealt with its blanks empty: the player fills each from the words it came with, or their
  * own, and a model writes more words for a blank only when the player asks for them. The limits are the custom wizard's own rules ([LimitsPolicy]),
  * applied to an in-memory draft that also carries everything the model writes, so beginning the story
  * is the custom wizard's [BeginStory] too.
@@ -97,8 +99,17 @@ internal class DefaultSeededWizard(
     /** The blank whose suggestions are shown, if any. */
     private var picked: String? = null
 
-    /** Seeds still to deal, in order. */
+    /** The shelf seeds are dealt from; `null` mixes every shelf but the opt-in ones. */
+    private var shelf: Register? = null
+
+    /** The bundled deck, shuffled once, read when started. */
+    private var deckOrder: List<Seed> = emptyList()
+
+    /** Seeds still to deal from [shelf], in order. */
     private val coming = ArrayDeque<Seed>()
+
+    /** The player set a limit themselves, so a new seed no longer moves them. */
+    private var limitsChosen = false
 
     /** Every seed dealt so far, so a model never writes one the player has seen. */
     private val dealt = mutableListOf<Seed>()
@@ -144,9 +155,9 @@ internal class DefaultSeededWizard(
     override fun start() = enqueue {
         if (draft != null) return@enqueue
         // The deck is read before the draft opens, so a deck that throws leaves start free to be tried again.
-        val shuffled = deck.seeds.shuffled(random)
+        deckOrder = deck.seeds.shuffled(random)
         draft = StoryDraft(DraftId(ids.next()), step = CreationStep.Limits)
-        coming += shuffled
+        refill()
         coming.removeFirstOrNull()?.let(::deal) ?: writeSeeds()
     }
 
@@ -185,6 +196,15 @@ internal class DefaultSeededWizard(
         deal(next)
     }
 
+    override fun pickShelf(shelf: Register?) = enqueueOn(SeededStep.Seed) {
+        if (shelf == this.shelf) return@enqueueOn
+        // Whatever a model is writing was for the seed or shelf being left.
+        stopWork()
+        this.shelf = shelf
+        refill()
+        coming.removeFirstOrNull()?.let(::deal) ?: writeSeeds()
+    }
+
     override fun describe(person: Person, text: String) = enqueueOn(SeededStep.People) {
         val kept = text.take(MAX_DESCRIPTION_LENGTH)
         when (person) {
@@ -196,13 +216,17 @@ internal class DefaultSeededWizard(
 
     override fun select(choice: Choice) = enqueueOn(SeededStep.Limits) {
         val current = draft ?: return@enqueueOn
-        limits.select(current, choice)?.let { draft = it.draft }
+        limits.select(current, choice)?.let {
+            draft = it.draft
+            limitsChosen = true
+        }
         render()
     }
 
     override fun submitOwn(text: String) = enqueueOn(SeededStep.Limits) {
         val current = draft ?: return@enqueueOn
         draft = limits.submitOwn(current, text).draft
+        limitsChosen = true
         render()
     }
 
@@ -360,11 +384,12 @@ internal class DefaultSeededWizard(
         report(failure)
     }
 
-    /** Asks a model for more seeds than the deck had, and deals the first once they come. */
+    /** Asks a model for more seeds for the shelf than the deck had, and deals the first once they come. */
     private suspend fun writeSeeds() {
-        val model = drafting ?: return report(WizardFailure.Drafting(DraftingError.NoModel))
+        val model = drafting ?: return failed(WizardFailure.Drafting(DraftingError.NoModel))
+        val asked = shelf
         launchWork(Work.Replacing()) { run ->
-            val written = writeSeeds(model, avoiding = dealt.toList())
+            val written = writeSeeds(model, asked, avoiding = dealt.toList())
             enqueue { onSeedsWritten(run, written) }
         }
     }
@@ -384,15 +409,28 @@ internal class DefaultSeededWizard(
         }
     }
 
+    /** The seeds still to deal from [shelf]: the deck's, in its shuffled order, less those dealt. */
+    private fun refill() {
+        coming.clear()
+        coming += deckOrder.filter { it.fits(shelf) && it !in dealt }
+    }
+
+    private fun Seed.fits(shelf: Register?): Boolean = if (shelf == null) !this.shelf.optIn else this.shelf == shelf
+
     /** Puts [next] on screen with its blanks empty and the first one picked. */
     private fun deal(next: Seed) {
         seed = next
         dealt += next
+        if (!limitsChosen) draft = draft?.copy(limits = startingLimits(next))
         suggestions = next.blanks.associate { it.key to it.shown + it.unused }
         filled = emptySet()
         picked = firstEmpty()
         render()
     }
+
+    /** The limits a seed starts at: an opt-in shelf is chosen for what it holds, so its seeds start explicit. */
+    private fun startingLimits(seed: Seed): ContentLimits =
+        if (seed.shelf.optIn) ContentLimits(desire = ContentLimits.Desire.AllTheWay) else ContentLimits()
 
     /** The first blank of the sentence still empty, if any. */
     private fun firstEmpty(): String? =
@@ -473,6 +511,7 @@ internal class DefaultSeededWizard(
         val premise = seed.text
         val body = when (step) {
             SeededStep.Seed -> SeededBody.Seed(
+                shelves = SHELVES.map { ShelfOption(it, picked = it == shelf) },
                 genre = seed.genre,
                 parts = seed.parts.map { part ->
                     when (part) {
@@ -572,6 +611,9 @@ internal class DefaultSeededWizard(
     companion object {
         /** A line or two about someone: enough to steer the model, short enough to stay a sketch. */
         const val MAX_DESCRIPTION_LENGTH: Int = 200
+
+        /** The shelves in the order they are offered: the mixed one, then each kind of life. */
+        private val SHELVES: List<Register?> = listOf(null) + Register.entries
 
         /** Characters that cannot stand in a blank, left out of the player's own words. */
         private const val UNFILLABLE = "{}\n\r"

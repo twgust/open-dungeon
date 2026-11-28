@@ -1,39 +1,82 @@
 {
   "genres": [
-    "Gothic", "Noir", "Space opera", "Low fantasy", "Weird west", "Court intrigue", "Cyberpunk", "Mythic",
-    "Folk horror", "Grimdark", "Regency", "Wuxia", "Solarpunk", "Cosmic horror", "Pulp adventure",
-    "Southern gothic", "Post-collapse", "Slice of life", "Dark academia", "Sword and sorcery"
+    { "label": "Everyday", "registers": ["everyday"], "words": ["Slice of life", "Romance", "Romcom", "Comedy", "Drama", "Coming of age", "Workplace", "Small town", "Family saga", "Cosy mystery"] },
+    { "label": "After dark", "registers": ["afterDark", "everyday"], "words": ["Erotic", "Erotic romance", "Kink", "Affair"] },
+    { "label": "Dark", "registers": ["dark"], "words": ["Noir", "Gothic", "Thriller", "Folk horror", "Cosmic horror", "Southern gothic", "Dark academia"] },
+    { "label": "Fantastical", "registers": ["fantastical"], "words": ["Low fantasy", "Sword and sorcery", "Grimdark", "Mythic", "Wuxia", "Weird west"] },
+    { "label": "Other worlds", "registers": ["otherWorlds"], "words": ["Space opera", "Cyberpunk", "Solarpunk", "Post-collapse"] },
+    { "label": "Historical", "registers": ["historical"], "words": ["Regency", "Court intrigue", "Pulp adventure"] }
   ],
   "twists": [
-    "a heist", "a romance", "cosmic dread", "survival", "farce", "revenge", "a betrayal", "a curse",
-    "a missing heir", "a locked room", "a debt come due", "an impostor"
+    { "label": "Everyday", "registers": ["everyday"], "words": ["a fresh start", "moving back home", "a first date", "a falling-out", "a secret crush", "a new neighbour", "a new job", "a wedding to plan", "a family visit", "a business going under", "a romance", "farce", "a breakup", "a pregnancy", "an inheritance", "a lottery win", "a divorce", "a diagnosis", "a school reunion", "a road trip", "a new baby", "a house to renovate", "a family secret", "a big exam", "a promotion", "a summer that changes everything"] },
+    { "label": "After dark", "registers": ["afterDark"], "words": ["an affair", "friends with benefits", "an open marriage", "camming to cover rent", "a sugar arrangement", "a one-night stand that keeps happening", "a new kink", "a threesome nobody planned", "an office fling", "a sex tape", "a swingers’ invitation", "a bet that ends in bed", "a forbidden student", "a wife swap", "a lover’s spouse finding out"] },
+    { "label": "Trouble", "registers": ["dark", "historical", "everyday"], "words": ["a betrayal", "revenge", "a debt come due", "an impostor", "a locked room", "a blackmail letter", "a disappearance", "a body in the garden", "a stolen identity"] },
+    { "label": "High stakes", "registers": ["fantastical", "otherWorlds", "historical"], "words": ["a heist", "survival", "a missing heir", "a quest", "a rebellion", "a war coming", "a prophecy", "an escape"] },
+    { "label": "Strange", "registers": ["dark", "fantastical", "otherWorlds"], "words": ["a curse", "cosmic dread", "a haunting", "a door that should stay shut", "a time loop", "a pact"] }
   ],
   "roles": [
-    "a disgraced smuggler", "a hedge witch", "a deserter", "a widowed heir", "a forger", "a priest without faith",
-    "a reliquary thief", "a court physician", "a debt collector", "a ferry pilot", "a lighthouse keeper",
-    "a bounty hunter", "a cartographer", "a travelling surgeon", "a retired assassin", "a grave robber"
+    { "label": "Care and health", "registers": ["everyday"], "words": ["a nurse", "a doctor", "a surgeon", "a paramedic", "a carer", "a pharmacist", "a midwife", "a vet", "a dentist", "a physiotherapist", "a hospital porter", "a therapist", "a psychiatrist", "a nursing student"] },
+    { "label": "Food and drink", "registers": ["everyday"], "words": ["a barista", "a chef", "a waitress", "a waiter", "a bartender", "a baker", "a butcher", "a pub landlord", "a cook", "a sommelier", "a dishwasher", "a fishmonger", "a food-truck owner", "a caterer", "a brewer"] },
+    { "label": "Shops and service", "registers": ["everyday"], "words": ["a shopkeeper", "a hairdresser", "a barber", "a bookseller", "a florist", "a cashier", "a tailor", "a tattoo artist", "a beautician", "an estate agent", "a concierge", "a cleaner", "a housekeeper", "a nail technician", "a dog walker"] },
+    { "label": "School and study", "registers": ["everyday"], "words": ["a teacher", "a student", "a professor", "a lecturer", "a caretaker", "a PhD student", "a tutor", "a driving instructor", "a librarian", "a teaching assistant", "a headteacher", "a dance teacher", "a researcher"] },
+    { "label": "Office", "registers": ["everyday"], "words": ["an office worker", "a temp", "an accountant", "a lawyer", "a secretary", "a receptionist", "a manager", "a graphic designer", "a programmer", "a journalist", "a recruiter", "an intern", "a banker", "a civil servant", "an architect"] },
+    { "label": "Hands and trades", "registers": ["everyday"], "words": ["a plumber", "an electrician", "a carpenter", "a gardener", "a mechanic", "a builder", "a decorator", "a locksmith", "a courier", "a delivery driver", "a farmer", "a fisherman", "a welder", "a roofer", "a removals man"] },
+    { "label": "On the road", "registers": ["everyday"], "words": ["a bus driver", "a taxi driver", "a trucker", "a train driver", "a pilot", "a flight attendant", "a tour guide", "a postman", "a sailor", "a drifter"] },
+    { "label": "Home and family", "registers": ["everyday"], "words": ["a single dad", "a single mum", "a housewife", "a househusband", "a widower", "a widow", "a retiree", "a newlywed", "a stepmother", "a stepfather", "an au pair", "a nanny", "a foster parent", "a grandmother", "a grandfather", "a new mother", "a divorcee", "an only child"] },
+    { "label": "Making things", "registers": ["everyday"], "words": ["an actor", "a musician", "a singer", "an artist", "a potter", "a photographer", "a writer", "a poet", "a busker", "a comedian", "a dancer", "a filmmaker", "a model", "a DJ", "a designer"] },
+    { "label": "Sport", "registers": ["everyday"], "words": ["a coach", "a personal trainer", "a lifeguard", "a footballer", "a yoga teacher", "a jockey", "a boxer", "a swimmer", "a climber", "a cyclist", "a referee"] },
+    { "label": "Public life", "registers": ["everyday"], "words": ["a firefighter", "a politician", "a vicar", "a social worker", "a councillor", "a mayor", "a charity worker", "an activist", "a bin man", "a traffic warden"] },
+    { "label": "Selling it", "registers": ["afterDark"], "words": ["a cam model", "an escort", "a stripper", "a sugar baby", "a phone-sex operator", "a dominatrix", "a porn star", "a burlesque dancer", "a pole dancer", "a masseuse", "a sex worker", "a call girl", "a gigolo"] },
+    { "label": "Behind closed doors", "registers": ["afterDark"], "words": ["a swinger", "a cheating husband", "a cheating wife", "a life model", "a sex-shop clerk", "a submissive", "a dom", "a voyeur", "an exhibitionist", "a sex therapist", "a virgin", "a mistress", "a kept man"] },
+    { "label": "On the margins", "registers": ["dark", "fantastical", "historical", "otherWorlds"], "words": ["a deserter", "a smuggler", "a debt collector", "a forger", "an assassin", "a grave robber", "a bounty hunter", "a pickpocket", "a fence", "a getaway driver", "a card sharp", "a con artist", "a thief", "a prizefighter", "a drug dealer", "a runaway", "a hitman", "a gangster", "an outlaw", "a poacher"] },
+    { "label": "Law and order", "registers": ["dark", "historical", "everyday"], "words": ["a detective", "a police officer", "a prison guard", "a coroner", "a judge", "a crime-scene cleaner", "a private investigator", "a parole officer", "a customs officer", "a spy", "a barrister"] },
+    { "label": "Faith and lore", "registers": ["fantastical", "dark"], "words": ["a witch", "a priest", "a monk", "a nun", "an exorcist", "a fortune teller", "a cultist", "a wise woman", "a gravedigger", "a medium", "a pilgrim", "an oracle", "a heretic"] },
+    { "label": "Steel", "registers": ["fantastical", "historical"], "words": ["a mercenary", "a squire", "a knight", "an archer", "a siege engineer", "a duellist", "a gladiator", "a shieldmaiden", "a guard", "a soldier", "a captain", "a ranger"] },
+    { "label": "Trade and craft", "registers": ["fantastical", "historical"], "words": ["a ferryman", "a lighthouse keeper", "a cartographer", "a barber-surgeon", "a blacksmith", "an apothecary", "a glassblower", "a falconer", "a bookbinder", "a candlemaker", "a merchant", "an innkeeper", "a scribe", "a miller", "a shepherd", "a weaver", "a stablehand"] },
+    { "label": "Magic", "registers": ["fantastical"], "words": ["a mage", "a wizard", "a sorceress", "a necromancer", "a druid", "an alchemist", "a dragon keeper", "an enchanter", "a bard", "a shapeshifter", "a summoner"] },
+    { "label": "Court and coin", "registers": ["historical"], "words": ["an heir", "an heiress", "a court physician", "a lady-in-waiting", "a duke", "a duchess", "a prince", "a princess", "a governess", "a footman", "a butler", "a maid", "a debutante", "a diplomat", "a bastard", "a courtesan", "a royal guard", "a steward"] },
+    { "label": "Out there", "registers": ["otherWorlds"], "words": ["a ship’s engineer", "a medic", "a freighter pilot", "an asteroid miner", "a terraformer", "a xenobiologist", "a navigator", "a colonist", "an android", "a clone", "a space marine", "a station commander", "an alien diplomat"] },
+    { "label": "The sprawl", "registers": ["otherWorlds", "dark"], "words": ["a netrunner", "a street doc", "a fixer", "a corporate exec", "a hacker", "a drone pilot", "a synth", "a cyborg", "a data broker"] }
   ],
   "tones": [
-    "tenderly", "brutally", "wryly", "with dread", "feverishly", "playfully", "coldly", "with longing",
-    "darkly funny", "slowly", "dreamily", "bitterly"
+    { "label": "Gentle", "registers": ["everyday", "afterDark"], "words": ["warmly", "gently", "tenderly", "wryly", "playfully", "quietly", "cosily", "honestly"] },
+    { "label": "After dark", "registers": ["afterDark"], "words": ["hungrily", "breathlessly", "frankly", "teasingly", "filthily", "slowly and explicitly"] },
+    { "label": "Hard", "registers": ["dark", "fantastical", "historical", "otherWorlds"], "words": ["brutally", "with dread", "coldly", "bitterly", "feverishly", "darkly funny"] },
+    { "label": "Dreamy", "registers": ["fantastical", "otherWorlds", "historical", "everyday"], "words": ["dreamily", "with longing", "slowly", "nostalgically"] }
   ],
   "settings": [
-    "a drowned cathedral city", "a generation ship", "a salt-war border town", "a snowed-in lodge",
-    "an orbital casino", "a sleeper train crossing the steppe", "a plague-quiet port", "a manor on a tidal island",
-    "the last inn before the wastes", "a besieged capital", "a forest that moves at night", "a canal city in carnival week"
+    { "label": "Home", "registers": ["everyday"], "words": ["a flat", "a shared house", "a cul-de-sac", "a tower block", "a narrowboat", "a farmhouse", "your childhood home", "a caravan park", "a studio flat", "a terraced house", "a penthouse", "a bungalow", "a cottage", "a basement flat"] },
+    { "label": "Town", "registers": ["everyday"], "words": ["a seaside town", "a village", "a market town", "a high street", "a housing estate", "a commuter town", "a fishing harbour", "a ski resort", "an island", "a small town", "a mill town", "a suburb"] },
+    { "label": "City", "registers": ["everyday"], "words": ["a big city", "a rooftop", "a night bus", "a diner", "a city park", "an apartment block", "the underground", "a food market", "a nightclub", "a pub", "a café", "a launderette", "a bus station", "a motorway services"] },
+    { "label": "Work", "registers": ["everyday"], "words": ["a hospital", "a call centre", "a restaurant", "a hair salon", "a school", "a warehouse", "a newsroom", "a garden centre", "a care home", "a garage", "a supermarket", "an office", "a kitchen", "a hotel", "a factory", "a farm", "a building site", "a law firm", "a bakery", "a bookshop", "a gym"] },
+    { "label": "Study", "registers": ["everyday"], "words": ["a university", "a boarding school", "a college", "a library", "student halls", "a conservatory", "a summer school", "a campus"] },
+    { "label": "Away", "registers": ["everyday"], "words": ["a campsite", "a cruise ship", "a wedding abroad", "a ski chalet", "a resort", "a road trip", "a hostel", "a festival", "a beach", "a holiday cottage", "an airport", "a train journey"] },
+    { "label": "Occasions", "registers": ["everyday"], "words": ["Christmas", "a heatwave", "a wedding", "a funeral", "New Year’s Eve", "a power cut", "a birthday party", "a village fete", "a family reunion"] },
+    { "label": "After dark", "registers": ["afterDark"], "words": ["a hotel bar", "a swingers’ party", "a members’ club", "a nude beach", "a strip club", "a sauna", "a love hotel", "a dungeon", "a cam studio", "a gay bar", "a sex club", "a motel", "a yacht party", "a gentlemen’s club", "a porn set", "a brothel", "an adult cinema", "a bathhouse", "a lingerie shop", "a massage parlour"] },
+    { "label": "Closed in", "registers": ["dark", "historical", "everyday"], "words": ["a snowed-in lodge", "a sleeper train", "a manor on an island", "a lighthouse", "a research station", "a hospital in lockdown", "a stranded ferry", "a submarine", "a bunker"] },
+    { "label": "Dark places", "registers": ["dark"], "words": ["a plague port", "a mining town", "a roadside motel", "a bayou", "an asylum", "an empty hotel", "a remote village", "a city in blackout", "a port city in 1947", "a cemetery", "a slaughterhouse", "a ghost town"] },
+    { "label": "Strange places", "registers": ["dark", "fantastical"], "words": ["a drowned city", "a moving forest", "a carnival city", "a city on a sleeping giant", "an endless library", "a night market", "a mirror town"] },
+    { "label": "Kingdoms", "registers": ["fantastical", "historical"], "words": ["a besieged capital", "a monastery", "a river kingdom", "a dwarven hold", "an elven city", "a pirate cove", "a wizard’s tower", "a northern keep", "a castle", "a royal court", "a temple", "a tavern"] },
+    { "label": "Frontier", "registers": ["fantastical", "historical"], "words": ["a border town", "the last inn", "a gold-rush camp", "a caravan", "a trading post", "a fort", "a railroad town", "a wasteland", "a desert", "the steppe"] },
+    { "label": "Long ago", "registers": ["historical"], "words": ["a Regency ballroom", "a Venetian palazzo", "Victorian London", "a Paris salon", "the Tang court", "an ocean liner", "a Viennese café", "a Mughal court", "Ancient Rome", "a Viking village", "Edo Japan", "a speakeasy"] },
+    { "label": "Beyond", "registers": ["otherWorlds"], "words": ["a generation ship", "an orbital casino", "a terraformed valley", "a frontier station", "an asteroid", "a Mars colony", "a cloud city", "a derelict starship", "a moon prison", "an ice moon", "an alien planet", "a space station"] },
+    { "label": "The sprawl", "registers": ["otherWorlds", "dark"], "words": ["a megacity", "an arcology", "a flooded city", "a black clinic", "a shanty town", "a virtual club", "a corporate tower"] },
+    { "label": "After the fall", "registers": ["otherWorlds", "dark"], "words": ["a convoy", "a walled farm", "a ruined mall", "a dry reservoir", "a vault", "a solar village", "a ruined city"] }
   ],
   "wants": [
-    "to clear a debt that isn’t yours", "to see your sister once more", "never to owe anyone again",
-    "forgiveness from someone dead", "to buy back the family name", "to find out who you were before",
-    "to keep a promise made to the dead", "to get even, quietly", "to bring someone home"
+    { "label": "Everyday", "registers": ["everyday"], "words": ["to be good at one thing", "to make rent", "to be asked to stay", "to finally move out", "to make your mother proud", "to fall in love properly", "one weekend without anyone needing you", "to start over somewhere nobody knows you", "to be taken seriously", "to fix things with your brother"] },
+    { "label": "After dark", "registers": ["afterDark"], "words": ["to be wanted", "to try everything once", "to stop pretending you’re vanilla", "to be caught", "to hear them beg", "to be someone else for a night"] },
+    { "label": "Old wounds", "registers": ["dark", "fantastical", "historical", "otherWorlds"], "words": ["to clear a debt that isn’t yours", "to see your sister once more", "never to owe anyone again", "forgiveness from someone dead", "to buy back the family name", "to find out who you were before", "to keep a promise made to the dead", "to get even, quietly", "to bring someone home"] }
   ],
   "flaws": [
-    "you lie when the truth would do", "you can’t leave a locked door alone", "you trust anyone who feeds you",
-    "you keep score", "you can’t walk away from a wager", "you run before you can be left",
-    "you can’t ask for help", "you promise too much"
+    { "label": "Anyone", "registers": ["everyday", "afterDark", "dark", "fantastical", "otherWorlds", "historical"], "words": ["you lie when the truth would do", "you keep score", "you can’t ask for help", "you promise too much"] },
+    { "label": "Everyday", "registers": ["everyday"], "words": ["you say yes to everything", "you can’t say sorry", "you need to be liked", "you put things off until they break", "you overshare", "you drink when it gets quiet"] },
+    { "label": "After dark", "registers": ["afterDark"], "words": ["you can’t say no to a dare", "you get jealous fast", "you mistake sex for love", "you always want more"] },
+    { "label": "Hard edges", "registers": ["dark", "fantastical", "historical", "otherWorlds"], "words": ["you can’t leave a locked door alone", "you trust anyone who feeds you", "you can’t walk away from a wager", "you run before you can be left"] }
   ],
   "goodAt": [
-    "locks and ledgers", "reading a room", "the marsh paths", "talking past guards", "patching a wound in the dark",
-    "knowing what things are worth", "remembering faces", "keeping a cool head"
+    { "label": "Everyday", "registers": ["everyday"], "words": ["remembering birthdays", "getting up before dawn", "fixing things", "making people laugh", "cooking for twenty", "reading a room", "keeping a cool head", "listening"] },
+    { "label": "After dark", "registers": ["afterDark"], "words": ["flirting", "knowing what people want", "being discreet", "taking your time"] },
+    { "label": "Rough trades", "registers": ["dark", "fantastical", "historical", "otherWorlds"], "words": ["locks and ledgers", "the marsh paths", "talking past guards", "patching a wound in the dark", "knowing what things are worth", "remembering faces"] }
   ]
 }

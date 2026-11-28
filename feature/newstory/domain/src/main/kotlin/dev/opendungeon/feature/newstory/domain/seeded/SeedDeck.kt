@@ -1,6 +1,7 @@
 package dev.opendungeon.feature.newstory.domain.seeded
 
 import dev.opendungeon.domain.drafting.Seed
+import dev.opendungeon.domain.story.Register
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -73,6 +74,7 @@ internal object SeedFile {
         val tone: String,
         val template: String,
         val counterpart: String,
+        val shelf: ShelfEntry,
         val blanks: List<BlankEntry>,
     ) {
         fun toSeed(): Seed? = Seed.of(
@@ -83,7 +85,29 @@ internal object SeedFile {
             blanks.map {
                 Triple(it.key, it.kind.kind, it.fills)
             },
+            shelf.register,
         )
+    }
+
+    @Serializable
+    private enum class ShelfEntry(val register: Register) {
+        @SerialName("everyday")
+        Everyday(Register.Everyday),
+
+        @SerialName("afterDark")
+        AfterDark(Register.AfterDark),
+
+        @SerialName("dark")
+        Dark(Register.Dark),
+
+        @SerialName("fantastical")
+        Fantastical(Register.Fantastical),
+
+        @SerialName("otherWorlds")
+        OtherWorlds(Register.OtherWorlds),
+
+        @SerialName("historical")
+        Historical(Register.Historical),
     }
 
     @Serializable

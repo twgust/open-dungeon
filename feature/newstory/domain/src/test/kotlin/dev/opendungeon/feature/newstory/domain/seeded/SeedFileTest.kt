@@ -17,8 +17,12 @@ class SeedFileTest {
         val unknownBlank = whole("Your {who} sold {thing}.")
         val unknownKind = whole("Your {who} sold the boat.").replace("\"person\"", "\"vegetable\"")
         val missingTone = whole("Your {who} sold the house.").replace("\"tone\": \"wryly\", ", "")
+        val unknownShelf = whole("Your {who} sold the van.").replace("\"everyday\"", "\"cosy\"")
+        val missingShelf = whole("Your {who} sold the bike.").replace("\"shelf\": \"everyday\", ", "")
 
-        val seeds = SeedFile.seedsIn(file(unknownBlank, unknownKind, missingTone, whole("Your {who} sold the car.")))
+        val seeds = SeedFile.seedsIn(
+            file(unknownBlank, unknownKind, missingTone, unknownShelf, missingShelf, whole("Your {who} sold the car.")),
+        )
 
         assertEquals(listOf("Your aunt sold the car."), seeds.map { it.text })
     }
@@ -35,7 +39,7 @@ class SeedFileTest {
     private fun whole(template: String) =
         """
         {
-          "genre": "Comedy", "tone": "wryly", "template": "$template", "counterpart": "your {who}",
+          "genre": "Comedy", "tone": "wryly", "shelf": "everyday", "template": "$template", "counterpart": "your {who}",
           "blanks": [{ "key": "who", "kind": "person", "fills": ["aunt", "uncle"] }]
         }
         """.trimIndent()

@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.opendungeon.core.designsystem.Paper
 import dev.opendungeon.core.designsystem.component.CardLine
 import dev.opendungeon.core.designsystem.component.CharacterCard
@@ -35,10 +34,11 @@ internal fun StarringBody(body: StepBody.Starring, onIntent: (WizardIntent) -> U
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        PillRow(body.roles, onIntent, style = Paper.type.pill.copy(fontSize = 20.sp))
+        // The card leads once dealt: the roles under it run long, and the card is what the player edits.
         AnimatedVisibility(visible = body.you != null, enter = fadeIn()) {
             body.you?.let { you -> YouCard(you.lines, onIntent) }
         }
+        PillGroups(body.roles, onIntent)
     }
 }
 

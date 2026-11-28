@@ -6,6 +6,7 @@ import dev.opendungeon.domain.story.CharacterId
 import dev.opendungeon.domain.story.DefaultSentenceBuilder
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.Phrase
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.Secret
 import dev.opendungeon.domain.story.StoryDraft
 import kotlinx.coroutines.test.runTest
@@ -27,6 +28,7 @@ class SeedWritingTest {
         tone = "with dread",
         template = template,
         counterpart = "the {$key}",
+        shelf = ShelfPayload.Dark,
         blanks = listOf(BlankPayload(key, BlankKindPayload.Person, listOf("child", "postman"))),
     )
 
@@ -47,12 +49,38 @@ class SeedWritingTest {
         )
 
         val seeds = assertIs<Outcome.Success<List<Seed>>>(
-            DefaultWriteSeeds(generator)(drafter, avoiding = listOf(seed), count = 4),
+            DefaultWriteSeeds(generator)(drafter, shelf = null, avoiding = listOf(seed), count = 4),
         ).value
 
         assertEquals(listOf("The {who} keeps knocking.", "The {who} is at the window."), seeds.map { it.template })
         assertEquals("Horror", seeds.first().genre)
         assertEquals(listOf("postman"), seeds.first().blank("who")?.unused)
+        assertEquals(Register.Dark, seeds.first().shelf)
+    }
+
+    @Test
+    fun `seeds asked for a shelf are on it, whatever the model called them`() = runTest {
+        val generator =
+            ScriptedStructuredGenerator(Outcome.Success(SeedsPayload(listOf(seedPayload("The {who} waits.")))))
+
+        val seeds = assertIs<Outcome.Success<List<Seed>>>(
+            DefaultWriteSeeds(generator)(drafter, shelf = Register.Everyday, avoiding = emptyList()),
+        ).value
+
+        assertEquals(listOf(Register.Everyday), seeds.map { it.shelf })
+    }
+
+    @Test
+    fun `mixed seeds never land on an opt-in shelf`() = runTest {
+        val adult = seedPayload("The {who} undresses.").copy(shelf = ShelfPayload.AfterDark)
+        val generator =
+            ScriptedStructuredGenerator(Outcome.Success(SeedsPayload(listOf(adult, seedPayload("The {who} waits.")))))
+
+        val seeds = assertIs<Outcome.Success<List<Seed>>>(
+            DefaultWriteSeeds(generator)(drafter, shelf = null, avoiding = emptyList()),
+        ).value
+
+        assertEquals(listOf("The {who} waits."), seeds.map { it.template })
     }
 
     @Test
@@ -65,7 +93,7 @@ class SeedWritingTest {
 
         assertEquals(
             Outcome.Failure(DraftingError.Unusable),
-            DefaultWriteSeeds(generator)(drafter, avoiding = listOf(seed)),
+            DefaultWriteSeeds(generator)(drafter, shelf = null, avoiding = listOf(seed)),
         )
     }
 
@@ -75,7 +103,7 @@ class SeedWritingTest {
 
         assertEquals(
             Outcome.Failure(DraftingError.Generation(GenerationError.Interrupted)),
-            DefaultWriteSeeds(generator)(drafter, avoiding = emptyList()),
+            DefaultWriteSeeds(generator)(drafter, shelf = null, avoiding = emptyList()),
         )
     }
 
@@ -84,7 +112,7 @@ class SeedWritingTest {
         val generator =
             ScriptedStructuredGenerator(Outcome.Success(SeedsPayload(listOf(seedPayload("The {who} waits.")))))
 
-        DefaultWriteSeeds(generator)(drafter, avoiding = emptyList())
+        DefaultWriteSeeds(generator)(drafter, shelf = null, avoiding = emptyList())
 
         val request = generator.requests.single()
         assertEquals(drafter.model, request.model)
@@ -250,7 +278,11 @@ class SeedWritingTest {
 
     @Test
     fun `the prompt for new seeds`() {
-        assertGolden("seeds", SeedsPrompt.messages(avoiding = listOf(seed), count = 4).transcript())
+        assertGolden("seeds", SeedsPrompt.messages(shelf = null, avoiding = listOf(seed), count = 4).transcript())
+        assertGolden(
+            "seeds-after-dark",
+            SeedsPrompt.messages(Register.AfterDark, avoiding = emptyList(), count = 4).transcript(),
+        )
     }
 
     @Test

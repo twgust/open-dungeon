@@ -321,7 +321,12 @@ internal data class StepCopy(
 internal fun stepCopy(step: CreationStep): StepCopy = when (step) {
     CreationStep.Genre -> StepCopy(R.string.wizard_prompt_genre, ownHint = R.string.wizard_own_hint_genre)
     CreationStep.Twist -> StepCopy(R.string.wizard_prompt_twist, ownHint = R.string.wizard_own_hint_twist)
-    CreationStep.Starring -> StepCopy(R.string.wizard_prompt_starring, topPadding = 32.dp)
+    CreationStep.Starring -> StepCopy(
+        R.string.wizard_prompt_starring,
+        ownLabel = R.string.wizard_own_starring,
+        ownHint = R.string.wizard_own_hint_starring,
+        topPadding = 32.dp,
+    )
     CreationStep.Tone -> StepCopy(R.string.wizard_prompt_tone, ownHint = R.string.wizard_own_hint_tone)
     CreationStep.Setting -> StepCopy(R.string.wizard_prompt_setting, ownHint = R.string.wizard_own_hint_setting)
     CreationStep.Limits -> StepCopy(

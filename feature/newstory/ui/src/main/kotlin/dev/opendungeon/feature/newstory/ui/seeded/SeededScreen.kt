@@ -115,6 +115,9 @@ private fun ColumnScope.StepPage(state: SeededState, onIntent: (SeededIntent) ->
     }
     StepTransition(state = state, stepOf = SeededState::step, modifier = Modifier.weight(1f)) { shown ->
         Column(Modifier.fillMaxSize()) {
+            (shown.body as? SeededBody.Seed)?.let { body ->
+                ShelfRow(body.shelves, onPick = { onIntent(SeededIntent.PickShelf(it)) })
+            }
             Stage(shown, onIntent, Modifier.weight(1f))
             if (shown.controls.takesOwnWords) OwnWords(shown, onIntent)
         }

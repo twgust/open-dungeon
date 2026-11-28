@@ -4,9 +4,17 @@ Write the template as one short sentence, at most 120 characters, with one to th
 Every blank must read well with any of its fills, so put articles inside the fills ("a live goose"), not in the template.
 Give every blank six fills that fit it and differ from each other, best first. Keep each fill under 40 characters.
 The counterpart is the person the player meets first, written the way the sentence names them, such as "your {who}" or "the estate agent".
-Mix genres and situations. Keep premises playable at any content limit: suggestive at most, never explicit.
+Every seed belongs on one shelf, the kind of life it is about:
+- Everyday: ordinary lives, work, family, friends and love, with small, real stakes; no crime, magic or monsters.
+- After dark: ordinary adult lives with sex at the centre: affairs, hookups, kinks, sex work.
+- Dark: crime, horror, mystery and dread.
+- Fantastical: magic, myth, swords and the uncanny.
+- Other worlds: science fiction, futures, and what comes after the fall.
+- Historical: real past eras, courts and intrigue.
 
 ## user
+Mix the shelves, genres and situations, but write nothing for After dark. Keep them playable at any content limit: suggestive at most, never explicit.
+
 The player has seen these, so write different ones:
 - Caught {act} by your {who}.
 

@@ -2,6 +2,7 @@ package dev.opendungeon.feature.newstory.ui.seeded
 
 import app.cash.turbine.test
 import dev.opendungeon.domain.story.ContentLimits
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.Choice
@@ -60,6 +61,10 @@ class SeededViewModelTest {
             calls += "rollSeed"
         }
 
+        override fun pickShelf(shelf: Register?) {
+            calls += "pickShelf($shelf)"
+        }
+
         override fun describe(person: Person, text: String) {
             calls += "describe($person, $text)"
         }
@@ -112,6 +117,7 @@ class SeededViewModelTest {
         viewModel.onIntent(SeededIntent.FillBlank("who", "boss"))
         viewModel.onIntent(SeededIntent.MoreWords("who"))
         viewModel.onIntent(SeededIntent.RollSeed)
+        viewModel.onIntent(SeededIntent.PickShelf(Register.AfterDark))
         viewModel.onIntent(SeededIntent.Describe(Person.Them, "nosy"))
         viewModel.onIntent(SeededIntent.Pick(Choice.Desire(ContentLimits.Desire.Close)))
         viewModel.onIntent(SeededIntent.Own("no spiders"))
@@ -128,6 +134,7 @@ class SeededViewModelTest {
                 "fill(who, boss)",
                 "suggestMore(who)",
                 "rollSeed",
+                "pickShelf(AfterDark)",
                 "describe(Them, nosy)",
                 "select(Desire(level=Close))",
                 "submitOwn(no spiders)",

@@ -1,5 +1,6 @@
 package dev.opendungeon.feature.newstory.ui.seeded
 
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.LeaveAnswer
@@ -30,6 +31,9 @@ sealed interface SeededIntent {
 
     /** The die: another seed. */
     data object RollSeed : SeededIntent
+
+    /** A shelf was tapped: seeds come from it from now on; `null` is the mixed one. */
+    data class PickShelf(val shelf: Register?) : SeededIntent
 
     data class Describe(val person: Person, val text: String) : SeededIntent
 

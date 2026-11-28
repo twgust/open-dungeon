@@ -17,7 +17,8 @@ import dev.zacsweers.metro.binding
 
 /**
  * A step that takes exactly one phrase. Any pick completes it: a tap, the player's own words, or the
- * die. Tapping the current pick again moves on with it.
+ * die. Tapping the current pick again moves on with it. Its words are grouped by the story's genres, and
+ * the die rolls only from the groups those open.
  */
 public abstract class SinglePhrasePolicy(
     final override val step: CreationStep,
@@ -32,8 +33,10 @@ public abstract class SinglePhrasePolicy(
 
     private val offered: List<String> get() = vocabulary[list]
 
+    private fun StoryDraft.shelf(): Shelf = Shelf.of(vocabulary, list, genres)
+
     override fun body(draft: StoryDraft): StepBody =
-        StepBody.Words(wordOptions(offered, listOfNotNull(draft.phrase())), maxPicks = 1)
+        StepBody.Words(draft.shelf().options(listOfNotNull(draft.phrase())), maxPicks = 1)
 
     override fun canAdvance(draft: StoryDraft): Boolean = draft.phrase() != null
 
@@ -56,7 +59,7 @@ public abstract class SinglePhrasePolicy(
         phraseFor(text, offered)?.let { Selection(draft.withPhrase(it), advance = true) }
 
     override suspend fun roll(draft: StoryDraft): Selection {
-        val word = rollChoice(list, avoiding = listOfNotNull(draft.phrase()?.text)).single()
+        val word = rollChoice(draft.shelf().rollable, avoiding = listOfNotNull(draft.phrase()?.text)).single()
         return Selection(draft.withPhrase(Phrase.Offered(word)), advance = true)
     }
 }

@@ -2,6 +2,7 @@ package dev.opendungeon.feature.newstory.domain.seeded
 
 import dev.opendungeon.domain.drafting.Seed
 import dev.opendungeon.domain.story.ContentLimits
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.feature.newstory.domain.Choice
 import dev.opendungeon.feature.newstory.domain.LeaveAnswer
 import dev.opendungeon.feature.newstory.domain.ModelLine
@@ -11,8 +12,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The fast way into a story: a premise with blanks the player fills, who the two people are if the player
- * cares to say, how far the story may go, and then the story begins, written by a model.
+ * The fast way into a story: a premise with blanks the player fills, dealt from a shelf the player may
+ * choose, who the two people are if the player cares to say, how far the story may go, and then the story
+ * begins, written by a model.
  *
  * Like the custom wizard, callers state what the player did and the wizard decides what it means. Verbs
  * run one at a time, show their result at once, and verbs that mean nothing where the player is are
@@ -47,6 +49,12 @@ public interface SeededWizard {
 
     /** Another seed, its blanks empty, written by a model once those that come with the app run out. */
     public fun rollSeed()
+
+    /**
+     * Deals from [shelf] from now on, starting with a seed from it, or from every shelf that is not
+     * [opt-in][Register.optIn] when `null`. Picking the shelf already picked does nothing.
+     */
+    public fun pickShelf(shelf: Register?)
 
     /** The player's words about one of the two people, kept as typed. */
     public fun describe(person: Person, text: String)
@@ -117,6 +125,8 @@ public sealed interface SeededBody {
      * for the picked blank. [replacing] while a model writes new seeds to replace it.
      */
     public data class Seed(
+        /** The shelves to deal from, in order, the one dealt from picked. */
+        val shelves: List<ShelfOption>,
         val genre: String,
         val parts: List<SeedPart>,
         /** The words for the picked blank; `null` when none is picked. */
@@ -149,6 +159,9 @@ public sealed interface SeededBody {
     /** Someone cast, as the last step names them. */
     public data class Cast(val name: String, val role: String?)
 }
+
+/** A shelf of seeds; [shelf] is `null` for the one that mixes every shelf but the opt-in ones. */
+public data class ShelfOption(val shelf: Register?, val picked: Boolean)
 
 /** A piece of the seed's sentence. */
 public sealed interface SeedPart {

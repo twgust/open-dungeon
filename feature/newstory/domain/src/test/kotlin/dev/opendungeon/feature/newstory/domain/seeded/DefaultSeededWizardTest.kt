@@ -8,6 +8,7 @@ import dev.opendungeon.domain.generation.GenerationError
 import dev.opendungeon.domain.story.CastMember
 import dev.opendungeon.domain.story.ContentLimits
 import dev.opendungeon.domain.story.Phrase
+import dev.opendungeon.domain.story.Register
 import dev.opendungeon.domain.story.StorageError
 import dev.opendungeon.domain.story.StoryId
 import dev.opendungeon.feature.newstory.domain.Choice
@@ -593,8 +594,117 @@ class DefaultSeededWizardTest {
         assertEquals(ModelLine("Storyteller", writing = false), rig.wizard.current().writer)
     }
 
+    @Test
+    fun `the shelves are offered in order, the mixed one picked at first`() = test { rig ->
+        rig.wizard.start()
+
+        assertEquals(
+            listOf(ShelfOption(null, picked = true)) + Register.entries.map { ShelfOption(it, picked = false) },
+            rig.wizard.seedBody().shelves,
+        )
+    }
+
+    @Test
+    fun `the mixed shelf never deals an opt-in seed`() = test(deck = FixedDeck(listOf(undressing, caught))) { rig ->
+        rig.wizard.start()
+        assertEquals("Caught lying by your _.", rig.wizard.sentence())
+
+        rig.wizard.rollSeed()
+
+        assertEquals(
+            listOf<Register?>(null),
+            rig.work.seedShelves,
+            "with the deck's mixed seeds dealt, a model writes more",
+        )
+    }
+
+    @Test
+    fun `picking a shelf deals from it at once`() =
+        test(deck = FixedDeck(listOf(caught, knocking, undressing))) { rig ->
+            rig.wizard.start()
+
+            rig.wizard.pickShelf(Register.AfterDark)
+
+            assertEquals("Your neighbour undresses with the curtains _.", rig.wizard.sentence())
+            val shelves = rig.wizard.seedBody().shelves
+            assertEquals(listOf(Register.AfterDark), shelves.filter { it.picked }.map { it.shelf })
+        }
+
+    @Test
+    fun `a shelf with no seeds left asks a model for that shelf`() = test(deck = FixedDeck(listOf(caught))) { rig ->
+        rig.wizard.start()
+
+        rig.wizard.pickShelf(Register.Dark)
+
+        assertEquals(listOf<Register?>(Register.Dark), rig.work.seedShelves)
+        assertTrue(rig.wizard.seedBody().replacing)
+    }
+
+    @Test
+    fun `picking the shelf already picked deals nothing new`() =
+        test(deck = FixedDeck(listOf(caught, knocking))) { rig ->
+            rig.wizard.start()
+            val first = rig.wizard.sentence()
+
+            rig.wizard.pickShelf(null)
+
+            assertEquals(first, rig.wizard.sentence())
+        }
+
+    @Test
+    fun `an opt-in seed starts the limits explicit, and an everyday one back at the default`() =
+        test(deck = FixedDeck(listOf(caught, knocking, undressing))) { rig ->
+            rig.wizard.start()
+            rig.wizard.pickShelf(Register.AfterDark)
+            fillAll(rig.wizard)
+            rig.wizard.next()
+            rig.wizard.next()
+            assertEquals(ContentLimits(desire = ContentLimits.Desire.AllTheWay), limitsShown(rig.wizard))
+
+            rig.wizard.back()
+            rig.wizard.back()
+            rig.wizard.pickShelf(Register.Everyday)
+            fillAll(rig.wizard)
+            rig.wizard.next()
+            rig.wizard.next()
+            assertEquals(ContentLimits(), limitsShown(rig.wizard))
+        }
+
+    @Test
+    fun `limits the player set are never moved by a new seed`() =
+        test(deck = FixedDeck(listOf(caught, knocking, undressing))) { rig ->
+            rig.wizard.toLimits()
+            rig.wizard.select(Choice.Desire(ContentLimits.Desire.Unspoken))
+            rig.wizard.back()
+            rig.wizard.back()
+
+            rig.wizard.pickShelf(Register.AfterDark)
+            fillAll(rig.wizard)
+            rig.wizard.next()
+            rig.wizard.next()
+
+            assertEquals(ContentLimits.Desire.Unspoken, limitsShown(rig.wizard).desire)
+        }
+
+    private suspend fun fillAll(wizard: SeededWizard) {
+        while (true) {
+            val shown = wizard.seedBody().suggestions ?: break
+            wizard.fill(shown.blank, shown.words.first())
+        }
+    }
+
+    private suspend fun limitsShown(wizard: SeededWizard): ContentLimits =
+        assertIs<SeededBody.Limits>(wizard.current().body).limits
+
     private companion object {
         const val SHUFFLE = 7
+
+        val undressing = seed(
+            "Your neighbour undresses with the curtains {how}.",
+            "how" to listOf("open", "half drawn"),
+            counterpart = "your neighbour",
+            shelf = Register.AfterDark,
+        )
 
         val twoBlanks = seed(
             "{act} got you caught by your {who}.",

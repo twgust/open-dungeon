@@ -21,6 +21,10 @@
     <string name="wizard_own_hint_twist">Your twist</string>
     <string name="wizard_own_hint_tone">e.g. like a lullaby</string>
     <string name="wizard_own_hint_setting">Your setting</string>
+    <string name="wizard_own_starring">Your own role</string>
+    <string name="wizard_own_hint_starring">e.g. a deserter</string>
+    <string name="wizard_more_groups">Also</string>
+    <string name="wizard_show_group">Show %1$s</string>
     <string name="wizard_own_hint_limits">e.g. no harm to animals</string>
     <string name="wizard_own_hint_premise">Your premise</string>
 
@@ -121,6 +125,13 @@
     <string name="seeded_blank_empty">empty</string>
     <string name="seeded_more">More words</string>
     <string name="seeded_die">New seed</string>
+    <string name="seeded_shelf_any">Any</string>
+    <string name="seeded_shelf_everyday">Everyday</string>
+    <string name="seeded_shelf_after_dark">After dark</string>
+    <string name="seeded_shelf_dark">Dark</string>
+    <string name="seeded_shelf_fantastical">Fantastical</string>
+    <string name="seeded_shelf_other_worlds">Other worlds</string>
+    <string name="seeded_shelf_historical">Historical</string>
     <string name="seeded_people_prompt">Characters</string>
     <string name="seeded_optional">Optional</string>
     <string name="seeded_leave_note">Going back discards the opening. Your choices are kept.</string>
