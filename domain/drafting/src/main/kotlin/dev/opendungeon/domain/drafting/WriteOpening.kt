@@ -30,9 +30,13 @@ public interface WriteOpening {
 
 @Inject
 @ContributesBinding(AppScope::class)
-public class DefaultWriteOpening(private val generator: TextGenerator, sentences: SentenceBuilder) : WriteOpening {
+public class DefaultWriteOpening(
+    private val generator: TextGenerator,
+    guide: NamingGuide,
+    sentences: SentenceBuilder,
+) : WriteOpening {
 
-    private val prompt = OpeningPrompt(StoryBrief(sentences))
+    private val prompt = OpeningPrompt(StoryBrief(sentences), guide)
 
     override fun invoke(draft: StoryDraft, model: DraftingModel): Flow<WritingProgress> = flow {
         val request = TextRequest(
@@ -95,7 +99,7 @@ internal object Continuation {
 }
 
 /** The instructions and the ask for an opening, written fresh or continued from the player's text. */
-internal class OpeningPrompt(private val brief: StoryBrief) {
+internal class OpeningPrompt(private val brief: StoryBrief, private val guide: NamingGuide) {
 
     fun messages(draft: StoryDraft): List<ChatMessage> = listOf(
         ChatMessage.System(SYSTEM),
@@ -107,6 +111,8 @@ internal class OpeningPrompt(private val brief: StoryBrief) {
                     append("\n\nPeople in the story:")
                     people.forEach { append("\n- ${it.sheet()}") }
                 }
+                append("\n\n")
+                append(guide.notes(draft, heading = NEWCOMERS))
                 if (draft.opening.isBlank()) {
                     append("\n\n$FRESH")
                 } else {
@@ -124,6 +130,8 @@ internal class OpeningPrompt(private val brief: StoryBrief) {
             Never decide what the player does, says, thinks or feels. Stop at a moment the player can answer.
             Answer with the story text alone: plain prose, no title, no headings, no preamble, no list of choices.
             """.trimIndent()
+
+        const val NEWCOMERS = "Names, for anyone new who needs one:"
 
         const val FRESH = "Write how the story begins, in two or three short paragraphs."
 

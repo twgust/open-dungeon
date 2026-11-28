@@ -13,6 +13,7 @@ import dev.opendungeon.domain.openrouter.testing.aiModel
 import dev.opendungeon.domain.story.Character
 import dev.opendungeon.domain.story.CharacterId
 import dev.opendungeon.domain.story.ContentLimits
+import dev.opendungeon.domain.story.DefaultSentenceBuilder
 import dev.opendungeon.domain.story.DraftId
 import dev.opendungeon.domain.story.IdGenerator
 import dev.opendungeon.domain.story.Phrase
@@ -42,6 +43,23 @@ internal class ScriptedStructuredGenerator(private val answer: Outcome<Any, Gene
         return answer as Outcome<T, GenerationError>
     }
 }
+
+/** Answers each request with the next of [answers], in order, and keeps the requests. */
+internal class QueuedStructuredGenerator(vararg answers: Outcome<Any, GenerationError>) : StructuredGenerator {
+    private val answers = ArrayDeque(answers.toList())
+    val requests = mutableListOf<StructuredRequest<*>>()
+
+    @Suppress("UNCHECKED_CAST")
+    override suspend fun <T> generate(request: StructuredRequest<T>): Outcome<T, GenerationError> {
+        requests += request
+        return checkNotNull(answers.removeFirstOrNull()) { "No answer left for request ${requests.size}" }
+            as Outcome<T, GenerationError>
+    }
+}
+
+/** The real slop guard over [generator], with the bundled lists. */
+internal fun replaceWornNames(generator: StructuredGenerator): ReplaceWornNames =
+    DefaultReplaceWornNames(generator, BundledWornNames(), BundledNamingGuide(), DefaultSentenceBuilder())
 
 internal class CountingIds(private val prefix: String) : IdGenerator {
     private var next = 0
