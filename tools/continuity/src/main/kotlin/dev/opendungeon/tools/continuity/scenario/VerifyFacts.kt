@@ -4,6 +4,7 @@ import dev.opendungeon.tools.continuity.judge.Judge
 import dev.opendungeon.tools.continuity.judge.JudgeFailure
 import dev.opendungeon.tools.continuity.judge.JudgeResult
 import dev.opendungeon.tools.continuity.judge.Verdict
+import dev.opendungeon.tools.continuity.judge.WhoIsWho
 import dev.opendungeon.tools.continuity.model.ModelChoice
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -44,7 +45,7 @@ internal class DefaultVerifyFacts(private val judge: Judge) : VerifyFacts {
         model: ModelChoice,
     ): List<String> {
         val passage = listOfNotNull(turn.player, turn.narrationText).joinToString(separator = "\n\n")
-        return when (val result = judge.judge(passage, facts, scenario.protagonist.name, model)) {
+        return when (val result = judge.judge(passage, facts, WhoIsWho.of(scenario), prompt = null, model = model)) {
             is JudgeResult.Failed -> listOf(
                 when (val reason = result.reason) {
                     is JudgeFailure.Generation -> "Turn '${turn.id}' could not be judged: ${reason.error}"

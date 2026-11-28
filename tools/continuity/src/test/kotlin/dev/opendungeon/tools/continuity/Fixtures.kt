@@ -14,6 +14,7 @@ import dev.opendungeon.tools.continuity.judge.FactVerdict
 import dev.opendungeon.tools.continuity.judge.Judge
 import dev.opendungeon.tools.continuity.judge.JudgeResult
 import dev.opendungeon.tools.continuity.judge.Verdict
+import dev.opendungeon.tools.continuity.judge.WhoIsWho
 import dev.opendungeon.tools.continuity.model.ModelChoice
 import dev.opendungeon.tools.continuity.scenario.Ask
 import dev.opendungeon.tools.continuity.scenario.CastId
@@ -142,7 +143,8 @@ internal class FakeJudge(private val verdict: (passage: String, fact: Fact) -> V
     override suspend fun judge(
         passage: String,
         facts: List<Fact>,
-        protagonist: String,
+        people: WhoIsWho,
+        prompt: String?,
         model: ModelChoice,
     ): JudgeResult {
         passages += passage

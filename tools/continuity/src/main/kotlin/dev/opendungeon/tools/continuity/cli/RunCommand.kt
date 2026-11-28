@@ -13,15 +13,8 @@ import com.github.ajalt.clikt.parameters.types.path
 import com.github.ajalt.clikt.parameters.types.restrictTo
 import dev.opendungeon.tools.continuity.context.PolicySpec
 import dev.opendungeon.tools.continuity.model.ModelChoice
-import dev.opendungeon.tools.continuity.report.ContinuityReport
-import dev.opendungeon.tools.continuity.report.MarkdownReport
-import dev.opendungeon.tools.continuity.run.ProbeSample
 import dev.opendungeon.tools.continuity.run.RunEvent
 import dev.opendungeon.tools.continuity.run.RunPlan
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
-import java.nio.file.Files
-import java.time.Instant
 
 /** Replays a scenario through each policy, probes it, and writes the report. */
 internal class RunCommand : SuspendingCliktCommand(name = "run") {
@@ -72,20 +65,8 @@ internal class RunCommand : SuspendingCliktCommand(name = "run") {
                     echo("Answers: ${event.finished}/${event.total}")
                 }
                 is RunEvent.Finished -> {
-                    val report = ContinuityReport.of(event.result, createdAt = Instant.now().toString())
                     val directory = out ?: OutputRoot.resolve("${loaded.id}-${timestamp()}")
-                    Files.createDirectories(directory)
-                    val markdown = MarkdownReport.render(report)
-                    Files.writeString(directory.resolve("report.md"), markdown)
-                    Files.writeString(
-                        directory.resolve("report.json"),
-                        Pretty.encodeToString(ContinuityReport.serializer(), report),
-                    )
-                    Files.writeString(
-                        directory.resolve("samples.json"),
-                        Pretty.encodeToString(ListSerializer(ProbeSample.serializer()), event.result.samples),
-                    )
-                    echo(markdown)
+                    echo(ReportFiles.write(event.result, directory))
                     echo("Report written to $directory")
                 }
             }
@@ -97,10 +78,5 @@ internal class RunCommand : SuspendingCliktCommand(name = "run") {
 
         /** Progress is printed at every tenth of the way. */
         const val PROGRESS_STEPS = 10
-
-        val Pretty = Json {
-            prettyPrint = true
-            classDiscriminator = "type"
-        }
     }
 }

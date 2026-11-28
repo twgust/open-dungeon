@@ -96,6 +96,15 @@ class TranscriptPolicyTest {
     }
 
     @Test
+    fun `none gives a reader the setup only, and says the story was left out`() = runTest {
+        val narrator = policy("none").after(tinyScenario(), turns = 4, Reader.Narrator)
+        val kael = policy("none").after(tinyScenario(), turns = 4, Reader.Character(KAEL))
+
+        assertEquals(ContextBlock("The story so far, its earlier part left out", "Left out."), narrator)
+        assertEquals(narrator, kael)
+    }
+
+    @Test
     fun `sessions do not share what they have seen`() = runTest {
         val policy = policy("full")
         val first = policy.open(tinyScenario())
@@ -108,7 +117,7 @@ class TranscriptPolicyTest {
 
     @Test
     fun `specs name their policy the way they were written`() {
-        listOf("full", "recent:3", "chars:12000", "perceived/full", "perceived/recent:6").forEach {
+        listOf("none", "full", "recent:3", "chars:12000", "perceived/full", "perceived/recent:6").forEach {
             assertEquals(it, policy(it).name)
         }
     }

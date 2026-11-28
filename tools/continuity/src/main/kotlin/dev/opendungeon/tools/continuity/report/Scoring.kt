@@ -34,6 +34,12 @@ internal data class ScoredCheck(
     /** A forbidden fact the answer stated: someone knew what they should not. */
     val leaked: Boolean get() = role == Role.Forbid && verdict == Verdict.Asserted
 
+    /**
+     * A forbidden fact the answer raised only as a suspicion. Not a leak by itself: a character may guess.
+     * Comparing the rate with the `none` policy's, whose reader was told nothing, says how much is a guess.
+     */
+    val suspected: Boolean get() = role == Role.Forbid && verdict == Verdict.Suspected
+
     /** An answer that broke the story. A forbidden fact being denied is not a contradiction, only discretion. */
     val contradicted: Boolean get() = role != Role.Forbid && verdict == Verdict.Contradicted
 }

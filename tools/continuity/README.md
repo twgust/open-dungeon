@@ -31,12 +31,16 @@ export OPENROUTER_API_KEY=sk-or-v1-…
 # Have the judge confirm that every fact really is stated in its turn.
 ./gradlew -q :tools:continuity:run --args="check saltmere --verify"
 
-# Compare the default policies: full, chars:12000, recent:3, recent:6, perceived/full.
+# Compare the default policies: none, full, chars:12000, recent:3, recent:6, perceived/full.
 ./gradlew -q :tools:continuity:run --args="run saltmere"
 
 # Pick the policies, the model and the judge.
 ./gradlew -q :tools:continuity:run --args="run saltmere --policy recent:2 --policy recent:3 \
   --policy recent:5 --model z-ai/glm-5.3-flash --judge-model deepseek/deepseek-v4.1-flash --samples 5"
+
+# Judge an earlier run's answers again with another judge. Nothing is asked of the model under test.
+./gradlew -q :tools:continuity:run --args="rejudge saltmere build/continuity/saltmere-20261128-132714 \
+  --judge-model anthropic/claude-sonnet-5.5"
 
 # Stretch the scenario to 300 turns, then run the long version.
 ./gradlew -q :tools:continuity:run --args="pad saltmere --turns 300"
@@ -98,12 +102,19 @@ scenario ──► policy session ──► probe prompt ──► model under t
     whether the story continues without contradiction.
   - `voice`: a line spoken to a character, who answers. It tests what that character knows, and
     what they should not.
-- **Judge** (`judge/`). A model with structured output reads the answer and nothing else, and says
-  for each fact whether the answer *asserted*, *contradicted* or left it *absent*. A probe lists the
-  facts to `expect` (missing one is a recall failure), to `forbid` (stating one is a leak) and to
-  `guard` (contradicting one is a contradiction).
+- **Judge** (`judge/`). A model with structured output reads the answer and who the story's people
+  are (names and public sheets, never the story), and says for each fact whether the answer
+  *asserted* it, only *suspected* it, *contradicted* it or left it *absent*. The cast list is what
+  lets it see that "the harbourmaster" in an answer is the Aldous Fenn of a fact. A probe lists the
+  facts to `expect` (missing one is a recall failure), to `forbid` (stating one is a leak, raising
+  it as a guess is a suspicion) and to `guard` (contradicting one is a contradiction). A character
+  who lies about a forbidden fact contradicts it, which is discretion, not a contradiction.
 - **Report** (`report/`). Rates per policy, each with a 95% Wilson interval, because a few dozen
   probes is a small sample and two policies only differ when their intervals say so.
+- **The floor** (`none`). A reader given the setup and nothing of the story. Whatever it "leaks" or
+  suspects, the premise and the cast sheets invited, so a policy's leaks only count beyond it.
+- **Rejudge** (`rejudge`). Judges a finished run's answers again, so two judges, or two versions of
+  the judge's prompt, can be compared on the very same answers for the price of the judge calls.
 - **Pad** (`pad/`). Writes quiet interludes between the hand-written turns so a story of 29 turns
   becomes one of 300 or more. Facts and probes stay on the hand-written turns, so every fact stays
   exact while the distances grow. The judge rejects any interlude that states a fact or contradicts
@@ -155,7 +166,9 @@ builds summaries as turns arrive does that work in `advance`.
 ## Limits
 
 - The judge is a model and can be wrong. `samples.json` holds every quote it based a verdict on, so
-  a surprising number can be traced to the exact words.
+  a surprising number can be traced to the exact words. A judge as cheap as the model under test
+  missed leaks that named people by their role on the first saltmere run; check a judge with
+  `rejudge` against answers you have read yourself before trusting its rates.
 - Judge calls are not counted in the reported cost, only the calls to the model under test.
 - Interludes in different gaps are written in parallel and cannot see each other. Each one reads
   the three turns before it within its own gap.

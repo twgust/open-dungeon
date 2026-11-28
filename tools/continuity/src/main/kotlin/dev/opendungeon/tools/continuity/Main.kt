@@ -6,10 +6,11 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.subcommands
 import dev.opendungeon.tools.continuity.cli.CheckCommand
 import dev.opendungeon.tools.continuity.cli.PadCommand
+import dev.opendungeon.tools.continuity.cli.RejudgeCommand
 import dev.opendungeon.tools.continuity.cli.RunCommand
 
 public suspend fun main(args: Array<String>) {
-    Continuity().subcommands(CheckCommand(), PadCommand(), RunCommand()).main(args)
+    Continuity().subcommands(CheckCommand(), PadCommand(), RunCommand(), RejudgeCommand()).main(args)
 }
 
 private class Continuity : SuspendingCliktCommand(name = "continuity") {
