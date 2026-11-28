@@ -93,6 +93,18 @@ class SeedTest {
     }
 
     @Test
+    fun `a blank takes any words that can stand in it, keeping its others`() {
+        val filled = assertNotNull(caught.filled("who", "  parole officer "))
+
+        assertEquals("Forging a note got you caught by your parole officer.", filled.text)
+        assertEquals(listOf("boss"), filled.blank("who")?.unused)
+        assertNull(caught.filled("who", " "))
+        assertNull(caught.filled("who", "{act}"))
+        assertNull(caught.filled("who", "x".repeat(Seed.MAX_FILL_LENGTH + 1)))
+        assertNull(caught.filled("where", "a pub"))
+    }
+
+    @Test
     fun `building a seed that is not whole is a bug`() {
         assertThrows<IllegalArgumentException> {
             Seed("Drama", "slowly", "Judged by {who}.", "the judge", emptyList())

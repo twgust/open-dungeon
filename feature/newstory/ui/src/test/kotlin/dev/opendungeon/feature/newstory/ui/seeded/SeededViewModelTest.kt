@@ -44,8 +44,16 @@ class SeededViewModelTest {
             calls += "start"
         }
 
-        override fun reroll(blank: String) {
-            calls += "reroll($blank)"
+        override fun pick(blank: String) {
+            calls += "pick($blank)"
+        }
+
+        override fun fill(blank: String, words: String) {
+            calls += "fill($blank, $words)"
+        }
+
+        override fun suggestMore(blank: String) {
+            calls += "suggestMore($blank)"
         }
 
         override fun rollSeed() {
@@ -100,7 +108,9 @@ class SeededViewModelTest {
         assertEquals(emptyList(), wizard.calls, "nothing starts until the screen opens")
 
         viewModel.onIntent(SeededIntent.Open)
-        viewModel.onIntent(SeededIntent.Reroll("who"))
+        viewModel.onIntent(SeededIntent.PickBlank("who"))
+        viewModel.onIntent(SeededIntent.FillBlank("who", "boss"))
+        viewModel.onIntent(SeededIntent.MoreWords("who"))
         viewModel.onIntent(SeededIntent.RollSeed)
         viewModel.onIntent(SeededIntent.Describe(Person.Them, "nosy"))
         viewModel.onIntent(SeededIntent.Pick(Choice.Desire(ContentLimits.Desire.Close)))
@@ -114,7 +124,9 @@ class SeededViewModelTest {
         assertEquals(
             listOf(
                 "start",
-                "reroll(who)",
+                "pick(who)",
+                "fill(who, boss)",
+                "suggestMore(who)",
                 "rollSeed",
                 "describe(Them, nosy)",
                 "select(Desire(level=Close))",
