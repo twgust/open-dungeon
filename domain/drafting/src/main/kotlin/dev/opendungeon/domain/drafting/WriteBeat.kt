@@ -40,9 +40,10 @@ public interface WriteBeat {
 
 @Inject
 @ContributesBinding(AppScope::class)
-public class DefaultWriteBeat(private val generator: TextGenerator, sentences: SentenceBuilder) : WriteBeat {
+public class DefaultWriteBeat(private val generator: TextGenerator, guide: NamingGuide, sentences: SentenceBuilder) :
+    WriteBeat {
 
-    private val prompt = BeatPrompt(StoryBrief(sentences))
+    private val prompt = BeatPrompt(StoryBrief(sentences), guide)
 
     override fun invoke(story: Story, ask: BeatAsk, model: DraftingModel): Flow<WritingProgress> = flow {
         if (ask is BeatAsk.Again) {
@@ -105,7 +106,7 @@ public class DefaultWriteBeat(private val generator: TextGenerator, sentences: S
  * The instructions and the ask for a beat. The model reads the story's choices, the people in it, and the
  * most recent beats, so a long story never becomes one giant prompt.
  */
-internal class BeatPrompt(private val brief: StoryBrief) {
+internal class BeatPrompt(private val brief: StoryBrief, private val guide: NamingGuide) {
 
     fun messages(story: Story, ask: BeatAsk): List<ChatMessage> {
         val beats = when (ask) {
@@ -122,6 +123,8 @@ internal class BeatPrompt(private val brief: StoryBrief) {
                         append("\n\nPeople in the story:")
                         people.forEach { append("\n- ${it.sheet()}") }
                     }
+                    append("\n\n")
+                    append(guide.notes(story.setup, heading = NEWCOMERS))
                     append("\n\n")
                     append(transcript(beats))
                     if (ask is BeatAsk.Again) {
@@ -171,6 +174,7 @@ internal class BeatPrompt(private val brief: StoryBrief) {
             Answer with the beat alone: plain prose, no title, no headings, no preamble, no list of choices.
             """.trimIndent()
 
+        const val NEWCOMERS = "Names, for anyone new who needs one:"
         const val STORY_MARK = "[Story]"
         const val PLAYER_MARK = "[The player's turn]"
         const val DIFFERENT = "Write a different one."

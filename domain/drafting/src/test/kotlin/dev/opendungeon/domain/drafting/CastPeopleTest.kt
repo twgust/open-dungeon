@@ -37,7 +37,14 @@ class CastPeopleTest {
     )
 
     private fun cast(answer: Outcome<Any, GenerationError>) = ScriptedStructuredGenerator(answer).let { generator ->
-        generator to DefaultCastPeople(generator, CountingIds("person"), DefaultSentenceBuilder())
+        generator to DefaultCastPeople(
+            generator,
+            CountingIds("person"),
+            replaceWornNames(generator),
+            BundledWornNames(),
+            BundledNamingGuide(),
+            DefaultSentenceBuilder(),
+        )
     }
 
     @Test
@@ -83,6 +90,52 @@ class CastPeopleTest {
         ).value
 
         assertEquals(listOf("Ida", "Bo"), people.map { it.name })
+    }
+
+    private fun guarded(vararg answers: Outcome<Any, GenerationError>) = QueuedStructuredGenerator(*answers).let {
+        it to DefaultCastPeople(
+            it,
+            CountingIds("person"),
+            replaceWornNames(it),
+            BundledWornNames(),
+            BundledNamingGuide(),
+            DefaultSentenceBuilder(),
+        )
+    }
+
+    @Test
+    fun `a worn name is replaced before anyone sees it`() = runTest {
+        val (generator, castPeople) = guarded(
+            Outcome.Success(CastPayload(listOf(person("Kael Voss"), person("Ida")))),
+            Outcome.Success(RenamesPayload(listOf(RenamePayload(1, "Ottilie Brandt")))),
+        )
+
+        val people = assertIs<Outcome.Success<List<Character>>>(castPeople(draft, drafter)).value
+
+        assertEquals(listOf("Ottilie Brandt", "Ida"), people.map { it.name })
+        assertEquals(2, generator.requests.size)
+    }
+
+    @Test
+    fun `someone whose worn name cannot be replaced is left out, and the rest are kept`() = runTest {
+        val (_, castPeople) = guarded(
+            Outcome.Success(CastPayload(listOf(person("Elara"), person("Ida")))),
+            Outcome.Failure(GenerationError.Refused),
+        )
+
+        val people = assertIs<Outcome.Success<List<Character>>>(castPeople(draft, drafter)).value
+
+        assertEquals(listOf("Ida"), people.map { it.name })
+    }
+
+    @Test
+    fun `a cast of nothing but worn names that cannot be replaced fails with the reason`() = runTest {
+        val (_, castPeople) = guarded(
+            Outcome.Success(CastPayload(listOf(person("Elara")))),
+            Outcome.Failure(GenerationError.Refused),
+        )
+
+        assertEquals(Outcome.Failure(DraftingError.Generation(GenerationError.Refused)), castPeople(draft, drafter))
     }
 
     @Test
@@ -137,14 +190,14 @@ class CastPeopleTest {
 
     @Test
     fun `the prompt for a first cast`() {
-        val prompt = CastPrompt(StoryBrief(DefaultSentenceBuilder()))
+        val prompt = CastPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
 
         assertGolden("cast-first", prompt.messages(draft, count = 3).transcript())
     }
 
     @Test
     fun `the prompt for a recast names everyone already there`() {
-        val prompt = CastPrompt(StoryBrief(DefaultSentenceBuilder()))
+        val prompt = CastPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
         val cast = listOf(
             CastMember(
                 Character(

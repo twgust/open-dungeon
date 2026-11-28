@@ -20,7 +20,7 @@ import kotlin.test.assertFalse
 class WriteOpeningTest {
 
     private fun opening(vararg events: TextEvent) = ScriptedTextGenerator(events.toList()).let { generator ->
-        generator to DefaultWriteOpening(generator, DefaultSentenceBuilder())
+        generator to DefaultWriteOpening(generator, BundledNamingGuide(), DefaultSentenceBuilder())
     }
 
     private val done = TextEvent.Completed(usage = null, cutOff = false)
@@ -135,7 +135,9 @@ class WriteOpeningTest {
 
     @Test
     fun `no secret reaches the prompt, and nobody left out of the story does`() {
-        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder())).messages(castDraft).transcript()
+        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
+            .messages(castDraft)
+            .transcript()
 
         assertFalse("forged" in prompt)
         assertFalse("Ilse" in prompt)
@@ -143,14 +145,14 @@ class WriteOpeningTest {
 
     @Test
     fun `the prompt for a fresh opening`() {
-        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()))
+        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
 
         assertGolden("opening-fresh", prompt.messages(castDraft).transcript())
     }
 
     @Test
     fun `the prompt for continuing the player's text`() {
-        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()))
+        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
         val draft = castDraft.copy(opening = "You wait under the tannery awning. The rain has not stopped in three")
 
         assertGolden("opening-continue", prompt.messages(draft).transcript())
@@ -158,7 +160,7 @@ class WriteOpeningTest {
 
     @Test
     fun `the prompt for a bare draft says only what was chosen`() {
-        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()))
+        val prompt = OpeningPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
 
         assertGolden("opening-bare", prompt.messages(StoryDraft(DraftId("bare"))).transcript())
     }

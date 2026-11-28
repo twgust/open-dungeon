@@ -26,8 +26,10 @@ public interface CastSeed {
      * own words about each, or `null` to leave them to the model; [counterpart] is how the sentence names
      * the other person, such as "your grandmother".
      *
-     * The player's character has no secret; the other person has a [Secret.Sealed] one. Fails with
-     * [DraftingError.Unusable] when the model left either without a name.
+     * The player's character has no secret; the other person has a [Secret.Sealed] one. Neither keeps a
+     * worn name the player did not write themselves: see [ReplaceWornNames]. Fails with
+     * [DraftingError.Unusable] when the model left either without a name, or with a worn one it could not
+     * replace.
      */
     public suspend operator fun invoke(
         draft: StoryDraft,
@@ -46,10 +48,12 @@ public data class SeedCast(val you: Character, val them: Character)
 public class DefaultCastSeed(
     private val generator: StructuredGenerator,
     private val ids: IdGenerator,
+    private val replaceWornNames: ReplaceWornNames,
+    guide: NamingGuide,
     sentences: SentenceBuilder,
 ) : CastSeed {
 
-    private val prompt = SeedCastPrompt(StoryBrief(sentences))
+    private val prompt = SeedCastPrompt(StoryBrief(sentences), guide)
 
     override suspend fun invoke(
         draft: StoryDraft,
@@ -58,14 +62,11 @@ public class DefaultCastSeed(
         them: String?,
         model: DraftingModel,
     ): Outcome<SeedCast, DraftingError> {
+        val aboutYou = you?.takeIf(String::isNotBlank)
+        val aboutThem = them?.takeIf(String::isNotBlank)
         val request = StructuredRequest(
             model = model.model,
-            messages = prompt.messages(
-                draft,
-                counterpart,
-                you?.takeIf(String::isNotBlank),
-                them?.takeIf(String::isNotBlank),
-            ),
+            messages = prompt.messages(draft, counterpart, aboutYou, aboutThem),
             serializer = SeedCastPayload.serializer(),
             descriptions = SeedCastPayload.DESCRIPTIONS,
             examples = listOf(SeedCastPayload.EXAMPLE),
@@ -78,7 +79,11 @@ public class DefaultCastSeed(
         }
         val player = payload.you.toCharacter(secret = false) ?: return Outcome.Failure(DraftingError.Unusable)
         val other = payload.them.toCharacter(secret = true) ?: return Outcome.Failure(DraftingError.Unusable)
-        return Outcome.Success(SeedCast(you = player, them = other))
+        val playerWords = listOfNotNull(aboutYou, aboutThem)
+        return when (val named = replaceWornNames(listOf(player, other), draft, model, playerWords)) {
+            is Outcome.Failure -> named
+            is Outcome.Success -> Outcome.Success(SeedCast(you = named.value.first(), them = named.value.last()))
+        }
     }
 
     /** Someone without a name cannot be put in a sentence, so the answer is not used. */
@@ -107,13 +112,15 @@ public class DefaultCastSeed(
 }
 
 /** The instructions and the ask for a seeded story's two people. */
-internal class SeedCastPrompt(private val brief: StoryBrief) {
+internal class SeedCastPrompt(private val brief: StoryBrief, private val guide: NamingGuide) {
 
     fun messages(draft: StoryDraft, counterpart: String, you: String?, them: String?): List<ChatMessage> = listOf(
         ChatMessage.System(SYSTEM),
         ChatMessage.User(
             buildString {
                 append(brief.of(draft, withPremise = true))
+                append("\n\n")
+                append(guide.notes(draft))
                 append("\n\nYou, the player's character: ")
                 append(you?.let { "the player says \"$it\"" } ?: INVENT)
                 append("\nThem, $counterpart: ")

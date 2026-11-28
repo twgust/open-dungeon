@@ -20,8 +20,9 @@ import kotlinx.serialization.Serializable
 public interface CastPeople {
     /**
      * Up to [count] people who fit [draft] and are none of those already in it. Each has a want and a
-     * [Secret.Sealed] secret, which the player never sees. Fails with [DraftingError.Unusable] when the
-     * model named nobody.
+     * [Secret.Sealed] secret, which the player never sees, and a name that is not a worn one: see
+     * [ReplaceWornNames]. Someone whose worn name could not be replaced is left out. Fails with
+     * [DraftingError.Unusable] when the model named nobody usable.
      */
     public suspend operator fun invoke(
         draft: StoryDraft,
@@ -39,10 +40,13 @@ public interface CastPeople {
 public class DefaultCastPeople(
     private val generator: StructuredGenerator,
     private val ids: IdGenerator,
+    private val replaceWornNames: ReplaceWornNames,
+    private val worn: WornNames,
+    guide: NamingGuide,
     sentences: SentenceBuilder,
 ) : CastPeople {
 
-    private val prompt = CastPrompt(StoryBrief(sentences))
+    private val prompt = CastPrompt(StoryBrief(sentences), guide)
 
     override suspend fun invoke(
         draft: StoryDraft,
@@ -69,7 +73,15 @@ public class DefaultCastPeople(
             .distinctBy { it.name?.lowercase() }
             .filterNot { it.name?.lowercase() in taken }
             .take(count)
-        return if (people.isEmpty()) Outcome.Failure(DraftingError.Unusable) else Outcome.Success(people)
+        if (people.isEmpty()) return Outcome.Failure(DraftingError.Unusable)
+        return when (val named = replaceWornNames(people, draft, model)) {
+            is Outcome.Success -> Outcome.Success(named.value)
+            // Better fewer people than a worn name: the rest of the cast is still good.
+            is Outcome.Failure -> people.filter { worn.foundIn(it.name.orEmpty()).isEmpty() }
+                .takeIf(List<Character>::isNotEmpty)
+                ?.let { Outcome.Success(it) }
+                ?: named
+        }
     }
 
     /** Someone without a name cannot be put in a sentence, so they are left out. */
@@ -97,13 +109,15 @@ public class DefaultCastPeople(
 }
 
 /** The instructions and the ask for new people. */
-internal class CastPrompt(private val brief: StoryBrief) {
+internal class CastPrompt(private val brief: StoryBrief, private val guide: NamingGuide) {
 
     fun messages(draft: StoryDraft, count: Int): List<ChatMessage> = listOf(
         ChatMessage.System(SYSTEM),
         ChatMessage.User(
             buildString {
                 append(brief.of(draft, withPremise = true))
+                append("\n\n")
+                append(guide.notes(draft))
                 val already = draft.cast.mapNotNull { it.character.tag() }
                 if (already.isNotEmpty()) {
                     append("\n\nAlready in the story, so cast someone else:")

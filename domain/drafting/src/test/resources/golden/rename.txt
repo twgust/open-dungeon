@@ -1,0 +1,38 @@
+## system
+You rename people in an interactive story. Their names were turned down as the stock names models overuse.
+Give each person a new name that fits who they are and the story's world, following the naming notes.
+Keep the shape of the old name: a surname only if it had one, and any title or nickname it carried.
+Never use a name that was turned down, one already in the story, or one you give someone else.
+
+## user
+Story: A slice of life story, twisted by a heist, starring a disgraced smuggler, told tenderly, set in a salt-war border town.
+
+The player's character, addressed as "you":
+- Role: a disgraced smuggler
+- Wants: To be forgiven
+- Flaw: Lies easily
+- Good at: Picking locks
+
+Premise: You inherit your aunt's failing café.
+
+Limits:
+- Desire can be written all the way, explicitly, when the story leads there.
+- Violence happens offstage. Show only what it leaves behind.
+- Everyone involved in desire is an adult.
+- The player also asks: no harm to animals
+
+Names:
+- Name people the way their families in this world would have: from the language, class and era the setting implies. Use names real people carry or have carried; a name never announces who someone is. Each genre's examples show the kind of name, so choose others like them.
+- Slice of life: Ordinary names of the setting's country and decade, the kind on a class list or a work rota: Lisa, Jonas, Emma Berg, Dave. Mostly common names, and nicknames the way friends use them.
+
+Rename these people:
+1. Kael Voss, barista
+  - Gender: man
+  - Habit: Kael hums when the milk burns
+2. Elara, baker
+  - Gender: woman
+
+Turned down, so never use: Kael Voss, Elara
+Already in the story: Ida
+
+Give each of them a new name.

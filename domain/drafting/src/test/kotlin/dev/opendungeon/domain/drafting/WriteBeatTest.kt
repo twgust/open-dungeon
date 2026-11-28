@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 class WriteBeatTest {
 
     private fun writer(vararg events: TextEvent) = ScriptedTextGenerator(events.toList()).let { generator ->
-        generator to DefaultWriteBeat(generator, DefaultSentenceBuilder())
+        generator to DefaultWriteBeat(generator, BundledNamingGuide(), DefaultSentenceBuilder())
     }
 
     private val done = TextEvent.Completed(usage = null, cutOff = false)
@@ -54,7 +54,7 @@ class WriteBeatTest {
         ),
     )
 
-    private val prompt = BeatPrompt(StoryBrief(DefaultSentenceBuilder()))
+    private val prompt = BeatPrompt(StoryBrief(DefaultSentenceBuilder()), BundledNamingGuide())
 
     @Test
     fun `a beat streams as it is written and ends written`() = runTest {
