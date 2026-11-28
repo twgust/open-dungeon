@@ -31,7 +31,7 @@ internal data class ContinuityReport(
             val scoring = Scoring(plan.scenario)
             val byPolicy = result.samples.groupBy { it.policy }
             val incidents = result.samples.flatMap { sample ->
-                scoring.checks(sample).filter { it.leaked || it.contradicted }.map { Incident.of(it) }
+                scoring.checks(sample).filter { it.leaked || it.suspected || it.contradicted }.map { Incident.of(it) }
             }
             return ContinuityReport(
                 scenario = plan.scenario.id,
@@ -67,6 +67,7 @@ internal data class ContinuityReport(
  * @property characterRecall expected facts stated by characters: what they should know and do. A low
  *   rate here with few leaks means the policy hides too much, which makes characters dull and amnesiac.
  * @property leaks forbidden facts stated, out of all forbidden checks.
+ * @property suspicions forbidden facts raised only as a suspicion, out of all forbidden checks.
  * @property contradictions expected and guarded facts contradicted, out of all such checks.
  */
 @Serializable
@@ -76,6 +77,7 @@ internal data class PolicyReport(
     val recallByDistance: List<Rate>,
     val characterRecall: Rate,
     val leaks: Rate,
+    val suspicions: Rate,
     val contradictions: Rate,
     val probesPassed: Rate,
     val meanPromptTokens: Int?,
@@ -104,6 +106,7 @@ internal data class PolicyReport(
                 },
                 characterRecall = expected.filter { it.byCharacter }.rate { it.recalled },
                 leaks = checks.filter { it.role == Role.Forbid }.rate { it.leaked },
+                suspicions = checks.filter { it.role == Role.Forbid }.rate { it.suspected },
                 contradictions = stable.rate { it.contradicted },
                 probesPassed = Rate.of(passes.count { it }, passes.size),
                 meanPromptTokens = usages.takeIf { it.isNotEmpty() }?.map { it.promptTokens }?.average()?.toInt(),
@@ -135,7 +138,7 @@ internal data class PolicyReport(
 @Serializable
 internal data class ProbeScore(val probe: ProbeId, val passed: Rate)
 
-/** A leak or a contradiction, with the words that gave it away. */
+/** A leak, a suspicion of a forbidden fact, or a contradiction, with the words that gave it away. */
 @Serializable
 internal data class Incident(
     val policy: String,
@@ -145,17 +148,23 @@ internal data class Incident(
     val kind: Kind,
     val quote: String,
 ) {
-    enum class Kind { Leak, Contradiction }
+    enum class Kind { Leak, Suspicion, Contradiction }
 
     companion object {
         fun of(check: ScoredCheck): Incident {
-            require(check.leaked || check.contradicted) { "Check of ${check.fact} in ${check.probe} is no incident" }
+            require(check.leaked || check.suspected || check.contradicted) {
+                "Check of ${check.fact} in ${check.probe} is no incident"
+            }
             return Incident(
                 policy = check.policy,
                 probe = check.probe,
                 sample = check.sample,
                 fact = check.fact,
-                kind = if (check.leaked) Kind.Leak else Kind.Contradiction,
+                kind = when {
+                    check.leaked -> Kind.Leak
+                    check.suspected -> Kind.Suspicion
+                    else -> Kind.Contradiction
+                },
                 quote = check.quote,
             )
         }

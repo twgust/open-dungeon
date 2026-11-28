@@ -79,6 +79,29 @@ class ReportTest {
     }
 
     @Test
+    fun `a forbidden fact raised as a suspicion is counted apart from a leak, and is no contradiction`() {
+        val checks = Scoring(scenario).checks(
+            judged("full", "kael-poison", 1, POISON to Verdict.Suspected, DARK to Verdict.Suspected),
+        )
+
+        val poison = checks.single { it.fact == POISON }
+        assertTrue(poison.suspected && !poison.leaked && !poison.contradicted)
+        val dark = checks.single { it.fact == DARK }
+        assertTrue(!dark.suspected && !dark.contradicted, "only a forbidden fact can be suspected")
+        val report = ContinuityReport.of(
+            result(
+                listOf(judged("full", "kael-poison", 1, POISON to Verdict.Suspected, DARK to Verdict.Absent)),
+                "full",
+            ),
+            createdAt = "now",
+        )
+        val full = report.policies.single()
+        assertEquals(Rate.of(0, 1), full.leaks)
+        assertEquals(Rate.of(1, 1), full.suspicions)
+        assertEquals(listOf(Incident.Kind.Suspicion), report.incidents.map { it.kind })
+    }
+
+    @Test
     fun `an answer passes only with every expected fact, no leak and no contradiction`() {
         val scoring = Scoring(scenario)
 
@@ -183,7 +206,12 @@ class ReportTest {
         val page = MarkdownReport.render(ContinuityReport.of(result(samples, "full"), "now"))
 
         assertTrue(page.startsWith("# Continuity: Tiny"))
-        listOf("## Summary", "## Narrator recall by distance", "## Probes", "## Leaks and contradictions").forEach {
+        listOf(
+            "## Summary",
+            "## Narrator recall by distance",
+            "## Probes",
+            "## Leaks, suspicions and contradictions",
+        ).forEach {
             assertTrue(it in page, "missing $it")
         }
         assertTrue("| `full` | `kael-poison` | 1 | `poison` | Leak | quote poison |" in page)

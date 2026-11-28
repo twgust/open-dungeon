@@ -17,7 +17,9 @@ internal object MarkdownReport {
         )
         appendLine()
         appendLine(
-            "Rates show the share with its 95% interval. Recall: higher is better. Leaks and contradictions: lower is better.",
+            "Rates show the share with its 95% interval. Recall: higher is better. " +
+                "Leaks and contradictions: lower is better. Suspicions are forbidden facts raised only as a guess; " +
+                "compare them with `none`, whose reader was told nothing, to see how much is guessing.",
         )
         appendLine()
         summary(report)
@@ -30,13 +32,15 @@ internal object MarkdownReport {
         appendLine("## Summary")
         appendLine()
         appendLine(
-            "| Policy | Narrator recall | Character recall | Leaks | Contradictions | Probes passed | Prompt tokens | Cost (USD) | Failed |",
+            "| Policy | Narrator recall | Character recall | Leaks | Suspicions | Contradictions | Probes passed | " +
+                "Prompt tokens | Cost (USD) | Failed |",
         )
-        appendLine("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+        appendLine("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         report.policies.forEach { p ->
             val tokens = p.meanPromptTokens?.toString() ?: "~${(p.meanPromptCharacters ?: 0) / CHARS_PER_TOKEN} (est.)"
             appendLine(
                 "| `${p.policy}` | ${p.narratorRecall.cell()} | ${p.characterRecall.cell()} | ${p.leaks.cell()} | " +
+                    "${p.suspicions.cell()} | " +
                     "${p.contradictions.cell()} | ${p.probesPassed.cell()} | $tokens | ${p.costUsd ?: "–"} | " +
                     "${p.unanswered + p.unjudged} |",
             )
@@ -75,7 +79,7 @@ internal object MarkdownReport {
     }
 
     private fun StringBuilder.incidents(report: ContinuityReport) {
-        appendLine("## Leaks and contradictions")
+        appendLine("## Leaks, suspicions and contradictions")
         appendLine()
         if (report.incidents.isEmpty()) {
             appendLine("None.")

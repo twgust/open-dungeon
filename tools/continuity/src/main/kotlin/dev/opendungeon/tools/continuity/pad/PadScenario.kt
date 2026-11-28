@@ -8,6 +8,7 @@ import dev.opendungeon.tools.continuity.judge.Judge
 import dev.opendungeon.tools.continuity.judge.JudgeFailure
 import dev.opendungeon.tools.continuity.judge.JudgeResult
 import dev.opendungeon.tools.continuity.judge.Verdict
+import dev.opendungeon.tools.continuity.judge.WhoIsWho
 import dev.opendungeon.tools.continuity.model.ModelChoice
 import dev.opendungeon.tools.continuity.scenario.Passage
 import dev.opendungeon.tools.continuity.scenario.Scenario
@@ -184,7 +185,7 @@ internal class DefaultPadScenario(private val generator: StructuredGenerator, pr
         val timeline = Timeline(scenario)
         val at = scenario.turns[gap].id
         val passage = "${turn.player}\n\n${turn.narrationText}"
-        val result = judge.judge(passage, scenario.facts, scenario.protagonist.name, request.judge)
+        val result = judge.judge(passage, scenario.facts, WhoIsWho.of(scenario), request.judge)
         val verdicts = when (result) {
             is JudgeResult.Failed -> return when (val reason = result.reason) {
                 is JudgeFailure.Generation -> "The judge failed: ${reason.error}"
@@ -196,6 +197,8 @@ internal class DefaultPadScenario(private val generator: StructuredGenerator, pr
             val verdict = verdicts.getValue(fact.id)
             when {
                 verdict.verdict == Verdict.Asserted -> "it mentions \"${fact.text}\" (\"${verdict.quote}\")"
+                // An interlude only fills time; even a hint at a fact would let a probe pass on the padding.
+                verdict.verdict == Verdict.Suspected -> "it hints at \"${fact.text}\" (\"${verdict.quote}\")"
                 // A fact that no longer holds is meant to be contradicted by the story as it stands now.
                 verdict.verdict == Verdict.Contradicted && !timeline.isSuperseded(fact, at) ->
                     "it contradicts \"${fact.text}\" (\"${verdict.quote}\")"

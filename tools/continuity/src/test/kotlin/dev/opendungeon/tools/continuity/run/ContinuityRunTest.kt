@@ -37,7 +37,7 @@ class ContinuityRunTest {
 
     @Test
     fun `every probe is asked through every policy, samples times, in plan order`() = runTest {
-        val run = DefaultContinuityRun(FakeTextGenerator(), FakeJudge())
+        val run = DefaultContinuityRun(FakeTextGenerator(), DefaultProbeJudge(FakeJudge()))
 
         val result = run.run(plan("full", "recent:1")).filterIsInstance<RunEvent.Finished>().single().result
 
@@ -52,7 +52,8 @@ class ContinuityRunTest {
 
     @Test
     fun `each sample is reported as it finishes, counting up to the total`() = runTest {
-        val events = DefaultContinuityRun(FakeTextGenerator(), FakeJudge()).run(plan("full", samples = 1)).toList()
+        val events = DefaultContinuityRun(FakeTextGenerator(), DefaultProbeJudge(FakeJudge()))
+            .run(plan("full", samples = 1)).toList()
 
         val progress = events.filterIsInstance<RunEvent.SampleFinished>()
         assertEquals((1..3).toList(), progress.map { it.finished }.sorted())
@@ -64,7 +65,8 @@ class ContinuityRunTest {
     fun `the prompt carries the policy's context taken right after the probe's turn`() = runTest {
         val generator = FakeTextGenerator()
 
-        DefaultContinuityRun(generator, FakeJudge()).run(plan("full", "perceived/full", samples = 1)).toList()
+        DefaultContinuityRun(generator, DefaultProbeJudge(FakeJudge()))
+            .run(plan("full", "perceived/full", samples = 1)).toList()
 
         val voicePrompts = generator.requests.map { it.messages.filterIsInstance<ChatMessage.User>().single().text }
             .filter { "Who poisoned the wine?" in it }
@@ -88,10 +90,8 @@ class ContinuityRunTest {
         val generator = FakeTextGenerator { listOf(TextEvent.Delta(" Mara did it. "), completed()) }
         val judge = FakeJudge { _, fact -> if (fact.id == POISON) Verdict.Asserted else Verdict.Absent }
 
-        val result = DefaultContinuityRun(
-            generator,
-            judge,
-        ).run(plan("full", samples = 1)).filterIsInstance<RunEvent.Finished>().single().result
+        val result = DefaultContinuityRun(generator, DefaultProbeJudge(judge))
+            .run(plan("full", samples = 1)).filterIsInstance<RunEvent.Finished>().single().result
 
         assertTrue(generator.requests.all { it.model == SUBJECT.model && it.tuning == SUBJECT.tuning })
         assertTrue(judge.passages.all { it == "Mara did it." })
@@ -113,7 +113,10 @@ class ContinuityRunTest {
         }
         val judge = FakeJudge()
 
-        val result = DefaultContinuityRun(generator, judge).run(plan("full", samples = 1, concurrency = 1))
+        val result = DefaultContinuityRun(
+            generator,
+            DefaultProbeJudge(judge),
+        ).run(plan("full", samples = 1, concurrency = 1))
             .filterIsInstance<RunEvent.Finished>().single().result
 
         assertTrue(result.samples.all { it.outcome is SampleOutcome.Unanswered })
@@ -124,10 +127,8 @@ class ContinuityRunTest {
     fun `no more calls are in flight than the plan allows`() = runTest {
         val generator = FakeTextGenerator()
 
-        DefaultContinuityRun(
-            generator,
-            FakeJudge(),
-        ).run(plan("full", "recent:1", "chars:100", samples = 3, concurrency = 2)).toList()
+        DefaultContinuityRun(generator, DefaultProbeJudge(FakeJudge()))
+            .run(plan("full", "recent:1", "chars:100", samples = 3, concurrency = 2)).toList()
 
         assertEquals(27, generator.requests.size)
         assertTrue(generator.mostInFlight.get() in 1..2, "at most two at once, saw ${generator.mostInFlight.get()}")

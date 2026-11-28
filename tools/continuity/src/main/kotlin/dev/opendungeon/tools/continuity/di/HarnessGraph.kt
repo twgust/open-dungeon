@@ -5,6 +5,7 @@ import dev.opendungeon.core.network.AppAttribution
 import dev.opendungeon.tools.continuity.model.ModelResolver
 import dev.opendungeon.tools.continuity.pad.PadScenario
 import dev.opendungeon.tools.continuity.run.ContinuityRun
+import dev.opendungeon.tools.continuity.run.RejudgeRun
 import dev.opendungeon.tools.continuity.scenario.VerifyFacts
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
@@ -18,6 +19,7 @@ import dev.zacsweers.metro.Provides
 @DependencyGraph(AppScope::class)
 internal interface HarnessGraph {
     val run: ContinuityRun
+    val rejudge: RejudgeRun
     val pad: PadScenario
     val verify: VerifyFacts
     val models: ModelResolver

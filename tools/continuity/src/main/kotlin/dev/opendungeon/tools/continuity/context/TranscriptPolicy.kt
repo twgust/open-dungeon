@@ -38,7 +38,11 @@ internal class TranscriptPolicy(private val window: Window, private val projecti
                 )
                 if (shown.size < total) append(", its earlier part left out")
             }
-            val body = if (shown.isEmpty()) NOTHING_YET else shown.joinToString(separator = "\n\n") { it.render() }
+            val body = when {
+                shown.isNotEmpty() -> shown.joinToString(separator = "\n\n") { it.render() }
+                total == 0 -> NOTHING_YET
+                else -> LEFT_OUT
+            }
             return listOf(ContextBlock(heading, body))
         }
 
@@ -68,6 +72,17 @@ internal class TranscriptPolicy(private val window: Window, private val projecti
 
         /** The lines that go in, oldest first, from [turns], each turn's lines oldest first. */
         fun select(turns: List<List<TranscriptEntry>>): List<TranscriptEntry>
+
+        /**
+         * Nothing of the story, only its setup. The floor: what a reader answers from the premise and the
+         * cast's public sheets alone. A leak this reader commits too is a guess the setup invites, not a
+         * fact that got through.
+         */
+        data object None : Window {
+            override val spec: String = "none"
+
+            override fun select(turns: List<List<TranscriptEntry>>): List<TranscriptEntry> = emptyList()
+        }
 
         /** Everything: the upper bound on recall, and the bill no long story can pay. */
         data object All : Window {
@@ -130,6 +145,7 @@ internal class TranscriptPolicy(private val window: Window, private val projecti
 
     private companion object {
         const val NOTHING_YET = "Nothing yet."
+        const val LEFT_OUT = "Left out."
     }
 }
 

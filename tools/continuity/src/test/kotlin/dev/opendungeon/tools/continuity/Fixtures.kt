@@ -14,6 +14,7 @@ import dev.opendungeon.tools.continuity.judge.FactVerdict
 import dev.opendungeon.tools.continuity.judge.Judge
 import dev.opendungeon.tools.continuity.judge.JudgeResult
 import dev.opendungeon.tools.continuity.judge.Verdict
+import dev.opendungeon.tools.continuity.judge.WhoIsWho
 import dev.opendungeon.tools.continuity.model.ModelChoice
 import dev.opendungeon.tools.continuity.scenario.Ask
 import dev.opendungeon.tools.continuity.scenario.CastId
@@ -139,12 +140,7 @@ internal class FakeJudge(private val verdict: (passage: String, fact: Fact) -> V
     Judge {
     val passages: MutableList<String> = CopyOnWriteArrayList()
 
-    override suspend fun judge(
-        passage: String,
-        facts: List<Fact>,
-        protagonist: String,
-        model: ModelChoice,
-    ): JudgeResult {
+    override suspend fun judge(passage: String, facts: List<Fact>, people: WhoIsWho, model: ModelChoice): JudgeResult {
         passages += passage
         return JudgeResult.Judged(facts.associate { it.id to FactVerdict(verdict(passage, it), quote = "…") })
     }

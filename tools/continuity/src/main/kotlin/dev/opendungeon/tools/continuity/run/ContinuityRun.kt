@@ -4,9 +4,6 @@ import dev.opendungeon.domain.generation.ChatMessage
 import dev.opendungeon.domain.generation.TextGenerator
 import dev.opendungeon.domain.generation.TextRequest
 import dev.opendungeon.tools.continuity.context.ContextPolicy
-import dev.opendungeon.tools.continuity.judge.Judge
-import dev.opendungeon.tools.continuity.judge.JudgeFailure
-import dev.opendungeon.tools.continuity.judge.JudgeResult
 import dev.opendungeon.tools.continuity.probe.Completion
 import dev.opendungeon.tools.continuity.probe.ProbePrompts
 import dev.opendungeon.tools.continuity.probe.complete
@@ -31,7 +28,8 @@ internal interface ContinuityRun {
 
 @Inject
 @ContributesBinding(AppScope::class)
-internal class DefaultContinuityRun(private val generator: TextGenerator, private val judge: Judge) : ContinuityRun {
+internal class DefaultContinuityRun(private val generator: TextGenerator, private val judge: ProbeJudge) :
+    ContinuityRun {
 
     override fun run(plan: RunPlan): Flow<RunEvent> = channelFlow {
         val prepared = plan.policies.flatMap { prepare(it, plan.scenario) }
@@ -74,7 +72,12 @@ internal class DefaultContinuityRun(private val generator: TextGenerator, privat
             TextRequest(model = plan.subject.model, messages = prepared.messages, tuning = plan.subject.tuning)
         val outcome = when (val completion = generator.complete(request)) {
             is Completion.Failed -> SampleOutcome.Unanswered(completion.error.toString())
-            is Completion.Answered -> judged(plan, prepared.probe, completion)
+            is Completion.Answered -> judge.judge(
+                plan.scenario,
+                prepared.probe,
+                ProbeAnswer(completion.text, completion.cutOff, completion.usage?.let(SampleUsage::of)),
+                plan.judge,
+            )
         }
         return ProbeSample(
             policy = prepared.policy,
@@ -83,29 +86,6 @@ internal class DefaultContinuityRun(private val generator: TextGenerator, privat
             promptCharacters = prepared.messages.sumOf { it.text.length },
             outcome = outcome,
         )
-    }
-
-    private suspend fun judged(plan: RunPlan, probe: Probe, answer: Completion.Answered): SampleOutcome {
-        val usage = answer.usage?.let(SampleUsage::of)
-        if (answer.text.isEmpty()) return SampleOutcome.Unanswered("The model answered with nothing")
-        val facts = probe.facts.map { requireNotNull(plan.scenario.fact(it)) { "No fact $it in ${plan.scenario.id}" } }
-        return when (val result = judge.judge(answer.text, facts, plan.scenario.protagonist.name, plan.judge)) {
-            is JudgeResult.Judged -> SampleOutcome.Judged(
-                answer = answer.text,
-                cutOff = answer.cutOff,
-                usage = usage,
-                verdicts = facts.map { fact ->
-                    val verdict = result.verdicts.getValue(fact.id)
-                    JudgedFact(fact.id, verdict.verdict, verdict.quote)
-                },
-            )
-            is JudgeResult.Failed -> SampleOutcome.Unjudged(answer.text, usage, result.reason.describe())
-        }
-    }
-
-    private fun JudgeFailure.describe(): String = when (this) {
-        is JudgeFailure.Generation -> "The judge failed: $error"
-        is JudgeFailure.Incomplete -> "The judge's verdicts were incomplete: $detail"
     }
 
     private data class PreparedProbe(val policy: String, val probe: Probe, val messages: List<ChatMessage>)

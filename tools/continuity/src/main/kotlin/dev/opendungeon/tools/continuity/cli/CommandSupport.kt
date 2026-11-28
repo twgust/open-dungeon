@@ -22,8 +22,11 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 
 /** A graph built around the key, failing with a message the person can act on when there is no usable key. */
-internal fun harness(options: ModelOptions): HarnessGraph {
-    val key = EnvironmentKey.read(options.keyFile).getOrElse { fail(it.message.orEmpty()) }
+internal fun harness(options: ModelOptions): HarnessGraph = harness(options.keyFile)
+
+/** A graph built around the key in [keyFile], or in the environment when there is none. */
+internal fun harness(keyFile: Path?): HarnessGraph {
+    val key = EnvironmentKey.read(keyFile).getOrElse { fail(it.message.orEmpty()) }
     return createGraphFactory<HarnessGraph.Factory>().create(FixedApiKeyStore(key), HarnessGraph.Attribution)
 }
 
